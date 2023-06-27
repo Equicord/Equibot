@@ -95,7 +95,7 @@ const saneName = /\w/;
 export async function moderateNick(member: Member) {
     if (!member.guild.permissionsOf(Vaius.user.id).has("MANAGE_NICKNAMES")) return;
 
-    const name = member.nick ?? member.username;
+    const name = member.nick ?? member.user.globalName ?? member.username;
     const normalizedName = name.normalize("NFKC");
 
     const isLame = normalizedName.startsWith("!");
