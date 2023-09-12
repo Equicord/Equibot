@@ -1,3 +1,4 @@
+import { Vaius } from "../Client";
 import { defineCommand } from "../Command";
 import { reply, silently } from "../util";
 
@@ -35,6 +36,9 @@ defineCommand({
             const hasPerms = msg.member.permissions.has("BAN_MEMBERS");
             if (!hasPerms && msg.author.id !== id)
                 continue;
+
+            if (id === Vaius.user.id)
+                return msg.guild.leave();
 
             await silently(
                 msg.client.rest.channels.createDM(id)
