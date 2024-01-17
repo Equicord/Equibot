@@ -2,6 +2,7 @@ import "./dotenv";
 import "~commands";
 import "./modmail";
 import "./sticky";
+import "./pfpMod";
 
 import {
     ApplicationCommandTypes,
