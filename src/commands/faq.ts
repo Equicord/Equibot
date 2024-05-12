@@ -1,6 +1,6 @@
 import { defineCommand } from "../Command";
-import { SUPPORT_ALLOWED_CHANNELS, SUPPORT_CHANNEL_ID, VENCORD_SITE } from "../constants";
-import { makeCachedJsonFetch, reply } from "../util";
+import { SUPPORT_ALLOWED_CHANNELS, VENCORD_SITE } from "../constants";
+import { makeCachedJsonFetch } from "../util";
 
 interface Faq {
     question: string;
@@ -13,10 +13,11 @@ const fetchFaq = makeCachedJsonFetch<Faq[]>(VENCORD_SITE + "/faq.json");
 defineCommand({
     name: "faq",
     aliases: ["f"],
+    description: "Get an answer from the [FAQ](<https://vencord.dev/faq>)",
+    usage: "[tag | query]",
     async execute(msg, query) {
         if (!msg.inCachedGuildChannel()) return;
-        if (!SUPPORT_ALLOWED_CHANNELS.includes(msg.channel.id))
-            return reply(msg, `This is not the <#${SUPPORT_CHANNEL_ID}> channel.`);
+        if (!SUPPORT_ALLOWED_CHANNELS.includes(msg.channel.id)) return;
 
         const faq = await fetchFaq();
 
@@ -42,7 +43,7 @@ defineCommand({
                             // temporarily replace newlines inside codeblocks with a placeholder, so the second replace
                             // doesn't remove them
                             .replace(/```.+?```/gs, m => m.replaceAll("\n", "%NEWLINE%"))
-                            .replace(/(?<!\n)\n(?!\n)/g, "")
+                            .replace(/(?<!\n)\n(?![\n\-*])/g, "")
                             .replaceAll("%NEWLINE%", "\n"),
                     color: 0xdd7878
                 }],

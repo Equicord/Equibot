@@ -7,7 +7,9 @@ import { codeblock, reply, silently } from "../util";
 
 defineCommand({
     name: "update",
+    // aliases: ["up"],
     description: "Update the bot",
+    usage: null,
     ownerOnly: true,
     async execute(msg) {
         try {
@@ -16,15 +18,14 @@ defineCommand({
                     content: "Already up to date"
                 });
 
-            execSync("pnpm build");
-
             await silently(reply(msg, {
                 content: "Updated!! Now restarting..."
             }));
 
             writeFileSync(UPDATE_CHANNEL_ID_FILE, msg.channel!.id);
 
-            execSync("pm2 restart vaius");
+            // just quit. systemd will restart the bot
+            process.exit(0);
         } catch (e) {
             console.error(e);
             reply(msg, {

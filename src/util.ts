@@ -1,7 +1,12 @@
 import { CreateMessageOptions, Message, User } from "oceanic.js";
-import { fetch } from "undici";
 
-const ZWSP = "\u200B";
+import { doFetch } from "./util/fetch";
+
+export const ZWSP = "\u200B";
+export const ID_REGEX = /^(?:<@!?)?(\d{17,20})>?$/;
+
+export const NOOP = () => { };
+export const swallow = NOOP;
 
 export function reply(msg: Message, opts: CreateMessageOptions | string): Promise<Message> {
     if (typeof opts === "string")
@@ -9,7 +14,7 @@ export function reply(msg: Message, opts: CreateMessageOptions | string): Promis
             content: opts
         };
 
-    return msg.channel!.createMessage({
+    return msg.client.rest.channels.createMessage(msg.channelID, {
         ...opts,
         messageReference: {
             messageID: msg.id,
@@ -20,11 +25,11 @@ export function reply(msg: Message, opts: CreateMessageOptions | string): Promis
 }
 
 export function sleep(ms: number) {
-    return new Promise(r => setTimeout(r, ms));
+    return new Promise<void>(r => setTimeout(r, ms));
 }
 
 const BACKTICKS = "```";
-export const codeblock = (s: string, lang = "js") => `${BACKTICKS}${lang}\n${s.replaceAll("`", "`" + ZWSP)}${BACKTICKS}`;
+export const codeblock = (s: string, lang = "") => `${BACKTICKS}${lang}\n${s.replaceAll("`", "`" + ZWSP)}${BACKTICKS}`;
 
 export async function sendManyLines(msg: Message, lines: string[]) {
     let s = "";
@@ -69,13 +74,19 @@ export function makeCachedJsonFetch<T>(url: string, msUntilStale = 60_000 * 5) {
 
     return async () => {
         if (Date.now() - cacheTimestamp > msUntilStale) {
-            const res = await fetch(url);
-            if (!res.ok)
-                throw new Error(`Failed to get ${url} - ${res.status}: ${res.statusText}`);
+            const res = await doFetch(url);
 
             cachedValue = await res.json();
             cacheTimestamp = Date.now();
         }
         return cachedValue as T;
     };
+}
+
+export function debounce<T extends Function>(func: T, delay = 300): T {
+    let timeout: NodeJS.Timeout;
+    return function (...args: any[]) {
+        clearTimeout(timeout);
+        timeout = setTimeout(() => { func(...args); }, delay);
+    } as any;
 }

@@ -19,12 +19,25 @@ interface Channels {
     currentChannel: string;
 }
 
+const DefaultCaptionsEnglish = {
+    category: "No Category",
+    destCaption: "you want to be here",
+    originCaption: "you are here"
+};
+
+const DefaultCaptionsGerman = {
+    category: "Keine Kategorie",
+    destCaption: "du solltest hier sein",
+    originCaption: "du bist hier"
+};
+
 defineCommand({
     name: "notsupport",
     aliases: ["ns", "nots"],
+    description: "Create a graphic guiding people to the correct channel (usually support)",
+    usage: "[destination channel] [destination caption] | [origin caption]",
+    guildOnly: true,
     async execute(msg, channelId, ...captionElements) {
-        if (!msg.inCachedGuildChannel()) return;
-
         let channel = msg.client.getChannel(SUPPORT_CHANNEL_ID) as AnyGuildChannelWithoutThreads;
         let caption = captionElements.join(" ");
         if (channelId) {
@@ -40,13 +53,15 @@ defineCommand({
 
         const [destCaption, currentCaption] = caption.split("|").map(s => s.trim());
 
+        const DefaultCaptions = msg.channelID === "1121201005456011366" ? DefaultCaptionsGerman : DefaultCaptionsEnglish;
+
         const image = await drawNotSupportImage({
-            currentCategory: msg.channel.parent?.name || "No Category",
+            currentCategory: msg.channel.parent?.name || DefaultCaptions.category,
             currentChannel: msg.channel.name,
-            destCategory: channel.parent?.name || "No Category",
+            destCategory: channel.parent?.name || DefaultCaptions.category,
             destChannel: channel.name,
-            destCaption: destCaption || "you want to be here",
-            currentCaption: currentCaption || "you are here"
+            destCaption: destCaption || DefaultCaptions.destCaption,
+            currentCaption: currentCaption || DefaultCaptions.originCaption
         });
 
         msg.channel.createMessage({
