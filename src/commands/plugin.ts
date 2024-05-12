@@ -46,7 +46,6 @@ defineCommand({
             const abilities = stripIndent`
                 ${match.required ? "`*️⃣` required" : ""}
                 ${match.enabledByDefault ? "`✅` enabled by default" : ""}
-                ${match.hasPatches ? "`🩹` has patches" : ""}
                 ${match.hasCommands ? "`💬` has chat commands" : ""}
             `.replace(/^\s*\n/gm, ""); // remove blanks
 
@@ -63,10 +62,7 @@ defineCommand({
                             {
                                 name: "Authors",
                                 value: match.authors
-                                    .map(a =>
-                                        // if they don't have an ID, don't mention them
-                                        a.id ? `<@${a.id}> ${a.name}` : a.name
-                                    )
+                                    .map(a => a.name)
                                     .join(", "),
                             },
                             {
@@ -81,8 +77,11 @@ defineCommand({
 
         // find plugins with similar names, in case of minor typos
         const similarPlugins = plugins
-            .map(p => ({ name: p.name, distance: leven(p.name.toLowerCase(), query.toLowerCase()) }))
-            .filter(p => p.distance <= 6)
+            .map(p => ({
+                name: p.name,
+                distance: leven(p.name.toLowerCase(), query.toLowerCase()),
+            }))
+            .filter(p => p.distance <= 3)
             .sort((a, b) => a.distance - b.distance);
 
         if (similarPlugins.length > 0) {
