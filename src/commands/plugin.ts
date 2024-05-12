@@ -52,7 +52,7 @@ defineCommand({
                 ${match.target === "desktop" ? "`🖥️` desktop only" : ""}
                 ${
                     match.target === "discordDesktop"
-                        ? "`🍦` vanilla desktop only"
+                        ? "`🍦` discord desktop only"
                         : ""
                 }
                 ${match.target === "web" ? "`🌐` web only" : ""}
