@@ -31,6 +31,8 @@ defineCommand({
     async execute(msg, _channelId, query) {
         if (!msg.inCachedGuildChannel()) return;
 
+        if (!query) return reply(msg, { content: "Gimme a plugin name silly" });
+
         const plugins = await fetchPlugins();
 
         const match = (() => {
@@ -41,19 +43,6 @@ defineCommand({
         })();
 
         if (match) {
-            let pluginInfo = stripIndent`
-            ## [${match.name}](<https://vencord.dev/plugins/${encodeURIComponent(match.name)}>)
-            ${match.description}
-            ### Authors
-            ${match.authors
-                .map(
-                    a =>
-                        // if they don't have an ID, don't mention them
-                        `- ${a.id ? `<@${a.id}> ${a.name}` : a.name}`
-                )
-                .join("\n")}
-            `;
-
             const abilities = stripIndent`
                 ${match.required ? "`*️⃣` required" : ""}
                 ${match.enabledByDefault ? "`✅` enabled by default" : ""}
@@ -61,16 +50,39 @@ defineCommand({
                 ${match.hasCommands ? "`💬` has chat commands" : ""}
             `.replace(/^\s*\n/gm, ""); // remove blanks
 
-            for (const section of [abilities])
-                if (section) pluginInfo += `\n${section}\n`;
-
-            return reply(msg, { content: pluginInfo });
+            return reply(msg, {
+                embeds: [
+                    {
+                        title: match.name,
+                        description: match.description,
+                        url: `https://vencord.dev/plugins/${encodeURIComponent(
+                            match.name
+                        )}`,
+                        color: 0xdd7878,
+                        fields: [
+                            {
+                                name: "Authors",
+                                value: match.authors
+                                    .map(a =>
+                                        // if they don't have an ID, don't mention them
+                                        a.id ? `<@${a.id}> ${a.name}` : a.name
+                                    )
+                                    .join(", "),
+                            },
+                            {
+                                name: "Abilities",
+                                value: abilities || "`❌` no special abilities",
+                            },
+                        ],
+                    },
+                ],
+            });
         }
 
         // find plugins with similar names, in case of minor typos
         const similarPlugins = plugins
             .map(p => ({ name: p.name, distance: leven(p.name, query) }))
-            .filter(p => p.distance < 4)
+            .filter(p => p.distance <= 6)
             .sort((a, b) => a.distance - b.distance);
 
         if (similarPlugins.length > 0) {
