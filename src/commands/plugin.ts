@@ -10,6 +10,8 @@ interface Plugin {
     description: string;
     authors: { name: string; id: string }[];
 
+    target?: "desktop" | "discordDesktop" | "web" | "dev";
+
     required: boolean;
     enabledByDefault: boolean;
 
@@ -47,6 +49,14 @@ defineCommand({
                 ${match.required ? "`*️⃣` required" : ""}
                 ${match.enabledByDefault ? "`✅` enabled by default" : ""}
                 ${match.hasCommands ? "`💬` has chat commands" : ""}
+                ${match.target === "desktop" ? "`🖥️` desktop only" : ""}
+                ${
+                    match.target === "discordDesktop"
+                        ? "`🍦` vanilla desktop only"
+                        : ""
+                }
+                ${match.target === "web" ? "`🌐` web only" : ""}
+                ${match.target === "dev" ? "`🧩` development build only" : ""}
             `.replace(/^\s*\n/gm, ""); // remove blanks
 
             return reply(msg, {
