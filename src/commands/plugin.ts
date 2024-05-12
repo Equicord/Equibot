@@ -42,7 +42,7 @@ defineCommand({
 
         if (match) {
             let pluginInfo = stripIndent`
-            ## [\`${match.name}\`](<https://vencord.dev/plugins/${encodeURIComponent(match.name)}>)
+            ## [${match.name}](<https://vencord.dev/plugins/${encodeURIComponent(match.name)}>)
             ${match.description}
             ### Authors
             ${match.authors
