@@ -50,10 +50,9 @@ defineCommand({
                 ${match.enabledByDefault ? "`✅` enabled by default" : ""}
                 ${match.hasCommands ? "`💬` has chat commands" : ""}
                 ${match.target === "desktop" ? "`🖥️` desktop only" : ""}
-                ${
-                    match.target === "discordDesktop"
-                        ? "`🍦` discord desktop only"
-                        : ""
+                ${match.target === "discordDesktop"
+                    ? "`🍦` discord desktop only"
+                    : ""
                 }
                 ${match.target === "web" ? "`🌐` web only" : ""}
                 ${match.target === "dev" ? "`🧩` development build only" : ""}
