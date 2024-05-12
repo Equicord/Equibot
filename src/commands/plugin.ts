@@ -81,7 +81,7 @@ defineCommand({
 
         // find plugins with similar names, in case of minor typos
         const similarPlugins = plugins
-            .map(p => ({ name: p.name, distance: leven(p.name, query) }))
+            .map(p => ({ name: p.name, distance: leven(p.name.toLowerCase(), query.toLowerCase()) }))
             .filter(p => p.distance <= 6)
             .sort((a, b) => a.distance - b.distance);
 
