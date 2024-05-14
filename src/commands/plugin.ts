@@ -23,6 +23,17 @@ const fetchPlugins = makeCachedJsonFetch<Plugin[]>(
     VENCORD_SITE + "/plugins.json"
 );
 
+const emojis = {
+    required: "<:_:1240029454701563925>",
+    enabledByDefault: "<:_:1240029457218015332>",
+    hasCommands: "<:_:1240029456157114460>",
+    desktop: "<:_:1240029460762464276>",
+    discordDesktop: "<:_:1240029458266591283>",
+    vesktop: "<:_:1240029451690184728>",
+    web: "<:_:1240029453665570887>",
+    dev: "<:_:1240029459449512029>",
+};
+
 defineCommand({
     name: "plugin",
     aliases: ["viewplugin", "p"],
@@ -46,16 +57,33 @@ defineCommand({
 
         if (match) {
             const abilities = stripIndent`
-                ${match.required ? "`*️⃣` required" : ""}
-                ${match.enabledByDefault ? "`✅` enabled by default" : ""}
-                ${match.hasCommands ? "`💬` has chat commands" : ""}
-                ${match.target === "desktop" ? "`🖥️` desktop only" : ""}
-                ${match.target === "discordDesktop"
-                    ? "`🍦` discord desktop only"
-                    : ""
+                ${match.required ? `${emojis.required} required` : ""}
+                ${
+                    match.enabledByDefault
+                        ? `${emojis.enabledByDefault} enabled by default`
+                        : ""
                 }
-                ${match.target === "web" ? "`🌐` web only" : ""}
-                ${match.target === "dev" ? "`🧩` development build only" : ""}
+                ${
+                    match.hasCommands
+                        ? `${emojis.hasCommands} has chat commands`
+                        : ""
+                }
+                ${
+                    match.target === "desktop"
+                        ? `${emojis.desktop} desktop only`
+                        : ""
+                }
+                ${
+                    match.target === "discordDesktop"
+                        ? `${emojis.discordDesktop} discord desktop only`
+                        : ""
+                }
+                ${match.target === "web" ? `${emojis.web} web only` : ""}
+                ${
+                    match.target === "dev"
+                        ? `${emojis.dev} development build only`
+                        : ""
+                }
             `.replace(/^\s*\n/gm, ""); // remove blanks
 
             return reply(msg, {
