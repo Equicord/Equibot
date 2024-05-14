@@ -58,31 +58,26 @@ defineCommand({
         if (match) {
             const abilities = stripIndent`
                 ${match.required ? `${emojis.required} required` : ""}
-                ${
-                    match.enabledByDefault
-                        ? `${emojis.enabledByDefault} enabled by default`
-                        : ""
+                ${match.enabledByDefault
+                    ? `${emojis.enabledByDefault} enabled by default`
+                    : ""
                 }
-                ${
-                    match.hasCommands
-                        ? `${emojis.hasCommands} has chat commands`
-                        : ""
+                ${match.hasCommands
+                    ? `${emojis.hasCommands} has chat commands`
+                    : ""
                 }
-                ${
-                    match.target === "desktop"
-                        ? `${emojis.desktop} desktop only`
-                        : ""
+                ${match.target === "desktop"
+                    ? `${emojis.desktop} desktop only`
+                    : ""
                 }
-                ${
-                    match.target === "discordDesktop"
-                        ? `${emojis.discordDesktop} discord desktop only`
-                        : ""
+                ${match.target === "discordDesktop"
+                    ? `${emojis.discordDesktop} discord desktop only`
+                    : ""
                 }
                 ${match.target === "web" ? `${emojis.web} web only` : ""}
-                ${
-                    match.target === "dev"
-                        ? `${emojis.dev} development build only`
-                        : ""
+                ${match.target === "dev"
+                    ? `${emojis.dev} development build only`
+                    : ""
                 }
             `.replace(/^\s*\n/gm, ""); // remove blanks
 
