@@ -56,7 +56,7 @@ defineCommand({
         })();
 
         if (match) {
-            const abilities = [
+            const traits = [
                 match.required && `${Emojis.Required} required`,
                 match.enabledByDefault && `${Emojis.EnabledByDefault} enabled by default`,
                 match.hasCommands && `${Emojis.HasCommands} has chat commands`,
@@ -64,7 +64,7 @@ defineCommand({
                 match.target === "discordDesktop" && `${Emojis.DiscordDesktop} discord desktop only`,
                 match.target === "web" && `${Emojis.Web} web only`,
                 match.target === "dev" && `${Emojis.Dev} development build only`
-            ].filter(Boolean).join("\n");
+            ].filter(isTruthy).join("\n");
 
             return reply(msg, {
                 embeds: [
@@ -82,9 +82,9 @@ defineCommand({
                                     .map(a => a.name)
                                     .join(", "),
                             },
-                            abilities && {
-                                name: "Abilities",
-                                value: abilities,
+                            traits && {
+                                name: "Traits",
+                                value: traits,
                             },
                         ].filter(isTruthy),
                     },
