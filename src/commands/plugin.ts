@@ -3,6 +3,7 @@ import leven from "leven";
 import { defineCommand } from "../Command";
 import { VENCORD_SITE } from "../constants";
 import { makeCachedJsonFetch, reply } from "../util";
+import { isTruthy } from "../util/guards";
 
 interface Plugin {
     name: string;
@@ -81,11 +82,11 @@ defineCommand({
                                     .map(a => a.name)
                                     .join(", "),
                             },
-                            {
+                            abilities && {
                                 name: "Abilities",
-                                value: abilities || "`❌` no special abilities",
+                                value: abilities,
                             },
-                        ],
+                        ].filter(isTruthy),
                     },
                 ],
             });
