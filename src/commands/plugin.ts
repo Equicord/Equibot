@@ -3,7 +3,6 @@ import leven from "leven";
 import { defineCommand } from "../Command";
 import { VENCORD_SITE } from "../constants";
 import { makeCachedJsonFetch, reply } from "../util";
-import { stripIndent } from "../util/text";
 
 interface Plugin {
     name: string;
@@ -23,15 +22,15 @@ const fetchPlugins = makeCachedJsonFetch<Plugin[]>(
     VENCORD_SITE + "/plugins.json"
 );
 
-const emojis = {
-    required: "<:_:1240029454701563925>",
-    enabledByDefault: "<:_:1240029457218015332>",
-    hasCommands: "<:_:1240029456157114460>",
-    desktop: "<:_:1240029460762464276>",
-    discordDesktop: "<:_:1240029458266591283>",
-    vesktop: "<:_:1240029451690184728>",
-    web: "<:_:1240029453665570887>",
-    dev: "<:_:1240029459449512029>",
+const Emojis = {
+    Required: "<:required:1240029454701563925>",
+    EnabledByDefault: "<:enabledByDefault:1240029457218015332>",
+    HasCommands: "<:hasCommands:1240029456157114460>",
+    Desktop: "<:desktop:1240029460762464276>",
+    DiscordDesktop: "<:discordDesktop:1240029458266591283>",
+    Vesktop: "<:vesktop1240029451690184728>",
+    Web: "<:web:1240029453665570887>",
+    Dev: "<:dev:1240029459449512029>",
 };
 
 defineCommand({
@@ -56,30 +55,15 @@ defineCommand({
         })();
 
         if (match) {
-            const abilities = stripIndent`
-                ${match.required ? `${emojis.required} required` : ""}
-                ${match.enabledByDefault
-                    ? `${emojis.enabledByDefault} enabled by default`
-                    : ""
-                }
-                ${match.hasCommands
-                    ? `${emojis.hasCommands} has chat commands`
-                    : ""
-                }
-                ${match.target === "desktop"
-                    ? `${emojis.desktop} desktop only`
-                    : ""
-                }
-                ${match.target === "discordDesktop"
-                    ? `${emojis.discordDesktop} discord desktop only`
-                    : ""
-                }
-                ${match.target === "web" ? `${emojis.web} web only` : ""}
-                ${match.target === "dev"
-                    ? `${emojis.dev} development build only`
-                    : ""
-                }
-            `.replace(/^\s*\n/gm, ""); // remove blanks
+            const abilities = [
+                match.required && `${Emojis.Required} required`,
+                match.enabledByDefault && `${Emojis.EnabledByDefault} enabled by default`,
+                match.hasCommands && `${Emojis.HasCommands} has chat commands`,
+                match.target === "desktop" && `${Emojis.Desktop} desktop only`,
+                match.target === "discordDesktop" && `${Emojis.DiscordDesktop} discord desktop only`,
+                match.target === "web" && `${Emojis.Web} web only`,
+                match.target === "dev" && `${Emojis.Dev} development build only`
+            ].filter(Boolean).join("\n");
 
             return reply(msg, {
                 embeds: [
