@@ -45,7 +45,8 @@ defineCommand({
         if (!msg.inCachedGuildChannel()) return;
 
         if (!query) return reply(msg, { content: "Gimme a plugin name silly" });
-
+        if (query.toLowerCase() == "shiggy") return reply(msg, { content: "https://cdn.discordapp.com/emojis/1024751291504791654.gif?size=48&quality=lossless&name=shiggy" });
+        
         const plugins = await fetchPlugins();
 
         const match = (() => {
