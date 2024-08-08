@@ -26,3 +26,7 @@ CREATE TABLE IF NOT EXISTS stickyRoles (
     id      TEXT NOT NULL PRIMARY KEY,
     roleIds TEXT NOT NULL              -- Comma separated list of role IDs. Sqlite doesn't support arrays.
 );
+
+CREATE TABLE IF NOT EXISTS signalHashes (
+    hash TEXT PRIMARY KEY NOT NULL
+);

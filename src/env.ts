@@ -28,7 +28,9 @@ const configSchema = object({
 
     MOD_MAIL_CHANNEL_ID: string(),
     MOD_MAIL_LOG_CHANNEL_ID: string(),
-    MOD_MAIL_BAN_ROLE_ID: string()
+    MOD_MAIL_BAN_ROLE_ID: string(),
+
+    ROBOT_9000_CHANNEL_ID: string()
 });
 
 const parsed = mustParse("Invalid environment variables", configSchema, process.env);
@@ -51,5 +53,7 @@ export const {
 
     MOD_MAIL_CHANNEL_ID,
     MOD_MAIL_LOG_CHANNEL_ID,
-    MOD_MAIL_BAN_ROLE_ID
+    MOD_MAIL_BAN_ROLE_ID,
+
+    ROBOT_9000_CHANNEL_ID
 } = parsed;

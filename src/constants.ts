@@ -42,6 +42,7 @@ export const Emoji = {
     Anger: "💢",
     TrashCan: "🗑️",
     Hammer: "🔨",
+    Sos: "🆘",
 
     DoubleLeft: "⏪",
     Left: "◀️",
