@@ -6,14 +6,14 @@ import { hourly } from "~/util/hourly";
 
 import { Vaius } from "../Client";
 
-const MaxAllowedHusksPerHour = 4;
+export const MaxAllowedHusksPerHour = 4;
 
-const HuskAbuserIds = new Set([
+export const HuskAbuserIds = new Set([
     "886685857560539176", // nino
     "259558259491340288", // sqakoi
 ]);
 
-const HusksUsedPerUser = new Map<string, number>();
+export const HusksUsedPerUser = new Map<string, number>();
 
 Vaius.on("messageReactionAdd", async (msg, reactor, reaction) => {
     if (!msg.guildID) return;
