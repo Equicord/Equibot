@@ -32,8 +32,23 @@ defineCommand({
     async execute(msg, userPtr) {
         const user = userPtr ? await resolveUser(userPtr).catch(() => null) : (msg.referencedMessage?? (() => { throw "who?" })()). author
         if (!user) return reply(msg, "the ghosts abuse husks")
-        if (antiHusk.HuskAbuserIds.has(user.id)) return reply(msg, "✅ **Done!** ${user.tag}'s Husk abuse is off the charts!")
+        if (antiHusk.HuskAbuserIds.has(user.id)) return reply(msg, "✅ **Done!** ${user.tag}'s husk abuse is off the charts!")
         antiHusk.HuskAbuserIds.add(user.id)
         return reply(msg, `✅ **Done**! Made ${user.tag} a husk abuser`)
+    }
+})
+
+defineCommand({
+    name: "huskrehabilitate",
+    description: "Mark a user as a husk abuser",
+    aliases: ["huskrehab", "hl"],
+    guildOnly: true,
+    usage: "[user]",
+    async execute(msg, userPtr) {
+        const user = userPtr ? await resolveUser(userPtr).catch(() => null) : (msg.referencedMessage?? (() => { throw "who?" })()). author
+        if (!user) return reply(msg, "the ghosts abuse husks")
+        if (!antiHusk.HuskAbuserIds.has(user.id)) return reply(msg, "✅ **Done!** ${user.tag} is completely husk-free!")
+        antiHusk.HuskAbuserIds.delete(user.id)
+        return reply(msg, `✅ **Done**! Made ${user.tag} a rehabilitated husk abuser`)
     }
 })
