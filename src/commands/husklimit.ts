@@ -8,7 +8,7 @@ defineCommand({
     description: "Get a user's husk quota",
     aliases: "hl",
     guildOnly: true,
-    usage: "<user>",
+    usage: "[user]",
     async execute(msg, userPtr) {
         const user = userPtr ? await resolveUser(userPtr).catch(() => null) : (msg.referencedMessage?? msg). author
         if (!user) return reply(msg, "bro fake")
