@@ -40,7 +40,7 @@ defineCommand({
 
 defineCommand({
     name: "huskrehabilitate",
-    description: "Mark a user as a husk abuser",
+    description: "Mark a user as no lonver a husk abuser",
     aliases: ["huskrehab", "hl"],
     guildOnly: true,
     usage: "[user]",
