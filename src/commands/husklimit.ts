@@ -31,10 +31,10 @@ defineCommand({
     usage: "[user]",
     async execute(msg, userPtr) {
         const user = userPtr ? await resolveUser(userPtr).catch(() => null) : (msg.referencedMessage?? (() => { throw "who?" })()). author
-        if (!user) return reply(msg, "the ghosts abuse husks")
-        if (antiHusk.HuskAbuserIds.has(user.id)) return reply(msg, "✅ **Done!** ${user.tag}'s husk abuse is off the charts!")
+        if (!user) return msg.react("🫥")
+        if (antiHusk.HuskAbuserIds.has(user.id)) return msg.react("😕")
         antiHusk.HuskAbuserIds.add(user.id)
-        return reply(msg, `✅ **Done**! Made ${user.tag} a husk abuser`)
+        return msg.react("✅")
     }
 })
 
@@ -46,9 +46,28 @@ defineCommand({
     usage: "[user]",
     async execute(msg, userPtr) {
         const user = userPtr ? await resolveUser(userPtr).catch(() => null) : (msg.referencedMessage?? (() => { throw "who?" })()). author
-        if (!user) return reply(msg, "the ghosts abuse husks")
-        if (!antiHusk.HuskAbuserIds.has(user.id)) return reply(msg, "✅ **Done!** ${user.tag} is completely husk-free!")
+        if (!user) return msg.react("🫥")
+        if (!antiHusk.HuskAbuserIds.has(user.id)) return msg.react("😕")
         antiHusk.HuskAbuserIds.delete(user.id)
-        return reply(msg, `✅ **Done**! Made ${user.tag} a rehabilitated husk abuser`)
+        return msg.react("✅")
+    }
+})
+
+defineCommand({
+    name: "huskcount",
+    description: "Correct number of remaining husks",
+    aliases: ["hc"],
+    guildOnly: true,
+    usage: "[user]",
+    async execute(msg, userPtr, count) {
+        const user = userPtr ? await resolveUser(userPtr).catch(() => null) : (msg.referencedMessage?? (() => { throw "who?" })()). author
+        if (!user) return msg.react("🫥")
+        if (!antiHusk.HuskAbuserIds.has(user.id)) return msg.react("😕")
+        try {
+            antiHusk.HusksUsedPerUser.set(user.id, eval(count) as number)
+            return msg.react("✅")
+        } catch (e) {
+            return msg.react("💥")
+        }
     }
 })
