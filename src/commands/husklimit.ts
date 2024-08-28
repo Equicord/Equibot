@@ -6,7 +6,7 @@ import * as antiHusk from "~/modules/antiHusk"
 defineCommand({
     name: "husklimit",
     description: "Get a user's husk quota",
-    aliases: ["hl"],
+    aliases: ["hl", "halflife"],
     guildOnly: true,
     usage: "[user]",
     async execute(msg, userPtr) {
