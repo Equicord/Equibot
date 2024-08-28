@@ -11,6 +11,7 @@ export const MaxAllowedHusksPerHour = 4;
 export const HuskAbuserIds = new Set([
     "886685857560539176", // nino
     "259558259491340288", // sqakoi
+    "334833943838720000", // stellaluna
 ]);
 
 export const HusksUsedPerUser = new Map<string, number>();
