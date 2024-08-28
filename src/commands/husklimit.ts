@@ -4,9 +4,9 @@ import { resolveUser } from "~/util/resolvers"
 import * as antiHusk from "~/modules/antiHusk"
 
 defineCommand({
-    name: "husklimit",
+    name: "huskquota",
     description: "Get a user's husk quota",
-    aliases: ["hl", "halflife"],
+    aliases: ["hq", "husklimit", "hl", "halflife"],
     guildOnly: true,
     usage: "[user]",
     async execute(msg, userPtr) {
