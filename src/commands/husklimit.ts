@@ -27,6 +27,7 @@ defineCommand({
     name: "huskabuser",
     description: "Mark a user as a husk abuser",
     aliases: ["ha"],
+    modOnly: true,
     guildOnly: true,
     usage: "[user]",
     async execute(msg, userPtr) {
@@ -42,6 +43,7 @@ defineCommand({
     name: "huskrehabilitate",
     description: "Mark a user as no longer a husk abuser",
     aliases: ["huskrehab", "hl"],
+    modOnly: true,
     guildOnly: true,
     usage: "[user]",
     async execute(msg, userPtr) {
