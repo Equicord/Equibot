@@ -28,7 +28,7 @@ defineCommand({
     name: "ban",
     description: "Ban one or more users with an optional reason and delete message days",
     usage: "[daysToDelete] <user> [user...] [reason]",
-    aliases: ["yeet", "🍌"],
+    aliases: ["lobotomize", "yeet", "🍌"],
     guildOnly: true,
     modOnly: true,
     async execute(msg, ...args) {
