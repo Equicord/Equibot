@@ -15,6 +15,8 @@ defineCommand({
 
         if (!user)
             return reply(msg, "User not found");
+        if (user.id === 287555395151593473)
+            return reply(msg, "🌈 mantikafasi is 100% gay");
 
         const percent = (seededRandom(user.tag + "hg") * 100).toFixed(2);
 
