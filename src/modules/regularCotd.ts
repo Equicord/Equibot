@@ -19,7 +19,7 @@ let tintImage: Image;
 
 export let currentCotd: { name: string; color: number; icon: Buffer } | null = null;
 
-async function drawIcon(color: string) {
+export async function drawBlobCatCozy(color: string) {
     const base = join(ASSET_DIR, "image-gen/regular-icon");
 
     if (!baseImage) {
@@ -52,7 +52,7 @@ export async function rerollCotd(inputHex?: string) {
     } = await fetchJson<ColorResponse>("https://www.thecolorapi.com/id?hex=" + randomHex);
 
     const color = parseInt(hex.slice(1), 16);
-    const icon = await drawIcon(hex);
+    const icon = await drawBlobCatCozy(hex);
 
     await Vaius.guilds.get(GUILD_ID)!.editRole(REGULAR_ROLE_ID, {
         name: "regular " + name.toLowerCase(),
