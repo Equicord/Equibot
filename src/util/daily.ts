@@ -6,7 +6,12 @@ const millisToNextFullDay = () => Millis.DAY - (Date.now() % Millis.DAY);
 
 function runDailyCallbacks() {
     for (const callback of dailyCallbacks) {
-        callback();
+        try {
+            callback();
+        } catch (err: any) {
+            // let the global uncaught rejection handler handle this
+            Promise.reject(new Error("Failed to run daily callback", { cause: err }));
+        }
     }
 
     setTimeout(runDailyCallbacks, millisToNextFullDay());
