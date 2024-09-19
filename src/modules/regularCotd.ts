@@ -17,6 +17,8 @@ interface ColorResponse {
 let baseImage: Image;
 let tintImage: Image;
 
+export let currentCotd: { name: string; color: number; icon: Buffer } | null = null;
+
 async function drawIcon(color: string) {
     const base = join(ASSET_DIR, "image-gen/regular-icon");
 
@@ -28,7 +30,7 @@ async function drawIcon(color: string) {
     const canvas = createCanvas(128, 128);
 
     const ctx = canvas.getContext("2d");
-    ctx.fillStyle = `#${color}`;
+    ctx.fillStyle = color;
     ctx.fillRect(0, 0, 128, 128);
 
     ctx.globalCompositeOperation = "destination-atop";
@@ -37,11 +39,11 @@ async function drawIcon(color: string) {
     ctx.globalCompositeOperation = "source-over";
     ctx.drawImage(baseImage, 0, 0, 128, 128);
 
-    return canvas.toDataURL();
+    return canvas.toBuffer("image/png");
 }
 
-export async function rerollCotd() {
-    const randomHex = ((1 << 24) * Math.random() | 0).toString(16);
+export async function rerollCotd(inputHex?: string) {
+    const randomHex = inputHex ?? ((1 << 24) * Math.random() | 0).toString(16);
     const {
         name: {
             value: name,
@@ -50,12 +52,15 @@ export async function rerollCotd() {
     } = await fetchJson<ColorResponse>("https://www.thecolorapi.com/id?hex=" + randomHex);
 
     const color = parseInt(hex.slice(1), 16);
+    const icon = await drawIcon(hex);
 
     await Vaius.guilds.get(GUILD_ID)!.editRole(REGULAR_ROLE_ID, {
         name: "regular " + name.toLowerCase(),
         color,
-        icon: await drawIcon(hex)
+        icon
     });
+
+    currentCotd = { name, color, icon };
 }
 
 daily(rerollCotd);
