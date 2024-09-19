@@ -9,8 +9,12 @@ defineCommand({
     guildOnly: true,
     modOnly: true,
     async execute(msg, hex?: string) {
-        if (hex && isNaN(parseInt(hex.replace(/^#/, "0x"), 16))) {
-            return reply(msg, "wtf is that hex");
+        if (hex) {
+            hex = hex.replace(/^#/, "0x");
+
+            if (isNaN(parseInt(hex, 16))) {
+                return reply(msg, "wtf is that hex");
+            }
         }
 
         await rerollCotd(hex);
