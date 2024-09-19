@@ -1,11 +1,11 @@
 import { createCanvas, Image, loadImage } from "canvas";
 import { join } from "path";
 
-import { Vaius } from "../Client";
-import { ASSET_DIR, REGULAR_ROLE_ID } from "../constants";
-import { GUILD_ID } from "../env";
-import { daily } from "../util/daily";
-import { fetchJson } from "../util/fetch";
+import { Vaius } from "~/Client";
+import { ASSET_DIR, REGULAR_ROLE_ID } from "~/constants";
+import { GUILD_ID } from "~/env";
+import { daily } from "~/util/daily";
+import { fetchJson } from "~/util/fetch";
 
 interface ColorResponse {
     name: {
