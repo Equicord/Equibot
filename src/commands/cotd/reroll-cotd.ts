@@ -9,7 +9,7 @@ defineCommand({
     guildOnly: true,
     modOnly: true,
     async execute(msg, hex?: string) {
-        if (hex && isNaN(parseInt(hex, 16))) {
+        if (hex && isNaN(parseInt(hex.replace(/^#/, "0x"), 16))) {
             return reply(msg, "wtf is that hex");
         }
 
