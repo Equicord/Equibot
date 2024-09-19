@@ -52,7 +52,7 @@ export async function rerollCotd() {
     const color = parseInt(hex.slice(1), 16);
 
     await Vaius.guilds.get(GUILD_ID)!.editRole(REGULAR_ROLE_ID, {
-        name: "regular " + name,
+        name: "regular " + name.toLowerCase(),
         color,
         icon: await drawIcon(hex)
     });
