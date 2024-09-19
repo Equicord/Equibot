@@ -4,7 +4,7 @@ import { reply } from "~/util";
 
 defineCommand({
     name: "reroll-cotd",
-    description: "Rerolls the current color of the day",
+    description: "Rerolls the current cozy of the day",
     usage: "[hex]",
     guildOnly: true,
     modOnly: true,

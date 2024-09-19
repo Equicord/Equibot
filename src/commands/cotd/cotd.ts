@@ -4,7 +4,7 @@ import { reply } from "~/util";
 
 defineCommand({
     name: "cotd",
-    description: "Shows the current color of the day",
+    description: "Shows the current cozy of the day",
     usage: null,
     async execute(msg, hex: string) {
         if (!currentCotd) {
@@ -13,7 +13,7 @@ defineCommand({
 
         return reply(msg, {
             embeds: [{
-                description: `The color of the day is ${currentCotd.name}!`,
+                description: `The cozy of the day is ${currentCotd.name}!`,
                 color: currentCotd.color,
                 image: {
                     url: "attachment://blobcatcozy.png"
