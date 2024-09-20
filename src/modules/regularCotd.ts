@@ -25,11 +25,8 @@ export async function drawBlobCatCozy(color: string, w = 256, h = 256) {
         tintImage = await loadImage(join(base, "tint-layer.png"));
     }
 
-    baseImage.width = w;
-    baseImage.height = h;
-
-    tintImage.width = w;
-    tintImage.height = h;
+    baseImage.width = tintImage.width = w;
+    baseImage.height = tintImage.height = h;
 
     const canvas = createCanvas(w, h);
 
