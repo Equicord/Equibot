@@ -17,7 +17,7 @@ interface ColorResponse {
 let baseImage: Image;
 let tintImage: Image;
 
-export async function drawBlobCatCozy(color: string) {
+export async function drawBlobCatCozy(color: string, w = 256, h = 256) {
     const base = join(ASSET_DIR, "image-gen/regular-icon");
 
     if (!baseImage) {
@@ -25,23 +25,29 @@ export async function drawBlobCatCozy(color: string) {
         tintImage = await loadImage(join(base, "tint-layer.png"));
     }
 
-    const canvas = createCanvas(128, 128);
+    baseImage.width = w;
+    baseImage.height = h;
+
+    tintImage.width = w;
+    tintImage.height = h;
+
+    const canvas = createCanvas(w, h);
 
     const ctx = canvas.getContext("2d");
     ctx.fillStyle = color;
-    ctx.fillRect(0, 0, 128, 128);
+    ctx.fillRect(0, 0, w, h);
 
     ctx.globalCompositeOperation = "destination-atop";
-    ctx.drawImage(tintImage, 0, 0, 128, 128);
+    ctx.drawImage(tintImage, 0, 0, w, h);
 
     ctx.globalCompositeOperation = "source-over";
-    ctx.drawImage(baseImage, 0, 0, 128, 128);
+    ctx.drawImage(baseImage, 0, 0, w, h);
 
     return canvas.toBuffer("image/png");
 }
 
 export async function rerollCotd(inputHex?: string) {
-    const randomHex = inputHex ?? ((1 << 24) * Math.random() | 0).toString(16);
+    const randomHex = inputHex ?? Math.floor(Math.random() * 0xffffff).toString(16);
     const {
         name: {
             value: name,
