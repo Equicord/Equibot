@@ -53,7 +53,7 @@ export async function rerollCotd(inputHex?: string) {
     const icon = await drawBlobCatCozy(hex);
 
     await Vaius.guilds.get(GUILD_ID)!.editRole(REGULAR_ROLE_ID, {
-        name: `regular (${name.toLowerCase() })`,
+        name: `regular (${name.toLowerCase()})`,
         color,
         icon,
         reason: "Rerolled cozy of the day"
