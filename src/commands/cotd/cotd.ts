@@ -1,5 +1,6 @@
 import { defineCommand } from "~/Commands";
-import { currentCotd } from "~/modules/regularCotd";
+import { REGULAR_ROLE_ID } from "~/constants";
+import { drawBlobCatCozy } from "~/modules/regularCotd";
 import { reply } from "~/util";
 
 defineCommand({
@@ -7,21 +8,21 @@ defineCommand({
     description: "Shows the current cozy of the day",
     usage: null,
     async execute(msg, hex: string) {
-        if (!currentCotd) {
-            return reply(msg, "uhhh idk");
-        }
+        const regularRole = msg.guild!.roles.get(REGULAR_ROLE_ID)!;
+
+        const [, colorName] = regularRole.name.match(/regular \((.+)\)/i)!;
 
         return reply(msg, {
             embeds: [{
-                description: `The cozy of the day is ${currentCotd.name}!`,
-                color: currentCotd.color,
+                description: `The cozy of the day is ${colorName}!`,
+                color: regularRole.color,
                 image: {
                     url: "attachment://blobcatcozy.png"
                 }
             }],
             files: [{
                 name: "blobcatcozy.png",
-                contents: currentCotd.icon
+                contents: await drawBlobCatCozy("#" + regularRole.color.toString(16)) // role icons are non-perma links
             }]
         });
     }

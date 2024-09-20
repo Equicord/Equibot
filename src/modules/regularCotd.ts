@@ -17,8 +17,6 @@ interface ColorResponse {
 let baseImage: Image;
 let tintImage: Image;
 
-export let currentCotd: { name: string; color: number; icon: Buffer } | null = null;
-
 export async function drawBlobCatCozy(color: string) {
     const base = join(ASSET_DIR, "image-gen/regular-icon");
 
@@ -55,12 +53,11 @@ export async function rerollCotd(inputHex?: string) {
     const icon = await drawBlobCatCozy(hex);
 
     await Vaius.guilds.get(GUILD_ID)!.editRole(REGULAR_ROLE_ID, {
-        name: "regular " + name.toLowerCase(),
+        name: `regular (${name.toLowerCase() })`,
         color,
-        icon
+        icon,
+        reason: "Rerolled cozy of the day"
     });
-
-    currentCotd = { name, color, icon };
 }
 
 daily(rerollCotd);
