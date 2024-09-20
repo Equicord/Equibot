@@ -1,4 +1,5 @@
-import { createCanvas, Image, loadImage } from "canvas";
+import { createCanvas, loadImage } from "canvas";
+import { readFile } from "fs/promises";
 import { join } from "path";
 
 import { Vaius } from "~/Client";
@@ -14,31 +15,21 @@ interface ColorResponse {
     }
 }
 
-let baseImage: Image;
-let tintImage: Image;
-
 export async function drawBlobCatCozy(color: string, w = 256, h = 256) {
     const base = join(ASSET_DIR, "image-gen/regular-icon");
+    const svgPath = join(base, "bcc.svg");
 
-    if (!baseImage) {
-        baseImage = await loadImage(join(base, "base-layer.png"));
-        tintImage = await loadImage(join(base, "tint-layer.png"));
-    }
+    const svgData = await readFile(svgPath, "utf-8");
+    const tintedSvg = svgData.replace(/#1a2b3c/g, color);
+    const svg = await loadImage(Buffer.from(tintedSvg));
 
-    baseImage.width = tintImage.width = w;
-    baseImage.height = tintImage.height = h;
+    svg.width = w;
+    svg.height = h;
 
     const canvas = createCanvas(w, h);
 
     const ctx = canvas.getContext("2d");
-    ctx.fillStyle = color;
-    ctx.fillRect(0, 0, w, h);
-
-    ctx.globalCompositeOperation = "destination-atop";
-    ctx.drawImage(tintImage, 0, 0, w, h);
-
-    ctx.globalCompositeOperation = "source-over";
-    ctx.drawImage(baseImage, 0, 0, w, h);
+    ctx.drawImage(svg, 0, 0, w, h);
 
     return canvas.toBuffer("image/png");
 }
