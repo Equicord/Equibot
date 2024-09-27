@@ -52,3 +52,5 @@ export const Emoji = {
 
     Claim: "🛄",
 } as const;
+
+export const R9K_MUTE_BASE = 4 /* seconds */;

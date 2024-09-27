@@ -42,6 +42,9 @@ const configSchema = object({
     GITHUB_CLIENT_SECRET: string(),
 
     CONTRIBUTOR_ROLE_ID: string(),
+
+    R9K_CHANNEL_ID: string(),
+    R9K_MUTE_ROLE_ID: string(),
 });
 
 const parsed = mustParse("Invalid environment variables", configSchema, process.env);
@@ -74,4 +77,7 @@ export const {
     GITHUB_CLIENT_SECRET,
 
     CONTRIBUTOR_ROLE_ID,
+
+    R9K_CHANNEL_ID,
+    R9K_MUTE_ROLE_ID,
 } = parsed;

@@ -33,3 +33,13 @@ CREATE TABLE IF NOT EXISTS linkedGitHubs (
 );
 
 CREATE INDEX IF NOT EXISTS discordIdIndex on linkedGitHubs (discordId);
+
+CREATE TABLE IF NOT EXISTS r9kSignals (
+    signal TEXT NOT NULL PRIMARY KEY
+);
+
+CREATE TABLE IF NOT EXISTS r9kPunishments (
+    id                       TEXT    NOT NULL PRIMARY KEY,
+    power                    INTEGER NOT NULL,             -- the current exponential power level of the next punishment
+    punishmentRevocationTime INTEGER
+);
