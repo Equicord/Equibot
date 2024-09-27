@@ -121,7 +121,7 @@ Vaius.on("ready", async () => {
         .execute();
 
     for (const punishment of punishments) {
-        if (punishment.punishmentRevocationTime >= Date.now()) {
+        if (punishment.punishmentRevocationTime < Date.now()) {
             await unmute(punishment.id);
         } else {
             setTimeout(() => {
