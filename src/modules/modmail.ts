@@ -217,7 +217,7 @@ handleComponentInteraction({
         if (!thread) return;
 
         const msg = await thread.createMessage({
-            content: `👋 ${interaction.user.mention}\n\n${prompt}. A moderator will be with you shortly!`,
+            content: `👋 ${interaction.user.mention}\n\n${prompt}. Someone with mod perms will be with you shortly!`,
             components: [{
                 type: ComponentTypes.ACTION_ROW,
                 components: [
@@ -260,7 +260,7 @@ handleComponentInteraction({
             allowedMentions: {
                 roles: [MOD_ROLE_ID],
             },
-            content: msg.content.replace("moderator", `<@&${MOD_ROLE_ID}>`)
+            content: msg.content.replace("mod perms", `<@&${MOD_ROLE_ID}>`)
         });
 
         await interaction.createFollowup({
