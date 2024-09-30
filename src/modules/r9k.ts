@@ -6,7 +6,7 @@ import { Message } from "oceanic.js";
 import { Vaius } from "~/Client";
 import { R9K_MUTE_BASE } from "~/constants";
 import { db } from "~/db";
-import { GUILD_ID, R9K_CHANNEL_ID, R9K_MUTE_ROLE_ID } from "~/env";
+import { GUILD_ID, MOD_ROLE_ID, R9K_CHANNEL_ID, R9K_MUTE_ROLE_ID } from "~/env";
 import { reply, silently } from "~/util";
 
 function formatTimeout(seconds: number) {
@@ -91,6 +91,7 @@ async function unmute(id: string) {
 Vaius.on("messageCreate", async msg => {
     if (msg.channelID !== R9K_CHANNEL_ID) return;
     if (msg.author.bot) return;
+    if (msg.member!.roles.includes(MOD_ROLE_ID)) return; // moderators are exempt from R9K for.. well.. moderation purposes
 
     if (await checkSignal(msg)) return;
 
@@ -121,7 +122,7 @@ Vaius.on("ready", async () => {
         .execute();
 
     for (const punishment of punishments) {
-        if (punishment.punishmentRevocationTime < Date.now()) {
+        if (punishment.punishmentRevocationTime <= Date.now()) {
             await unmute(punishment.id);
         } else {
             setTimeout(() => {
