@@ -23,10 +23,10 @@ defineCommand({
         let actor = "idk who";
 
         // ban command uses reason format like `actor: reason`
-        if (ban.reason?.split(" ")[0].endsWith(":")) {
-            const [a, ...rest] = ban.reason.split(" ");
-            reason = rest.join(" ");
-            actor = a;
+        const splitReason = ban.reason?.split(" ");
+        if (splitReason?.[0].endsWith(":")) {
+            actor = splitReason[0].slice(0, -1);
+            reason = splitReason.slice(1).join(" ");
         }
 
         reply(msg, `Banned by **${actor}**: ${codeblock(reason)}`);
