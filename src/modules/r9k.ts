@@ -93,7 +93,7 @@ Vaius.on("messageCreate", async msg => {
     if (msg.author.bot) return;
     if (msg.member!.roles.includes(MOD_ROLE_ID)) return; // moderators are exempt from R9K for.. well.. moderation purposes
 
-    if (await checkSignal(msg)) return;
+    if (!await checkSignal(msg)) return;
 
     const power = await getMutePower(msg.author.id);
 
