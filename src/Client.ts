@@ -3,7 +3,7 @@ import { AnyTextableChannel, Client, Message } from "oceanic.js";
 import { Commands } from "./Commands";
 import { Emoji, SUPPORT_ALLOWED_CHANNELS } from "./constants";
 import { BotState } from "./db/botState";
-import { DISCORD_TOKEN, MOD_ROLE_ID, PREFIX } from "./env";
+import { DISCORD_TOKEN, MOD_PERMS_ROLE_ID, PREFIX } from "./env";
 import { lobotomiseMaybe, moderateMessage } from "./modules/moderate";
 import { reply, silently } from "./util";
 
@@ -71,14 +71,17 @@ Vaius.on("messageCreate", async msg => {
     if (cmd.modOnly) {
         if (!msg.inCachedGuildChannel()) return;
 
-        if (!msg.member.roles.includes(MOD_ROLE_ID))
+        if (!msg.member.roles.includes(MOD_PERMS_ROLE_ID))
             return silently(msg.createReaction(Emoji.Anger));
     }
 
     const noRateLimit = SUPPORT_ALLOWED_CHANNELS.includes(msg.channel?.id!) || msg.member?.permissions.has("MANAGE_MESSAGES");
 
-    if (!noRateLimit && cmd.rateLimits.getOrAdd(msg.author.id))
+    if (!noRateLimit && cmd.rateLimits.getOrAdd(msg.author.id)) {
+        silently(msg.createReaction("🛑"));
+        silently(msg.createReaction("snailcat:1217891976108576839"));
         return;
+    }
 
     if (!msg.channel)
         await msg.client.rest.channels.get(msg.channelID);
