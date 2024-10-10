@@ -68,10 +68,6 @@ defineCommand({
             return reply(msg, "Can't get discord status at the moment :c");
         }
 
-        const desiredOutages = incidents.incidents.filter(
-            i => i.status !== "resolved"
-        );
-
         const desiredComponents = components.components.filter(c => [
             "API", 
             "Media Proxy",
@@ -85,18 +81,22 @@ defineCommand({
             c => `${statusEmoji(c.status)} **${c.name}**: ${toTitle(c.status)}`
         )
 
+
+        const desiredOutages = incidents.incidents.filter(
+            i => i.status !== "resolved"
+        );
+
         const systemOutages = desiredOutages.map(i => {
             const identifiedUpdate = i.incident_updates.find(update => update.status === "identified");
         
             return `**Incident:** ${impactEmoji(i.impact)} ${i.name}
 **Status:** 🔴 ${toTitle(i.status)}
 **Identified At:** ${identifiedUpdate ? `<t:${Math.floor(new Date(identifiedUpdate.created_at).getTime() / 1000)}:F>` : 'N/A'}
-**Last Updated:** <t:${Math.floor(new Date(i.incident_updates[0].updated_at).getTime() / 1000)}:F>
-            `;
+**Last Updated:** <t:${Math.floor(new Date(i.incident_updates[0].updated_at).getTime() / 1000)}:F>\n`;
         });
 
         const systemOutagesText = 
-        `\n\n__**Latest Outage Information**__\n ${systemOutages.join("\n")}`;
+        `\n\n__**Latest Outage Information**__\n${systemOutages.join("\n")}`;
 
         const description = systemStatuses.join("\n");
 
