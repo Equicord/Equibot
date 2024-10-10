@@ -32,13 +32,13 @@ const impactEmoji = (impact: string) => {
         default:
             return "⚫";
     }
-}
+};
 
 interface DiscordComponentsResponse {
-    components: Array<{ 
-        id: string; 
-        name: string; 
-        status: string; 
+    components: Array<{
+        id: string;
+        name: string;
+        status: string;
         description: string;
         position: number;
         created_at: string
@@ -46,10 +46,10 @@ interface DiscordComponentsResponse {
 }
 
 interface DiscordIncdentsResponse {
-    incidents: Array<{ 
-        id: string; 
-        name: string; 
-        status: string; 
+    incidents: Array<{
+        id: string;
+        name: string;
+        status: string;
         impact: string;
         incident_updates: Array<any>;
     }>;
@@ -69,7 +69,7 @@ defineCommand({
         }
 
         const desiredComponents = components.components.filter(c => [
-            "API", 
+            "API",
             "Media Proxy",
             "Push Notifications",
             "Search",
@@ -79,8 +79,7 @@ defineCommand({
 
         const systemStatuses = desiredComponents.map(
             c => `${statusEmoji(c.status)} **${c.name}**: ${toTitle(c.status)}`
-        )
-
+        );
 
         const desiredOutages = incidents.incidents.filter(
             i => i.status !== "resolved"
@@ -88,23 +87,23 @@ defineCommand({
 
         const systemOutages = desiredOutages.map(i => {
             const identifiedUpdate = i.incident_updates.find(update => update.status === "identified");
-        
+
             return `**Incident:** ${impactEmoji(i.impact)} ${i.name}
 **Status:** 🔴 ${toTitle(i.status)}
-**Identified At:** ${identifiedUpdate ? `<t:${Math.floor(new Date(identifiedUpdate.created_at).getTime() / 1000)}:F>` : 'N/A'}
+**Identified At:** ${identifiedUpdate ? `<t:${Math.floor(new Date(identifiedUpdate.created_at).getTime() / 1000)}:F>` : "N/A"}
 **Last Updated:** <t:${Math.floor(new Date(i.incident_updates[0].updated_at).getTime() / 1000)}:F>\n`;
         });
 
-        const systemOutagesText = 
-        `\n\n__**Latest Outage Information**__\n${systemOutages.join("\n")}`;
+        const systemOutagesText =
+            `\n\n__**Latest Outage Information**__\n${systemOutages.join("\n")}`;
 
         const description = systemStatuses.join("\n");
 
-        return reply(msg, { 
+        return reply(msg, {
             embeds: [{
                 title: "Discord Status",
                 color: 0x5865F2,
-                description: description+systemOutagesText,
+                description: description + systemOutagesText,
             }],
         });
     }
@@ -121,7 +120,7 @@ async function getDiscordStatusComponents(): Promise<DiscordComponentsResponse |
     }
 }
 
-async function getDiscordStatusIncidents(): Promise<DiscordIncdentsResponse | null>   {
+async function getDiscordStatusIncidents(): Promise<DiscordIncdentsResponse | null> {
     try {
         const response = await fetch("https://discordstatus.com/api/v2/incidents.json");
         const data: DiscordIncdentsResponse = await response.json() as DiscordIncdentsResponse;
@@ -131,5 +130,3 @@ async function getDiscordStatusIncidents(): Promise<DiscordIncdentsResponse | nu
         return null;
     }
 }
-
-
