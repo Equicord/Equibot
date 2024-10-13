@@ -3,8 +3,11 @@ import { Emoji } from "~/constants";
 import { reply } from "~/util";
 
 function parseArgs(args: string[]) {
+    let property = args[0]?.toLowerCase()
+    if (property === "description") property = "topic"
+
     return {
-        property: args[0]?.toLowerCase() as "name" | "topic" | undefined,
+        property: property as "name" | "topic" | undefined,
         value: args.slice(1).join(" ")
     }
 }
@@ -12,7 +15,7 @@ function parseArgs(args: string[]) {
 defineCommand({
     name: "edit-channel",
     description: "Edit a channels name or topic",
-    usage: "<name|topic> <value>",
+    usage: "<name|topic|description> <value>",
     aliases: ["channel-edit", "ce", "ec"],
     guildOnly: true,
     modOnly: true,
@@ -31,18 +34,8 @@ defineCommand({
             return reply(msg, `Remember to provide the new ${property}!`);
         }
 
-        let didError = false;
-        switch (property) {
-            case "name": 
-                msg.client.rest.channels.edit(msg.channelID, { name: value })
-                    .catch(e => { didError = true });
-                break;
-            case "topic": 
-                msg.client.rest.channels.edit(msg.channelID, { topic: value })
-                    .catch(e => { didError = true });
-                break;
-        }
-
-        msg.createReaction(didError ? Emoji.X : Emoji.CheckMark);
+        msg.channel.edit({ [property]: value })
+            .catch(() => { msg.createReaction(Emoji.X) })
+            .then(() => { msg.createReaction(Emoji.CheckMark) });
     }
 });
