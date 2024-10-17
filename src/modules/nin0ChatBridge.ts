@@ -38,13 +38,13 @@ function init() {
     socket.on("close", init);
 }
 
-function sendMessage(content: string, username = "venbot bridge") {
+function sendMessage(content: string, username = "venbot bridge", metadata = undefined) {
     if (socket?.readyState !== WebSocket.OPEN) {
         onOpenCallbacks.push(() => sendMessage(content, username));
         return;
     }
 
-    socket.send(JSON.stringify({ username, content, key: NINA_CHAT_KEY }));
+    socket.send(JSON.stringify({ username, content, key: NINA_CHAT_KEY, metadata }));
 }
 
 function onOpen() {
@@ -54,25 +54,34 @@ function onOpen() {
 
 function onMessage(rawData: RawData) {
     const data = JSON.parse(String(rawData));
-    if (!data.content) return;
-
     if (data.role === Role.Discord) return;
 
-    const content = String(data.content)
-        .replaceAll("[img]", "")
-        .replaceAll("[/img]", "")
-        .replaceAll("&lt;", "<")
-        .replaceAll("&gt;", ">")
-        .replaceAll("&quot;", "\"")
-        .replaceAll("&#039;", "'")
-        .replaceAll("&amp;", "&");
+    const content = data.metadata.discordContent ??
+        String(data.content)
+            .replaceAll("[img]", "")
+            .replaceAll("[/img]", "")
+            .replaceAll("&lt;", "<")
+            .replaceAll("&gt;", ">")
+            .replaceAll("&quot;", "\"")
+            .replaceAll("&#039;", "'")
+            .replaceAll("&amp;", "&");
+    if (!content) return
 
     let emoji = Emojis[data.role] || "";
     emoji &&= "`" + emoji + "` ";
 
-    Vaius.rest.channels.createMessage(NinaChatThreadId, {
-        content: `${emoji}<**${data.username}**>   ${content}`
-    });
+    const flags = {
+        content: `${emoji}<**${data.username}**>   ${content}`,
+    };
+    if (data.metadata?.discordReplyID) {
+        flags.messageReference = {
+            messageID: data.metadata?.discordReplyID,
+            channelID: NinaChatThreadId,
+            failIfNotExists: true,
+        };
+    }
+
+    Vaius.rest.channels.createMessage(NinaChatThreadId, flags);
 }
 
 Vaius.on("messageCreate", msg => {
@@ -87,7 +96,7 @@ Vaius.on("messageCreate", msg => {
         content += "\n" + msg.attachments.map(a => `[img]${a.proxyURL.replace("https://", "http://")}[/img]`).join("\n");
     }
 
-    sendMessage(content, msg.author.tag);
+    sendMessage(content, msg.author.tag, { discordContent: msg.content, discordAuthor: {...msg.author}, discordMessageID: msg.id });
 });
 
 init();
