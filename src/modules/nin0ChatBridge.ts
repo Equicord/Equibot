@@ -18,7 +18,7 @@ const NinaChatThreadId = "1295541912010362932";
 
 let socket: WebSocket;
 let closeCount = 0;
-const onOpenCallbacks = [] as Function[];
+const onOpenCallbacks = [] as (() => void)[];
 
 function init() {
     if (!NINA_CHAT_KEY) {
@@ -49,8 +49,7 @@ function sendMessage(content: string, username = "venbot bridge") {
 
 function onOpen() {
     console.log("Connected to nina chat");
-    onOpenCallbacks.forEach(cb => cb());
-    onOpenCallbacks.length = 0;
+    onOpenCallbacks.splice(0).forEach(cb => cb());
 }
 
 function onMessage(rawData: RawData) {
