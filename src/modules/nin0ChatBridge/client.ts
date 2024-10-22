@@ -5,7 +5,7 @@ import { NINA_CHAT_TOKEN } from "~/env";
 
 import { AnyIncomingPayload, AnyOutgoingPayload, IncomingMessage, IncomingOpcode, OutgoingOpcode, Role } from "./types";
 
-const NinaChatThreadId = "1298190801314123807";
+const NinaChatThreadId = "1295541912010362932";
 const bridgeFrom = "venbot";
 
 let socket: WebSocket;
