@@ -33,3 +33,12 @@ CREATE TABLE IF NOT EXISTS linkedGitHubs (
 );
 
 CREATE INDEX IF NOT EXISTS discordIdIndex on linkedGitHubs (discordId);
+
+CREATE TABLE IF NOT EXISTS gambles (
+    id TEXT NOT NULL,
+    result TEXT NOT NULL,
+    leftGamble TEXT NOT NULL,
+    middleGamble TEXT NOT NULL,
+    rightGamble TEXT NOT NULL,
+    gambleTime TEXT NOT NULL
+);
