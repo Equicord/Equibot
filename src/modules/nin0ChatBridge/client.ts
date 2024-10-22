@@ -5,7 +5,8 @@ import { NINA_CHAT_TOKEN } from "~/env";
 
 import { AnyIncomingPayload, AnyOutgoingPayload, IncomingMessage, IncomingOpcode, OutgoingOpcode, Role } from "./types";
 
-const NinaChatThreadId = "1295541912010362932";
+const NinaChatThreadId = "1298190801314123807";
+const bridgeFrom = "venbot";
 
 let socket: WebSocket;
 let closeCount = 0;
@@ -23,7 +24,7 @@ export function init() {
 
     socket?.close();
 
-    socket = new WebSocket("wss://chatws.nin0.dev/");
+    socket = new WebSocket("ws://100.122.203.1:8928/");
     socket.on("open", onOpen);
     socket.on("message", onMessage);
     socket.on("close", init);
@@ -38,11 +39,16 @@ function sendPayload(payload: AnyOutgoingPayload) {
     socket.send(JSON.stringify(payload));
 }
 
-function sendMessage(content: string, username = "venbot bridge") {
+function sendMessage(content: string, username = "venbot bridge", color: string | undefined = undefined) {
     sendPayload({
         op: OutgoingOpcode.Message,
         d: {
-            content: `${username} ~ ${content}`
+            content: `${content}`,
+            bridgeMetadata: {
+                username,
+                color,
+                from: bridgeFrom
+            }
         }
     });
 }
@@ -94,10 +100,11 @@ function getRoleEmoji(roles: Role) {
 }
 
 function mirrorToDiscord(payload: IncomingMessage) {
-    const { username, roles } = payload.d.userInfo;
+    const { username, roles, bridgeMetadata } = payload.d.userInfo;
 
     if (hasFlag(roles, Role.Bot) && !hasFlag(roles, Role.Admin)) return;
     if (hasFlag(roles, Role.System) && !hasFlag(roles, Role.Admin)) return;
+    if (bridgeMetadata?.from === bridgeFrom) return;
 
     const content = String(payload.d.content)
         .replaceAll("[img]", "")
@@ -120,7 +127,7 @@ function mirrorToDiscord(payload: IncomingMessage) {
     });
 }
 
-Vaius.on("messageCreate", msg => {
+Vaius.on("messageCreate", async msg => {
     if (msg.channelID !== NinaChatThreadId || msg.author.bot) return;
 
     let content = msg.content
@@ -132,5 +139,8 @@ Vaius.on("messageCreate", msg => {
         content += "\n" + msg.attachments.map(a => `[img]${a.proxyURL.replace("https://", "http://")}[/img]`).join("\n");
     }
 
-    sendMessage(content, msg.author.tag);
+    const member = await Vaius.rest.guilds.getMember(msg.guild!.id, msg.author.id);
+    const topRole = member.roles.length > 0 ? await Vaius.rest.guilds.getRole(msg.guild!.id, member.roles.at(-1)!) : undefined;
+
+    sendMessage(content, msg.author.tag, topRole ? topRole.color!.toString(16) : "0");
 });
