@@ -8,9 +8,9 @@ import { silently } from "~/util";
 // 15 is forum channel
 
 const channelIcon = {
-    0: "<:hash:1298088950941876317>",
-    15: "<:forums:1298097464980668487>",
-    default: "<:hash:1298088950941876317>",
+    0: "<:hash:1298166928438726666>",
+    15: "<:forums:1298166907601682464>",
+    default: "<:hash:1298166928438726666>",
 };
 
 const channelTopicText = {
