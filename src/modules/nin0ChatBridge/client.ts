@@ -96,8 +96,8 @@ function getRoleEmoji(roles: Role) {
 function mirrorToDiscord(payload: IncomingMessage) {
     const { username, roles } = payload.d.userInfo;
 
-    if (hasFlag(roles, Role.Bot)) return;
-    if (hasFlag(roles, Role.System)) return;
+    if (hasFlag(roles, Role.Bot) && !hasFlag(roles, Role.Admin)) return;
+    if (hasFlag(roles, Role.System) && !hasFlag(roles, Role.Admin)) return;
 
     const content = String(payload.d.content)
         .replaceAll("[img]", "")
