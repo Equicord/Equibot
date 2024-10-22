@@ -95,10 +95,14 @@ defineCommand({
             });
         }
 
+        const uniqueThreads = Array.from(new Set(threads.map(thread => thread.name)))
+            .map((name, index) => {
+                const thread = threads.find(t => t.name === name);
+                return `**${index + 1}.** ${thread?.name}`;
+            });
+
         return msg.channel.createMessage({
-            content: threads.map((thread, index) =>
-                `**${index + 1}.** ${thread.name}`
-            ).join("\n") || "I couldn't find any issues :d",
+            content: uniqueThreads.join("\n") || "I couldn't find any issues :d",
         });
     }
 });
