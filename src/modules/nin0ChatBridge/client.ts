@@ -24,7 +24,7 @@ export function init() {
 
     socket?.close();
 
-    socket = new WebSocket("ws://100.122.203.1:8928/");
+    socket = new WebSocket("wss://chatws.nin0.dev/");
     socket.on("open", onOpen);
     socket.on("message", onMessage);
     socket.on("close", init);
