@@ -2,6 +2,8 @@ import { RawData, WebSocket } from "ws";
 
 import { Vaius } from "~/Client";
 import { NINA_CHAT_TOKEN } from "~/env";
+import { getHighestRole } from "~/util";
+import { toHexColorString } from "~/util/colors";
 
 import { AnyIncomingPayload, AnyOutgoingPayload, IncomingMessage, IncomingOpcode, OutgoingOpcode, Role } from "./types";
 
@@ -39,11 +41,11 @@ function sendPayload(payload: AnyOutgoingPayload) {
     socket.send(JSON.stringify(payload));
 }
 
-function sendMessage(content: string, username = "venbot bridge", color: string | undefined = undefined) {
+function sendMessage(content: string, username = "venbot bridge", color?: string) {
     sendPayload({
         op: OutgoingOpcode.Message,
         d: {
-            content: `${content}`,
+            content: content,
             bridgeMetadata: {
                 username,
                 color,
@@ -128,7 +130,7 @@ function mirrorToDiscord(payload: IncomingMessage) {
 }
 
 Vaius.on("messageCreate", async msg => {
-    if (msg.channelID !== NinaChatThreadId || msg.author.bot) return;
+    if (msg.channelID !== NinaChatThreadId || msg.author.bot || !msg.member) return;
 
     let content = msg.content
         .replaceAll(/<@!?(\d+)>/g, (_, id) => `@${Vaius.users.get(id)?.tag ?? "unknown-user"}`)
@@ -139,8 +141,10 @@ Vaius.on("messageCreate", async msg => {
         content += "\n" + msg.attachments.map(a => `[img]${a.proxyURL.replace("https://", "http://")}[/img]`).join("\n");
     }
 
-    const member = await Vaius.rest.guilds.getMember(msg.guild!.id, msg.author.id);
-    const topRole = member.roles.length > 0 ? await Vaius.rest.guilds.getRole(msg.guild!.id, member.roles.at(-1)!) : undefined;
+    const highestRole = getHighestRole(msg.member);
+    const color = highestRole
+        ? toHexColorString(highestRole.color)
+        : "0";
 
-    sendMessage(content, msg.author.tag, topRole ? topRole.color!.toString(16) : "0");
+    sendMessage(content, msg.author.tag, color);
 });
