@@ -107,6 +107,10 @@ export async function moderateMessage(msg: Message) {
     if (!msg.inCachedGuildChannel()) return;
     if (!msg.channel.permissionsOf(Vaius.user.id).has("MANAGE_MESSAGES")) return;
 
+    // FIXME: make this less bad
+    if (msg.messageSnapshots?.length)
+        msg.content = msg.messageSnapshots[0].message?.content || msg.content;
+
     const warnText = ChannelRules[msg.channel.id]?.(msg);
     if (warnText !== void 0) {
         silently(msg.delete().then(() => !!warnText && sendDm(msg.author, { content: warnText })));
@@ -129,7 +133,11 @@ export async function moderateNick(member: Member) {
     const normalizedName = name
         .normalize("NFKC")
         .replace(HoistCharactersRegex, "")
-        .replaceAll("﷽", "") || member.username.replace(HoistCharactersRegex, "");
+        .replaceAll(/[\u3099-\u309C]/g, "") // renders as a space and can be used for "empty" usernames
+        .replaceAll("﷽", "")
+        .trim()
+        || member.username.replace(HoistCharactersRegex, "").trim()
+        || "lame username";
 
     if (name !== normalizedName)
         silently(member.edit({ nick: normalizedName }));

@@ -1,7 +1,7 @@
 import { ActivityTypes, AnyTextableGuildChannel, ApplicationCommandTypes, ButtonStyles, ChannelTypes, CommandInteraction, ComponentInteraction, ComponentTypes, InteractionTypes, MessageFlags, SelectMenuTypes, TextButton, TextChannel } from "oceanic.js";
 
 import { db } from "~/db";
-import { GUILD_ID, MOD_MAIL_BAN_ROLE_ID, MOD_MAIL_CHANNEL_ID, MOD_MAIL_LOG_CHANNEL_ID, MOD_ROLE_ID, SUPPORT_CHANNEL_ID } from "~/env";
+import { GUILD_ID, MOD_MAIL_BAN_ROLE_ID, MOD_MAIL_CHANNEL_ID, MOD_MAIL_LOG_CHANNEL_ID, MOD_PERMS_ROLE_ID, MOD_ROLE_ID, SUPPORT_CHANNEL_ID } from "~/env";
 import { handleCommandInteraction, handleComponentInteraction, handleInteraction } from "~/SlashCommands";
 import { sendDm } from "~/util";
 import { stripIndent } from "~/util/text";
@@ -26,22 +26,7 @@ const ChannelNameAndPrompt: Record<string, [string, string]> = {
     [Ids.REASON_MOD]: ["ticket", "Please describe your issue with as much detail as possible."],
     [Ids.REASON_PLUGIN]: ["plugin-submission", "Please post the full message + image(s) that you would like to post in the plugin channel."],
     [Ids.REASON_CSS]: ["css-submission", "Please post the full message + image(s) that you would like to post in the css snippet channel."],
-    [Ids.REASON_JS]: ["js-submission", "Please post the full message + image(s) that you would like to post in the js snippet channel."],
-    [Ids.REASON_DONOR]: [
-        "donor-rewards",
-        stripIndent`
-            Thank you so much! Please provide the following info:
-            - Receipt: [GitHub PDF](<https://github.com/account/billing/history>) or [Kofi Share Link](<https://ko-fi.com/manage/supportreceived?src=sidemenu>),
-            - How much did you donate?
-            - What perks do you want?
-            - For each badge: provide the image / gif and the short name / text you want associated with it
-
-            Badge Rules:
-            - No NSFW
-            - No official Discord badges (staff, partner, early supported, etc.)
-            - For it to look good, the badge must be square (and fit in a circle) and not have too much detail. try adding it as an emoji on discord to see how it will look! <https://ezgif.com/crop> is an amazing crop tool
-        `
-    ]
+    [Ids.REASON_JS]: ["js-submission", "Please post the full message + image(s) that you would like to post in the js snippet channel."]
 };
 
 const COMMAND_NAME = PROD ? "modmail" : "devmodmail";
@@ -174,9 +159,17 @@ handleComponentInteraction({
     guildOnly: true,
     async handle(interaction: ComponentInteraction<SelectMenuTypes, AnyTextableGuildChannel>) {
         const reason = interaction.data.values.getStrings()[0];
+
         if (reason.startsWith(Ids.REASON_MONKEY)) {
             return await interaction.createMessage({
                 content: `This form is NOT FOR VENCORD SUPPORT OR TESTING. To get Vencord support, use <#${SUPPORT_CHANNEL_ID}>`,
+                flags: MessageFlags.EPHEMERAL
+            });
+        }
+
+        if (reason === Ids.REASON_DONOR) {
+            return await interaction.createMessage({
+                content: "Thanks a lot for donating! Please private message <@343383572805058560> to redeem your perks! Make sure you have your DMs open or it won't work.",
                 flags: MessageFlags.EPHEMERAL
             });
         }
@@ -292,7 +285,7 @@ handleInteraction({
 
         const isBan = interaction.data.customID.startsWith("modmail:close-ban:");
 
-        const isModAction = interaction.member.roles.includes(MOD_ROLE_ID);
+        const isModAction = interaction.member.roles.includes(MOD_PERMS_ROLE_ID);
 
         if (isBan && !isModAction) return;
 
@@ -348,7 +341,7 @@ handleInteraction({
     guildOnly: true,
     isMatch: i => i.data.customID.startsWith("modmail:claim-ticket:"),
     async handle(interaction) {
-        const isModAction = interaction.member.roles.includes(MOD_ROLE_ID);
+        const isModAction = interaction.member.roles.includes(MOD_PERMS_ROLE_ID);
 
         if (!isModAction) return;
 
