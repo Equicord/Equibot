@@ -44,7 +44,7 @@ function buildURL(guildID: string, messageID: string): string {
 export function buildIssueEmbed(issue: Issue, invoker: User, guildID: string): EmbedOptions {
     return {
         title: issue.name,
-        color: 0xdd7878,
+        color: 0xfc5858,
         description: issue.content,
         url: buildURL(guildID, issue.contentId),
         footer: { text: `Auto-response invoked by ${invoker.tag}` },
