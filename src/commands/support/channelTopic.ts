@@ -30,7 +30,7 @@ defineCommand({
         let caption = captionElements.join(" ");
 
         if (channelId) {
-            const customChannel = channelId ? msg.guild.channels.get(channelId.match(/\d+/)?.[0] || "") : null;
+            const customChannel = msg.guild.channels.get(channelId.match(/\d+/)?.[0] || "");
             if (customChannel) {
                 channel = customChannel;
             } else {
