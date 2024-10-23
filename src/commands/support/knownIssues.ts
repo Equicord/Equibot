@@ -1,4 +1,4 @@
-import { AnyTextableGuildChannel, Collection, CommandInteraction, EmbedOptions, ForumChannel, Message, PublicThreadChannel, User } from "oceanic.js";
+import { AnyTextableChannel, AnyTextableGuildChannel, ChannelTypes, CommandInteraction, ComponentInteraction, EmbedOptions, ForumChannel, Message, PublicThreadChannel, SelectMenuTypes, User } from "oceanic.js";
 
 import { defineCommand } from "~/Commands";
 import { KNOWN_ISSUES_CHANNEL_ID } from "~/env";
@@ -11,23 +11,22 @@ export interface Issue {
 }
 
 export async function findThreads(
-    msgOrInteraction: Message<AnyTextableGuildChannel> | CommandInteraction
-): Promise<Collection<string, PublicThreadChannel> | undefined> {
+    msgOrInteraction: Message<AnyTextableGuildChannel> | CommandInteraction | ComponentInteraction<SelectMenuTypes, AnyTextableChannel>
+): Promise<PublicThreadChannel[]> {
     const guild = msgOrInteraction.guild;
     const forumChannel = guild?.channels.get(KNOWN_ISSUES_CHANNEL_ID) as ForumChannel | undefined;
-    if (!forumChannel || forumChannel.type !== 15) return undefined;
+    if (!forumChannel || forumChannel.type !== ChannelTypes.GUILD_FORUM) return [];
 
-    const activeThreads = forumChannel.threads;
+    const activeThreads = Array.from(forumChannel.threads.values());
     const archivedThreads = await forumChannel.getPublicArchivedThreads();
 
-    archivedThreads.threads.forEach((thread, key) => activeThreads.set(key.toString(), thread));
-    return activeThreads;
+    return [...activeThreads, ...archivedThreads.threads.values()];
 }
 
-export async function buildIssueStruct(match: any): Promise<Issue> {
+export async function buildIssueStruct(match: PublicThreadChannel): Promise<Issue> {
     const firstMessage = await match.getMessage(match.id);
-    const messageContents = firstMessage ? firstMessage.content : "";
-    const messageID = firstMessage ? firstMessage.id : "";
+    const messageContents = firstMessage?.content ?? "";
+    const messageID = firstMessage.id ?? "";
 
     return {
         name: match.name,

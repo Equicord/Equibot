@@ -1,4 +1,4 @@
-import { AnyGuildChannelWithoutThreads } from "oceanic.js";
+import { AnyGuildChannelWithoutThreads, ChannelTypes } from "oceanic.js";
 
 import { defineCommand } from "~/Commands";
 import { Emoji } from "~/constants";
@@ -8,14 +8,14 @@ import { silently } from "~/util";
 // 15 is forum channel
 
 const channelIcon = {
-    0: "<:hash:1298166928438726666>",
-    15: "<:forums:1298166907601682464>",
+    [ChannelTypes.GUILD_TEXT]: "<:hash:1298166928438726666>",
+    [ChannelTypes.GUILD_FORUM]: "<:forums:1298166907601682464>",
     default: "<:hash:1298166928438726666>",
 };
 
 const channelTopicText = {
-    0: "Topic for",
-    15: "Guidelines for",
+    [ChannelTypes.GUILD_TEXT]: "Topic for",
+    [ChannelTypes.GUILD_FORUM]: "Guidelines for",
     default: "Topic for",
 };
 
@@ -30,7 +30,7 @@ defineCommand({
         let caption = captionElements.join(" ");
 
         if (channelId) {
-            const customChannel = msg.guild.channels.get(channelId.match(/\d+/)?.[0] || "");
+            const customChannel = channelId ? msg.guild.channels.get(channelId.match(/\d+/)?.[0] || "") : null;
             if (customChannel) {
                 channel = customChannel;
             } else {
@@ -40,7 +40,7 @@ defineCommand({
 
         if (!channel || !channel.name) return;
 
-        const [cChannelName, cTopicName] = caption.split("|").map(s => s.trim());
+        const [customChannelName, customTopicName] = caption.split("|").map(s => s.trim());
 
         const icon = channelIcon[channel.type];
         const topicText = channelTopicText[channel.type];
@@ -50,11 +50,11 @@ defineCommand({
         let content = "";
         let footer = "";
 
-        if (cChannelName || cTopicName) {
-            const icon = channelIcon[0];
-            channelName = `${icon}  ${cChannelName}`;
-            channelTopic = cTopicName;
-        } else if (channel.type === 0 || channel.type === 15) {
+        if (customChannelName || customTopicName) {
+            const icon = channelIcon[ChannelTypes.GUILD_TEXT];
+            channelName = `${icon}  ${customChannelName}`;
+            channelTopic = customTopicName;
+        } else if ([ChannelTypes.GUILD_TEXT, ChannelTypes.GUILD_FORUM].includes(channel.type)) {
             if ("topic" in channel && !channel.topic) {
                 return msg.createReaction(Emoji.Anger);
             } else if ("topic" in channel) {
@@ -62,6 +62,8 @@ defineCommand({
                 channelName = `${icon}  ${channel.name}`;
                 channelTopic = channel.topic ?? "";
             }
+        } else {
+            return msg.createReaction(Emoji.Anger);
         }
 
         const isReply = !!msg.referencedMessage;

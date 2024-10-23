@@ -82,18 +82,15 @@ handleCommandInteraction({
     async handle(interaction) {
         const [_, issues] = await Promise.all([interaction.defer(MessageFlags.EPHEMERAL), findThreads(interaction)]);
 
-        if (!issues || issues.size === 0) {
+        if (!issues?.length) {
             await interaction.createFollowup({ content: "No issues found.", flags: MessageFlags.EPHEMERAL });
             return;
         }
 
-        const options = Array.from(new Set(issues.map(i => i.name)))
-            .map(name =>
-                ({
-                    value: name,
-                    label: name
-                })
-            );
+        const options = Array.from(new Set(issues.map(i => i.name)), name => ({
+            value: name,
+            label: name
+        }));
 
         await interaction.createFollowup({
             flags: MessageFlags.EPHEMERAL,
@@ -152,8 +149,11 @@ handleInteraction({
                     });
                     break;
                 case Commands.Issue:
-                    const threads = await findThreads(interaction as unknown as CommandInteraction);
-                    if (!threads) throw new Error("No threads found");
+                    const threads = await findThreads(interaction);
+                    if (!threads) {
+                        await interaction.createFollowup({ content: "I can't find any posts :d", flags: MessageFlags.EPHEMERAL });
+                        return;
+                    }
 
                     const issue = threads.find(t => t.name === choice);
 
