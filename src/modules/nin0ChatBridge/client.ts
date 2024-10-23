@@ -3,7 +3,6 @@ import { RawData, WebSocket } from "ws";
 import { Vaius } from "~/Client";
 import { NINA_CHAT_TOKEN } from "~/env";
 import { getHighestRole } from "~/util";
-import { toHexColorString } from "~/util/colors";
 
 import { AnyIncomingPayload, AnyOutgoingPayload, IncomingMessage, IncomingOpcode, OutgoingOpcode, Role } from "./types";
 
@@ -139,9 +138,9 @@ Vaius.on("messageCreate", async msg => {
         content += "\n" + msg.attachments.map(a => `![${a.description || a.filename}](${a.proxyURL})`).join("\n");
     }
 
-    const highestRole = getHighestRole(msg.member);
+    const highestRole = getHighestRole(msg.member, r => r.color !== 0);
     const color = highestRole
-        ? toHexColorString(highestRole.color)
+        ? highestRole.color.toString(16).padStart(6, "0")
         : "0";
 
     sendMessage(content, msg.author.tag, color);
