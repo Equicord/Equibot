@@ -4,19 +4,10 @@ import { defineCommand } from "~/Commands";
 import { Emoji } from "~/constants";
 import { silently } from "~/util";
 
-// 0 is text channel
-// 15 is forum channel
-
-const channelIcon = {
-    [ChannelTypes.GUILD_TEXT]: "<:hash:1298166928438726666>",
-    [ChannelTypes.GUILD_FORUM]: "<:forums:1298166907601682464>",
-    default: "<:hash:1298166928438726666>",
-};
-
-const channelTopicText = {
-    [ChannelTypes.GUILD_TEXT]: "Topic for",
-    [ChannelTypes.GUILD_FORUM]: "Guidelines for",
-    default: "Topic for",
+const channelTextAndEmoji = {
+    [ChannelTypes.GUILD_TEXT]: ["Topic for", "<:hash:1298166928438726666>"],
+    [ChannelTypes.GUILD_FORUM]: ["Guidelines for", "<:forums:1298166907601682464>"],
+    default: ["Topic for", "<:hash:1298166928438726666>" ],
 };
 
 defineCommand({
@@ -42,8 +33,7 @@ defineCommand({
 
         const [customChannelName, customTopicName] = caption.split("|").map(s => s.trim());
 
-        const icon = channelIcon[channel.type];
-        const topicText = channelTopicText[channel.type];
+        const [topicText, icon] = channelTextAndEmoji[channel.type] ?? channelTextAndEmoji.default;
 
         let channelName = "";
         let channelTopic = "";
@@ -51,7 +41,6 @@ defineCommand({
         let footer = "";
 
         if (customChannelName || customTopicName) {
-            const icon = channelIcon[ChannelTypes.GUILD_TEXT];
             channelName = `${icon}  ${customChannelName}`;
             channelTopic = customTopicName;
         } else if ([ChannelTypes.GUILD_TEXT, ChannelTypes.GUILD_FORUM].includes(channel.type)) {
