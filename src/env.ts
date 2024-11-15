@@ -1,5 +1,5 @@
 import dotenv from "dotenv";
-import { number, object, optional, picklist, pipe, string, transform } from "valibot";
+import { array, minLength, number, object, optional, picklist, pipe, string, transform } from "valibot";
 
 import { mustParse } from "./util/validation";
 
@@ -8,7 +8,12 @@ if (error)
     throw error;
 
 const configSchema = object({
-    PREFIX: string(),
+    PREFIXES: pipe(
+        string(),
+        transform(s => s.split(/ +/).filter(Boolean)),
+        array(string()),
+        minLength(1)
+    ),
     DISCORD_TOKEN: string(),
     DATABASE_URL: string(),
 
@@ -51,7 +56,7 @@ const configSchema = object({
 const parsed = mustParse("Invalid environment variables", configSchema, process.env);
 
 export const {
-    PREFIX,
+    PREFIXES,
     DISCORD_TOKEN,
     DATABASE_URL,
     NODE_ENV,
