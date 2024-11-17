@@ -55,7 +55,7 @@ defineCommand({
 
         await Promise.all([
             ...members.map(async member => {
-                if (getHighestRolePosition(member) >= authorHighestRolePosition) {
+                if (getHighestRolePosition(member) >= authorHighestRolePosition && member.id !== "558481110330507294" /* rosie */) {
                     fails.push(`Failed to ban **${member.tag}** (${member.mention}): You can't ban that person!`);
                     return;
                 }
