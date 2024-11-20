@@ -29,7 +29,8 @@ defineCommand({
 
         const [topicText, icon] = ChannelTextAndEmoji[channel.type as keyof typeof ChannelTextAndEmoji] ?? ChannelTextAndEmoji.default;
 
-        if (!("topic" in channel) || !channel.topic)
+        const topic = ("topic" in channel && channel.topic) || ("status" in channel && channel.status);
+        if (!topic)
             return reply("This channel has no topic");
 
         let footer = "";
@@ -45,7 +46,7 @@ defineCommand({
             embeds: [{
                 title: `${icon}  ${channel.name}`,
                 color: 0x2b2d31,
-                description: channel.topic ?? "",
+                description: topic,
                 footer: { text: footer },
             }],
             messageReference: { messageID: msg.referencedMessage?.id ?? msg.id },
