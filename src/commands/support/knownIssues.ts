@@ -1,5 +1,6 @@
-import { AnyTextableChannel, AnyTextableGuildChannel, ChannelTypes, CommandInteraction, ComponentInteraction, EmbedOptions, ForumChannel, Message, PublicThreadChannel, SelectMenuTypes, User } from "oceanic.js";
+import { ChannelTypes, EmbedOptions, PublicThreadChannel, User } from "oceanic.js";
 
+import { Vaius } from "~/Client";
 import { defineCommand } from "~/Commands";
 import { KNOWN_ISSUES_CHANNEL_ID } from "~/env";
 import { silently } from "~/util";
@@ -10,42 +11,32 @@ export interface Issue {
     contentId: string;
 }
 
-export async function findThreads(
-    msgOrInteraction: Message<AnyTextableGuildChannel> | CommandInteraction | ComponentInteraction<SelectMenuTypes, AnyTextableChannel>
-): Promise<PublicThreadChannel[]> {
-    const { guild } = msgOrInteraction;
-    const forumChannel = guild?.channels.get(KNOWN_ISSUES_CHANNEL_ID) as ForumChannel | undefined;
-    if (!forumChannel || forumChannel.type !== ChannelTypes.GUILD_FORUM) return [];
+export async function findThreads(): Promise<PublicThreadChannel[]> {
+    const forumChannel = Vaius.getChannel(KNOWN_ISSUES_CHANNEL_ID);
 
-    const activeThreads = Array.from(forumChannel.threads.values());
+    if (forumChannel?.type !== ChannelTypes.GUILD_FORUM) return [];
+
+    const threads = new Set(forumChannel.threads.values());
+
     const archivedThreads = await forumChannel.getPublicArchivedThreads();
+    archivedThreads.threads.forEach(thread => threads.add(thread));
 
-    return [...activeThreads, ...archivedThreads.threads.values()];
+    return [...threads];
 }
 
-export async function buildIssueStruct(match: PublicThreadChannel): Promise<Issue> {
-    const firstMessage = await match.getMessage(match.id);
-    const messageContents = firstMessage?.content ?? "";
-    const messageID = firstMessage.id ?? "";
+
+function buildURL(guildId: string, messageId: string): string {
+    return messageId && `https://discord.com/channels/${guildId}/${messageId}`;
+}
+
+export async function buildIssueEmbed(thread: PublicThreadChannel, invoker: User, guildID: string): Promise<EmbedOptions> {
+    const firstMessage = await thread.getMessage(thread.id);
 
     return {
-        name: match.name,
-        content: messageContents,
-        contentId: messageID,
-    };
-}
-
-function buildURL(guildID: string, messageID: string): string {
-    if (!messageID) { return ""; }
-    return `https://discord.com/channels/${guildID}/${messageID}`;
-}
-
-export function buildIssueEmbed(issue: Issue, invoker: User, guildID: string): EmbedOptions {
-    return {
-        title: issue.name,
+        title: thread.name,
         color: 0xfc5858,
-        description: issue.content,
-        url: buildURL(guildID, issue.contentId),
+        description: firstMessage.content,
+        url: buildURL(guildID, firstMessage.id),
         footer: { text: `Auto-response invoked by ${invoker.tag}` },
     };
 }
@@ -57,11 +48,10 @@ defineCommand({
     guildOnly: true,
     usage: "[tag | query]",
     async execute({ msg, createMessage, reply }, query) {
-        const threads = await findThreads(msg);
+        const threads = await findThreads();
 
-        if (!threads) {
+        if (!threads)
             return reply("that ain't a forum channel ⁉️");
-        }
 
         const match = (() => {
             if (!query) return;
@@ -70,9 +60,7 @@ defineCommand({
             if (!isNaN(idx)) return threads[idx - 1];
 
             query = query.toLowerCase();
-            return threads?.find(t =>
-                t.name.toLowerCase().includes(query)
-            );
+            return threads.find(t => t.name.toLowerCase().includes(query));
         })();
 
         if (match) {
@@ -83,8 +71,8 @@ defineCommand({
                 messageReference: { messageID: msg.referencedMessage?.id ?? msg.id },
                 allowedMentions: { repliedUser: isReply },
                 embeds: [
-                    buildIssueEmbed(
-                        await buildIssueStruct(match),
+                    await buildIssueEmbed(
+                        match,
                         msg.author,
                         msg.guild.id
                     )
@@ -92,12 +80,10 @@ defineCommand({
             });
         }
 
-        const uniqueThreads = Array.from(new Set(threads.map(thread => thread.name)))
-            .map((name, index) => {
-                const thread = threads.find(t => t.name === name);
-                return `**${index + 1}.** ${thread?.name}`;
-            });
+        const response = threads
+            .map(({ name }, index) => `**${index + 1}.** ${name}`)
+            .join("\n");
 
-        return reply(uniqueThreads.join("\n") || "I couldn't find any issues :d");
+        return reply(response || "I couldn't find any issues :d");
     }
 });

@@ -1,11 +1,11 @@
-import { AnyTextableChannel, ApplicationCommandTypes, CommandInteraction, ComponentInteraction, ComponentTypes, InteractionTypes, MessageFlags, SelectMenuTypes } from "oceanic.js";
+import { AnyTextableChannel, ApplicationCommandTypes, ComponentInteraction, ComponentTypes, InteractionTypes, MessageFlags, SelectMenuTypes } from "oceanic.js";
 
 import { Vaius } from "~/Client";
 import { GUILD_ID } from "~/env";
 import { handleCommandInteraction, handleInteraction } from "~/SlashCommands";
 
 import { buildFaqEmbed, fetchFaq } from "./faq";
-import { buildIssueEmbed, buildIssueStruct, findThreads } from "./knownIssues";
+import { buildIssueEmbed, findThreads } from "./knownIssues";
 import { SupportInstructions, SupportTagList } from "./support";
 
 const enum Commands {
@@ -80,14 +80,13 @@ handleCommandInteraction({
 handleCommandInteraction({
     name: Commands.Issue,
     async handle(interaction) {
-        const [_, issues] = await Promise.all([interaction.defer(MessageFlags.EPHEMERAL), findThreads(interaction)]);
+        const [_, issues] = await Promise.all([interaction.defer(MessageFlags.EPHEMERAL), findThreads()]);
 
         if (!issues?.length) {
-            await interaction.createFollowup({ content: "No issues found.", flags: MessageFlags.EPHEMERAL });
-            return;
+            return interaction.createFollowup({ content: "No issues found.", flags: MessageFlags.EPHEMERAL });
         }
 
-        const options = Array.from(new Set(issues.map(i => i.name)), name => ({
+        const options = issues.map(({ name }) => ({
             value: name,
             label: name
         }));
@@ -149,11 +148,9 @@ handleInteraction({
                     });
                     break;
                 case Commands.Issue:
-                    const threads = await findThreads(interaction);
-                    if (!threads) {
-                        await interaction.createFollowup({ content: "I can't find any posts :d", flags: MessageFlags.EPHEMERAL });
-                        return;
-                    }
+                    const threads = await findThreads();
+                    if (!threads)
+                        return interaction.createFollowup({ content: "I can't find any posts :d", flags: MessageFlags.EPHEMERAL });
 
                     const issue = threads.find(t => t.name === choice);
 
@@ -163,8 +160,8 @@ handleInteraction({
                     await interaction.channel.createMessage({
                         ...replyOptions,
                         embeds: [
-                            buildIssueEmbed(
-                                await buildIssueStruct(issue),
+                            await buildIssueEmbed(
+                                issue,
                                 interaction.user,
                                 interaction.guildID!
                             )
