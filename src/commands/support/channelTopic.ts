@@ -1,14 +1,14 @@
 import { ChannelTypes } from "oceanic.js";
 
 import { defineCommand } from "~/Commands";
-import { Emoji } from "~/constants";
+import { ChannelEmoji, Emoji } from "~/constants";
 import { silently } from "~/util";
 import { makeConstants } from "~/util/objects";
 
 const ChannelTextAndEmoji = makeConstants({
-    [ChannelTypes.GUILD_TEXT]: ["Topic for", "<:hash:1298166928438726666>"],
-    [ChannelTypes.GUILD_FORUM]: ["Guidelines for", "<:forums:1298166907601682464>"],
-    default: ["Topic for", "<:hash:1298166928438726666>"],
+    [ChannelTypes.GUILD_TEXT]: ["Topic for", ChannelEmoji.Hash],
+    [ChannelTypes.GUILD_FORUM]: ["Guidelines for", ChannelEmoji.Forum],
+    get default() { return this[ChannelTypes.GUILD_TEXT]; },
 });
 
 defineCommand({
