@@ -5,12 +5,6 @@ import { defineCommand } from "~/Commands";
 import { KNOWN_ISSUES_CHANNEL_ID } from "~/env";
 import { silently } from "~/util";
 
-export interface Issue {
-    name: string;
-    content: string;
-    contentId: string;
-}
-
 export async function findThreads(): Promise<PublicThreadChannel[]> {
     const forumChannel = Vaius.getChannel(KNOWN_ISSUES_CHANNEL_ID);
 
