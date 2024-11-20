@@ -8,6 +8,7 @@ import { makeConstants } from "~/util/objects";
 const ChannelTextAndEmoji = makeConstants({
     [ChannelTypes.GUILD_TEXT]: ["Topic for", ChannelEmoji.Hash],
     [ChannelTypes.GUILD_FORUM]: ["Guidelines for", ChannelEmoji.Forum],
+    [ChannelTypes.GUILD_VOICE]: ["Status for", "🔊"], // FIXME: better icon
     get default() { return this[ChannelTypes.GUILD_TEXT]; },
 });
 
