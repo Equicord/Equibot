@@ -7,7 +7,7 @@ import { silently } from "~/util";
 const channelTextAndEmoji = {
     [ChannelTypes.GUILD_TEXT]: ["Topic for", "<:hash:1298166928438726666>"],
     [ChannelTypes.GUILD_FORUM]: ["Guidelines for", "<:forums:1298166907601682464>"],
-    default: ["Topic for", "<:hash:1298166928438726666>" ],
+    default: ["Topic for", "<:hash:1298166928438726666>"],
 };
 
 defineCommand({
@@ -16,7 +16,7 @@ defineCommand({
     description: "Show the topic of a channel or guidelines of a forum",
     usage: "[destination channel topic] [custom channel name] | [custom channel topic]",
     guildOnly: true,
-    async execute(msg, channelId, ...captionElements) {
+    async execute({ msg, createMessage, react }, channelId, ...captionElements) {
         let channel = msg.client.getChannel(msg.channelID) as AnyGuildChannelWithoutThreads;
         let caption = captionElements.join(" ");
 
@@ -45,14 +45,14 @@ defineCommand({
             channelTopic = customTopicName;
         } else if ([ChannelTypes.GUILD_TEXT, ChannelTypes.GUILD_FORUM].includes(channel.type)) {
             if ("topic" in channel && !channel.topic) {
-                return msg.createReaction(Emoji.Anger);
+                return react(Emoji.Anger);
             } else if ("topic" in channel) {
                 content = `${topicText} ${channel.mention}`;
                 channelName = `${icon}  ${channel.name}`;
                 channelTopic = channel.topic ?? "";
             }
         } else {
-            return msg.createReaction(Emoji.Anger);
+            return react(Emoji.Anger);
         }
 
         const isReply = !!msg.referencedMessage;
@@ -61,7 +61,7 @@ defineCommand({
             silently(msg.delete());
         }
 
-        msg.channel.createMessage({
+        createMessage({
             content,
             embeds: [{
                 title: channelName,

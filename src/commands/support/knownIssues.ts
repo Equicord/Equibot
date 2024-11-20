@@ -13,7 +13,7 @@ export interface Issue {
 export async function findThreads(
     msgOrInteraction: Message<AnyTextableGuildChannel> | CommandInteraction | ComponentInteraction<SelectMenuTypes, AnyTextableChannel>
 ): Promise<PublicThreadChannel[]> {
-    const guild = msgOrInteraction.guild;
+    const { guild } = msgOrInteraction;
     const forumChannel = guild?.channels.get(KNOWN_ISSUES_CHANNEL_ID) as ForumChannel | undefined;
     if (!forumChannel || forumChannel.type !== ChannelTypes.GUILD_FORUM) return [];
 
@@ -56,13 +56,11 @@ defineCommand({
     description: "Show issues from known-issues channel",
     guildOnly: true,
     usage: "[tag | query]",
-    async execute(msg, query) {
-        if (!msg.inCachedGuildChannel()) return;
-
+    async execute({ msg, createMessage, reply }, query) {
         const threads = await findThreads(msg);
 
         if (!threads) {
-            return msg.channel.createMessage({ content: "that ain't a forum channel ⁉️" });
+            return reply("that ain't a forum channel ⁉️");
         }
 
         const match = (() => {
@@ -81,13 +79,13 @@ defineCommand({
             const isReply = !!msg.referencedMessage;
             if (isReply) silently(msg.delete());
 
-            return msg.channel.createMessage({
+            return createMessage({
                 messageReference: { messageID: msg.referencedMessage?.id ?? msg.id },
                 allowedMentions: { repliedUser: isReply },
                 embeds: [
                     buildIssueEmbed(
-                        await buildIssueStruct(match), 
-                        msg.author, 
+                        await buildIssueStruct(match),
+                        msg.author,
                         msg.guild.id
                     )
                 ],
@@ -100,8 +98,6 @@ defineCommand({
                 return `**${index + 1}.** ${thread?.name}`;
             });
 
-        return msg.channel.createMessage({
-            content: uniqueThreads.join("\n") || "I couldn't find any issues :d",
-        });
+        return reply(uniqueThreads.join("\n") || "I couldn't find any issues :d");
     }
 });
