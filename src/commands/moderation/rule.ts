@@ -29,7 +29,7 @@ defineCommand({
             .trim()
             .replace(`${ruleNumber}. `, "");
 
-        if (!rule) return react(Emoji.QuestionMark);
+        if (!rule || rulesMessage.indexOf(`${ruleNumber}. `) === -1) return react(Emoji.QuestionMark);
 
         const embed: Embed = {
             title: `Rule ${ruleNumber}`,
