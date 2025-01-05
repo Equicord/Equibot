@@ -4,7 +4,7 @@ import { Vaius } from "~/Client";
 import { defineCommand } from "~/Commands";
 import { db } from "~/db";
 import { GUILD_ID } from "~/env";
-import { reply } from "~/util";
+import { reply } from "~/util/discord";
 import { isNonNullish } from "~/util/guards";
 
 const ignoreRoles = new Set([
@@ -67,7 +67,7 @@ defineCommand({
     guildOnly: true,
     ownerOnly: true,
     usage: null,
-    async execute(msg) {
+    async execute({ msg }) {
         if (msg.guildID !== GUILD_ID) return;
 
         const members = await msg.guild.fetchMembers();

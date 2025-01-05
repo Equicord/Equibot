@@ -1,8 +1,6 @@
-import { Message } from "oceanic.js";
 
-import { defineCommand } from "~/Commands";
+import { CommandContext, defineCommand } from "~/Commands";
 import { db, ExpressionType, ExpressionUsageType } from "~/db";
-import { reply } from "~/util";
 import { Paginator } from "~/util/Paginator";
 import { toInlineCode, toTitle } from "~/util/text";
 
@@ -10,7 +8,7 @@ import { formatCountAndName } from "./shared";
 
 const customEmojiRe = /<a?:\w+:(\d+)>/;
 
-const makeLeaderboard = (usageType: ExpressionUsageType, expressionType = ExpressionType.EMOJI) => async (msg: Message, emoji: string) => {
+const makeLeaderboard = (usageType: ExpressionUsageType, expressionType = ExpressionType.EMOJI) => async ({ msg, reply }: CommandContext, emoji: string) => {
     let name = emoji;
     let id: string | undefined;
     if (expressionType === ExpressionType.EMOJI) {
@@ -22,7 +20,7 @@ const makeLeaderboard = (usageType: ExpressionUsageType, expressionType = Expres
         }
     }
 
-    if (!id) return reply(msg, { content: `Did you forget to specify the ${expressionType}?` });
+    if (!id) return reply(`Did you forget to specify the ${expressionType}?`);
 
     const stats = await db.selectFrom("expressionUses")
         .select(({ fn }) => [
@@ -41,7 +39,6 @@ const makeLeaderboard = (usageType: ExpressionUsageType, expressionType = Expres
 
     if (!stats.length)
         return reply(
-            msg,
             `Either no one has used ${customEmojiRe.test(name) ? name : toInlineCode(name)} yet, or it's not a valid ${expressionType}! ` +
             `Keep in mind that I only track ${expressionType}s from this server :3`
         );

@@ -1,11 +1,12 @@
 import { AnyTextableChannel, Client, Message } from "oceanic.js";
 
-import { Commands } from "./Commands";
+import { CommandContext, Commands } from "./Commands";
 import { Emoji, SUPPORT_ALLOWED_CHANNELS } from "./constants";
 import { BotState } from "./db/botState";
-import { DISCORD_TOKEN, MOD_PERMS_ROLE_ID, PREFIX } from "./env";
+import { DISCORD_TOKEN, MOD_PERMS_ROLE_ID, PREFIXES } from "./env";
 import { lobotomiseMaybe, moderateMessage } from "./modules/moderate";
-import { reply, silently } from "./util";
+import { reply } from "./util/discord";
+import { silently } from "./util/functions";
 
 export const Vaius = new Client({
     auth: "Bot " + DISCORD_TOKEN,
@@ -40,14 +41,24 @@ Vaius.once("ready", async () => {
 const whitespaceRe = /\s+/;
 const GEN_AI_ID = "974297735559806986";
 
-Vaius.on("messageCreate", async msg => {
+Vaius.on("messageCreate", handleMessage);
+Vaius.on("messageUpdate", (msg, oldMsg) => {
+    if (oldMsg && msg.content === oldMsg?.content) return;
+
+    handleMessage(msg);
+});
+
+async function handleMessage(msg: Message) {
     if (msg.inCachedGuildChannel() && await lobotomiseMaybe(msg)) return;
     if (msg.author.bot && msg.author.id !== GEN_AI_ID) return;
     moderateMessage(msg);
 
-    if (!msg.content?.toLowerCase().startsWith(PREFIX)) return;
+    const lowerContent = msg.content.toLowerCase();
 
-    const content = msg.content.slice(PREFIX.length).trim();
+    const prefix = PREFIXES.find(p => lowerContent.startsWith(p));
+    if (!prefix) return;
+
+    const content = msg.content.slice(prefix.length).trim();
     const args = content.split(whitespaceRe);
 
     const cmdName = args.shift()?.toLowerCase()!;
@@ -86,11 +97,17 @@ Vaius.on("messageCreate", async msg => {
     if (!msg.channel)
         await msg.client.rest.channels.get(msg.channelID);
 
+    const context = new CommandContext(
+        msg as Message<AnyTextableChannel>,
+        prefix,
+        cmdName
+    );
+
     try {
         if (cmd.rawContent)
-            await cmd.execute(msg as Message<AnyTextableChannel>, content.slice(cmdName.length).trim());
+            await cmd.execute(context, content.slice(cmdName.length).trim());
         else
-            await cmd.execute(msg as Message<AnyTextableChannel>, ...args);
+            await cmd.execute(context, ...args);
     } catch (e) {
         console.error(
             `Failed to run ${cmd.name}`,
@@ -99,4 +116,4 @@ Vaius.on("messageCreate", async msg => {
         );
         silently(reply(msg, { content: "oop, that didn't go well 💥" }));
     }
-});
+}

@@ -1,7 +1,7 @@
 import { Message } from "oceanic.js";
 
 import { defineCommand } from "~/Commands";
-import { reply } from "~/util";
+import { run } from "~/util/functions";
 
 defineCommand({
     name: "prune",
@@ -10,14 +10,14 @@ defineCommand({
     usage: "<amount> [by|from|embeds|files|invites] [extra]",
     guildOnly: true,
     permissions: ["MANAGE_MESSAGES"],
-    async execute(msg, amount, modifier, extra) {
+    async execute({ msg, reply }, amount, modifier, extra) {
         const limit = Number(amount) + 1;
-        if (!limit) return reply(msg, { content: "?" });
+        if (!limit) return reply("?");
 
         if (limit > 200)
-            return reply(msg, { content: "You can't delete more than 200 messages at once" });
+            return reply("You can't delete more than 200 messages at once");
 
-        const filter: ((msg: Message) => boolean) | undefined = (() => {
+        const filter: ((msg: Message) => boolean) | undefined = run(() => {
             switch (modifier) {
                 case "by":
                 case "from":
@@ -33,7 +33,7 @@ defineCommand({
                 case "invites":
                     return m => m.content.includes("discord.gg/") || m.content.includes("discord.com/invite/");
             }
-        })();
+        });
 
         await msg.channel.purge({
             limit,

@@ -2,8 +2,10 @@ import { createHash } from "crypto";
 import { mkdirSync, readFileSync, renameSync, rmSync, writeFileSync } from "fs";
 import { ApplicationCommandOptions, ApplicationCommandOptionTypes, ApplicationCommandTypes, ApplicationIntegrationTypes, CreateChatInputApplicationCommandOptions, InteractionContextTypes, InteractionTypes, MessageFlags } from "oceanic.js";
 
+import { ZWSP } from "~/constants";
 import { GUILD_ID } from "~/env";
 import { handleInteraction } from "~/SlashCommands";
+import { run } from "~/util/functions";
 
 import { OwnerId, Vaius } from "../../Client";
 import { DONOR_ROLE_ID, PROD } from "../../constants";
@@ -13,13 +15,13 @@ const BasePath = "/var/www/badges.vencord.dev";
 const BadgeJson = `${BasePath}/badges.json`;
 const badgesForUser = (userId: string) => `${BasePath}/badges/${userId}`;
 
-const BadgeData: Record<string, Array<Record<"tooltip" | "badge", string>>> = (() => {
+const BadgeData: Record<string, Array<Record<"tooltip" | "badge", string>>> = run(() => {
     try {
         return JSON.parse(readFileSync(BadgeJson, "utf-8"));
     } catch {
         return {};
     }
-})();
+});
 
 const saveBadges = () => writeFileSync(BadgeJson, JSON.stringify(BadgeData));
 
@@ -38,7 +40,10 @@ handleInteraction({
         const user = i.data.options.getUserOption("user")!;
         const existingBadges = BadgeData[user.value];
 
-        return i.result(existingBadges?.map((b, i) => ({ name: b.tooltip, value: String(i) })) ?? []);
+        return i.result(existingBadges?.map((b, i) => ({
+            name: `${i} - ${b.tooltip === ZWSP ? "<ZWSP>" : b.tooltip}`,
+            value: String(i)
+        })) ?? []);
     }
 });
 

@@ -1,10 +1,9 @@
 import { AnyTextableGuildChannel } from "oceanic.js";
 
+import { Vaius } from "~/Client";
 import { BotState } from "~/db/botState";
-
-import { Vaius } from "../Client";
-import { SUPPORT_CHANNEL_ID } from "../env";
-import { debounce, silently } from "../util";
+import { SUPPORT_CHANNEL_ID } from "~/env";
+import { debounce, silently } from "~/util/functions";
 
 let lastMsgId: string | null = null;
 
@@ -13,7 +12,7 @@ const getSupportChannel = () => Vaius.getChannel(SUPPORT_CHANNEL_ID) as AnyTexta
 export async function createStickyMessage() {
     await deleteStickyMessage();
 
-    const msg = await getSupportChannel().createMessage({ content: BotState.sticky.message });
+    const msg = await getSupportChannel().createMessage({ content: BotState.sticky.message + "\n-# This is an automated sticky message." });
     lastMsgId = msg.id;
 }
 

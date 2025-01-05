@@ -5,7 +5,7 @@ import { join } from "path";
 import { defineCommand } from "~/Commands";
 import { ASSET_DIR } from "~/constants";
 import { SUPPORT_CHANNEL_ID } from "~/env";
-import { silently } from "~/util";
+import { silently } from "~/util/functions";
 
 const WIDTH = 400;
 const HEIGHT = 260;
@@ -40,7 +40,7 @@ defineCommand({
     description: "Create a graphic guiding people to the correct channel (usually support)",
     usage: "[destination channel] [destination caption] | [origin caption]",
     guildOnly: true,
-    async execute(msg, channelId, ...captionElements) {
+    async execute({ msg, createMessage }, channelId, ...captionElements) {
         let channel = msg.client.getChannel(SUPPORT_CHANNEL_ID) as AnyGuildChannelWithoutThreads;
         let caption = captionElements.join(" ");
         if (channelId) {
@@ -75,7 +75,7 @@ defineCommand({
             silently(msg.delete());
         }
 
-        msg.channel.createMessage({
+        return createMessage({
             content,
             files: [
                 {

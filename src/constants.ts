@@ -1,7 +1,8 @@
 import { mkdirSync } from "fs";
 import { join } from "path";
 
-import { BOT_CHANNEL_ID, DEV_CHANNEL_ID, NODE_ENV, SUPPORT_CHANNEL_ID } from "./env";
+import { BOT_CHANNEL_ID, DEV_CHANNEL_ID, NODE_ENV, SUPPORT_CHANNEL_ID } from "~/env";
+import { makeConstants } from "~/util/objects";
 
 export const VENCORD_SITE = "https://vencord.dev";
 
@@ -36,7 +37,7 @@ export const enum Millis {
     WEEK = 7 * 24 * 60 * 60 * 1000
 }
 
-export const Emoji = {
+export const Emoji = makeConstants({
     X: "❌",
     CheckMark: "✅",
     QuestionMark: "❓",
@@ -51,4 +52,12 @@ export const Emoji = {
     DoubleRight: "⏩",
 
     Claim: "🛄",
-} as const;
+});
+
+export const ChannelEmoji = makeConstants({
+    Forum: "<:forums:1308638540833361981>",
+    Hash: "<:hash:1308638553827315742>",
+    Voice: "<:voice:1308642929010671617>",
+});
+
+export const ZWSP = "\u200B";

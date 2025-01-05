@@ -1,14 +1,19 @@
 import dotenv from "dotenv";
-import { number, object, optional, picklist, pipe, string, transform } from "valibot";
+import { array, minLength, number, object, optional, picklist, pipe, string, transform } from "valibot";
 
-import { mustParse } from "./util/validation";
+import { mustParse } from "~/util/validation";
 
 const { error } = dotenv.config({ override: true });
 if (error)
     throw error;
 
 const configSchema = object({
-    PREFIX: string(),
+    PREFIXES: pipe(
+        string(),
+        transform(s => s.split(/ +/).filter(Boolean)),
+        array(string()),
+        minLength(1)
+    ),
     DISCORD_TOKEN: string(),
     DATABASE_URL: string(),
 
@@ -21,6 +26,7 @@ const configSchema = object({
 
     DEV_CHANNEL_ID: string(),
     SUPPORT_CHANNEL_ID: string(),
+    KNOWN_ISSUES_CHANNEL_ID: string(),
     BOT_CHANNEL_ID: string(),
 
     MOD_PERMS_ROLE_ID: string(),
@@ -43,12 +49,17 @@ const configSchema = object({
     GITHUB_CLIENT_SECRET: string(),
 
     CONTRIBUTOR_ROLE_ID: string(),
+
+    NINA_CHAT_TOKEN: optional(string()),
+
+    ADVENT_OF_CODE_COOKIE: optional(string()),
+    ADVENT_OF_CODE_CHANNEL_ID: optional(string()),
 });
 
 const parsed = mustParse("Invalid environment variables", configSchema, process.env);
 
 export const {
-    PREFIX,
+    PREFIXES,
     DISCORD_TOKEN,
     DATABASE_URL,
     NODE_ENV,
@@ -58,6 +69,7 @@ export const {
     COMMUNITY_POST_PASS_ROLE_ID,
 
     DEV_CHANNEL_ID,
+    KNOWN_ISSUES_CHANNEL_ID,
     BOT_CHANNEL_ID,
     MOD_LOG_CHANNEL_ID,
     MOD_PERMS_ROLE_ID,
@@ -76,4 +88,9 @@ export const {
     GITHUB_CLIENT_SECRET,
 
     CONTRIBUTOR_ROLE_ID,
+
+    NINA_CHAT_TOKEN,
+
+    ADVENT_OF_CODE_COOKIE,
+    ADVENT_OF_CODE_CHANNEL_ID
 } = parsed;
