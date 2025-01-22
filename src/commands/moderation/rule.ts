@@ -4,7 +4,8 @@ import { Vaius } from "~/Client";
 import { defineCommand } from "~/Commands";
 import { Emoji } from "~/constants";
 import { RULES_CHANNEL_ID } from "~/env";
-import { reply, silently } from "~/util";
+import { reply } from "~/util/discord";
+import { silently } from "~/util/functions";
 
 defineCommand({
     name: "rule",
@@ -20,14 +21,13 @@ defineCommand({
             await Vaius.rest.channels.getMessages(RULES_CHANNEL_ID)
         )[0].content;
         const rule = rulesMessage
-            .substring(
-                rulesMessage.indexOf(`${ruleNumber}. `),
+            .slice(
+                rulesMessage.indexOf(`${ruleNumber}. `) + ruleNumber.length + 2,
                 rulesMessage.indexOf(`${parseInt(ruleNumber) + 1}. `) !== -1
                     ? rulesMessage.indexOf(`${parseInt(ruleNumber) + 1}. `)
                     : rulesMessage.length
             )
-            .trim()
-            .replace(`${ruleNumber}. `, "");
+            .trim();
 
         if (!rule || rulesMessage.indexOf(`${ruleNumber}. `) === -1) return react(Emoji.QuestionMark);
 
