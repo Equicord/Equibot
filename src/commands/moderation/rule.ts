@@ -2,10 +2,20 @@ import { Embed } from "oceanic.js";
 
 import { Vaius } from "~/Client";
 import { defineCommand } from "~/Commands";
-import { Emoji } from "~/constants";
+import { Emoji, Millis } from "~/constants";
 import { RULES_CHANNEL_ID } from "~/env";
 import { reply } from "~/util/discord";
 import { silently } from "~/util/functions";
+import { ttlLazy } from "~/util/lazy";
+
+const fetchRules = ttlLazy(async () => {
+    const [rulesMessage] = await Vaius.rest.channels.getMessages(RULES_CHANNEL_ID, { limit: 1 });
+
+    return rulesMessage.content
+        .slice(rulesMessage.content.indexOf("1."))
+        .split(/\d+\./g)
+        .map(r => r.trim().replace(/^\s+/gm, ""));
+}, 5 * Millis.MINUTE);
 
 defineCommand({
     name: "rule",
@@ -14,22 +24,12 @@ defineCommand({
     usage: "<ruleNumber>",
     guildOnly: true,
     async execute({ msg, react }, ruleNumber) {
-        if (!ruleNumber || isNaN(parseInt(ruleNumber)))
+        const rules = await fetchRules();
+
+        const rule = rules[Number(ruleNumber)];
+
+        if (!rule)
             return react(Emoji.QuestionMark);
-
-        const rulesMessage = (
-            await Vaius.rest.channels.getMessages(RULES_CHANNEL_ID)
-        )[0].content;
-        const rule = rulesMessage
-            .slice(
-                rulesMessage.indexOf(`${ruleNumber}. `) + ruleNumber.length + 2,
-                rulesMessage.indexOf(`${parseInt(ruleNumber) + 1}. `) !== -1
-                    ? rulesMessage.indexOf(`${parseInt(ruleNumber) + 1}. `)
-                    : rulesMessage.length
-            )
-            .trim();
-
-        if (!rule || rulesMessage.indexOf(`${ruleNumber}. `) === -1) return react(Emoji.QuestionMark);
 
         const embed: Embed = {
             title: `Rule ${ruleNumber}`,
