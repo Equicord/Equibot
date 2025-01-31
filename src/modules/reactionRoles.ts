@@ -24,6 +24,8 @@ const reactionRoles = {
     },
 };
 
+const getEntries = () => Object.entries(reactionRoles);
+
 defineCommand({
     name: "reactions:post",
     description: "Post the reaction roles message",
@@ -33,7 +35,7 @@ defineCommand({
             embeds: [{
                 description: [
                     "Want to be notified for Vencord related things? Press the buttons below to get roles!",
-                    ...Object.entries(reactionRoles).map(([label, data]) => 
+                    ...getEntries().map(([label, data]) => 
                     `**${label}**\n${data.description}`
                     )
                 ].join("\n\n"),
@@ -44,7 +46,7 @@ defineCommand({
             }],
             components: [{
                 type: ComponentTypes.ACTION_ROW,
-                components: Object.entries(reactionRoles).map(([label, data]) => ({
+                components: getEntries().map(([label, data]) => ({
                     type: ComponentTypes.BUTTON,
                     style: ButtonStyles.SECONDARY,
                     customID: `${REACTIONS_ASSIGN}_${data.role}`,
@@ -56,20 +58,20 @@ defineCommand({
     }
 });
 
-Object.values(reactionRoles).forEach(role => {
+getEntries().forEach(([_, data]) => {
     handleComponentInteraction({
-        customID: `${REACTIONS_ASSIGN}_${role.role}`,
+        customID: `${REACTIONS_ASSIGN}_${data.role}`,
         guildOnly: true,
         async handle(interaction) {
             if (!interaction.member) return;
 
             try {
-                const hasRole = interaction.member.roles.includes(role.role);
+                const hasRole = interaction.member.roles.includes(data.role);
                 const action = hasRole ? 'removeRole' : 'addRole';
                 
-                await interaction.member[action](role.role);
+                await interaction.member[action](data.role);
                 await interaction.createMessage({
-                    content: `${hasRole ? 'Removed' : 'Added'} <@&${role.role}> ${hasRole ? ' from you :(' : 'to you :D'}`,
+                    content: `${hasRole ? 'Removed' : 'Added'} <@&${data.role}> ${hasRole ? 'from you :(' : 'to you :D'}`,
                     flags: MessageFlags.EPHEMERAL
                 });
             } catch {
