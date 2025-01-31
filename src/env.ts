@@ -29,6 +29,7 @@ const configSchema = object({
     KNOWN_ISSUES_CHANNEL_ID: string(),
     BOT_CHANNEL_ID: string(),
     RULES_CHANNEL_ID: string(),
+    REACTION_ROLES_CHANNEL_ID: string(),
 
     MOD_PERMS_ROLE_ID: string(),
     MOD_ROLE_ID: string(),
@@ -78,6 +79,7 @@ export const {
     MOD_ROLE_ID,
     SUPPORT_CHANNEL_ID,
     RULES_CHANNEL_ID,
+    REACTION_ROLES_CHANNEL_ID,
 
     MOD_MAIL_CHANNEL_ID,
     MOD_MAIL_LOG_CHANNEL_ID,
