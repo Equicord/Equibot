@@ -91,9 +91,6 @@ entries.flat().forEach(([_, data]) => {
             try {
                 const hasRole = interaction.member.roles.includes(data.role);
                 const action = hasRole ? 'removeRole' : 'addRole';
-
-                console.log(hasRole, action);
-                console.log(data.role);
                 
                 await interaction.member[action](data.role);
                 await interaction.createMessage({
