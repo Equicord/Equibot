@@ -1,4 +1,5 @@
 import { ButtonStyles, ComponentTypes, MessageFlags } from "oceanic.js";
+import { emoji } from "valibot";
 import { Vaius } from "~/Client";
 import { defineCommand } from "~/Commands";
 import { REACTION_ROLES_CHANNEL_ID } from "~/env";
@@ -6,7 +7,10 @@ import { handleComponentInteraction } from "~/SlashCommands";
 
 const REACTIONS_ASSIGN = "reactions:assign";
 
-const reactionRoles = {
+const EMBED_COLOR = 0xde7878;
+const LONG_IMAGE = "https://i.sstatic.net/Fzh0w.png";
+
+const notificationRoles = {
     "Vencord Announcements": { 
         role: "1166731270542340146",
         emoji: "1092089799109775453",
@@ -24,41 +28,60 @@ const reactionRoles = {
     },
 };
 
-const getEntries = () => Object.entries(reactionRoles);
+const accessRoles = {
+    "Off-topic Channels": { 
+        role: "0", // replace with role id
+        name: "🍐",
+        description: "Gives you access to off-topic and miscellaneous channels"
+    },
+    "Development Channels": { 
+        role: "1191202487978438656", 
+        name: "👾",
+        description: "Gives you access to development and programming channels"
+    },
+};
+
+const entries = [
+    Object.entries(notificationRoles),
+    Object.entries(accessRoles)
+];
 
 defineCommand({
     name: "reactions:post",
     description: "Post the reaction roles message",
     usage: null,
-    execute(interaction) {
-        return Vaius.rest.channels.createMessage(REACTION_ROLES_CHANNEL_ID, {
+    async execute(interaction) {
+        const messages = entries.map((entry, index) => ({
+            content: index === 0 
+                ? "Press on the buttons below to get notified or get access to specific channels!" 
+                : "",
             embeds: [{
-                description: [
-                    "Want to be notified for Vencord related things? Press the buttons below to get roles!",
-                    ...getEntries().map(([label, data]) => 
-                    `**${label}**\n${data.description}`
-                    )
-                ].join("\n\n"),
-                author: {
-                    name: "Get Notified",
-                    iconURL: interaction.msg.guild?.iconURL() ?? Vaius.user.avatarURL(),
-                },
+                description: entry
+                    .map(([label, data]) => `**${label}**\n${data.description}`)
+                    .join("\n\n"),
+                color: EMBED_COLOR,
+                image: { url: LONG_IMAGE }
             }],
             components: [{
                 type: ComponentTypes.ACTION_ROW,
-                components: getEntries().map(([label, data]) => ({
+                components: entry.map(([label, data]) => ({
                     type: ComponentTypes.BUTTON,
-                    style: ButtonStyles.SECONDARY,
                     customID: `${REACTIONS_ASSIGN}_${data.role}`,
                     label,
-                    emoji: { id: data.emoji }
+                    style: ButtonStyles.SECONDARY,
+                    emoji: {
+                        id: data.emoji ?? null,
+                        name: data.name ?? null
+                    }
                 }))
             }]
-        });
+        }));
+
+        await Promise.all(messages.map(msg => interaction.createMessage(msg)));
     }
 });
 
-getEntries().forEach(([_, data]) => {
+entries.flat().forEach(([_, data]) => {
     handleComponentInteraction({
         customID: `${REACTIONS_ASSIGN}_${data.role}`,
         guildOnly: true,
@@ -68,6 +91,9 @@ getEntries().forEach(([_, data]) => {
             try {
                 const hasRole = interaction.member.roles.includes(data.role);
                 const action = hasRole ? 'removeRole' : 'addRole';
+
+                console.log(hasRole, action);
+                console.log(data.role);
                 
                 await interaction.member[action](data.role);
                 await interaction.createMessage({
