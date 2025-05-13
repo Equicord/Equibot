@@ -66,7 +66,7 @@ defineCommand({
                 await silently(
                     member.user.createDM()
                         .then(dm => dm.createMessage({
-                            content: `You have been banned from the Vencord Server by ${msg.author.tag}.\n## Reason:\n${toCodeblock(reason)}`
+                            content: `You have been banned from the Equicord Server by ${msg.author.tag}.\n## Reason:\n${toCodeblock(reason)}`
                         }))
                 );
 

@@ -10,7 +10,6 @@ import {
 
 import { Vaius } from "./Client";
 import { PROD } from "./constants";
-import { BotState } from "./db/botState";
 // eslint-disable-next-line no-duplicate-imports
 import { DEV_CHANNEL_ID } from "./env";
 import { initModListeners } from "./modules/moderate";
@@ -23,15 +22,15 @@ if (PROD) {
     Vaius.once("ready", () => {
         Vaius.application.createGlobalCommand({
             type: ApplicationCommandTypes.CHAT_INPUT,
-            name: "owo",
-            description: "owo",
+            name: "stare",
+            description: "stare....",
         });
     });
 
     handleCommandInteraction({
-        name: "owo",
+        name: "stare",
         handle(i) {
-            i.createMessage({ content: "owo " });
+            i.createMessage({ content: "stare...." });
         }
     });
 }
@@ -62,10 +61,7 @@ process.on("unhandledRejection", err => handleError("Unhandled Rejection", err))
 
 process.on("uncaughtException", async err => {
     await silently(handleError("Uncaught Exception. Restarting process", err));
-    try {
-        // proxy shouldn't throw but uncaughtException means anything could have happened so just in case
-        BotState.helloChannelId = DEV_CHANNEL_ID;
-    } catch { }
+    try { } catch { }
 
     process.exit(1);
 });

@@ -28,12 +28,6 @@ const DefaultCaptionsEnglish = {
     originCaption: "you are here"
 };
 
-const DefaultCaptionsGerman = {
-    category: "Keine Kategorie",
-    destCaption: "du solltest hier sein",
-    originCaption: "du bist hier"
-};
-
 defineCommand({
     name: "notsupport",
     aliases: ["ns", "nots"],
@@ -56,15 +50,13 @@ defineCommand({
 
         const [destCaption, currentCaption] = caption.split("|").map(s => s.trim());
 
-        const DefaultCaptions = msg.channelID === "1121201005456011366" ? DefaultCaptionsGerman : DefaultCaptionsEnglish;
-
         const image = await drawNotSupportImage({
-            currentCategory: msg.channel.parent?.name || DefaultCaptions.category,
+            currentCategory: msg.channel.parent?.name || DefaultCaptionsEnglish.category,
             currentChannel: msg.channel.name,
-            destCategory: channel.parent?.name || DefaultCaptions.category,
+            destCategory: channel.parent?.name || DefaultCaptionsEnglish.category,
             destChannel: channel.name,
-            destCaption: destCaption || DefaultCaptions.destCaption,
-            currentCaption: currentCaption || DefaultCaptions.originCaption
+            destCaption: destCaption || DefaultCaptionsEnglish.destCaption,
+            currentCaption: currentCaption || DefaultCaptionsEnglish.originCaption
         });
 
         let content = `👉 ${channel.mention}`;

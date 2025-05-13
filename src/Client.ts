@@ -2,9 +2,8 @@ import { AnyTextableChannel, Client, Message } from "oceanic.js";
 
 import { CommandContext, Commands } from "./Commands";
 import { Emoji, SUPPORT_ALLOWED_CHANNELS } from "./constants";
-import { BotState } from "./db/botState";
 import { DISCORD_TOKEN, MOD_PERMS_ROLE_ID, PREFIXES } from "./env";
-import { lobotomiseMaybe, moderateMessage } from "./modules/moderate";
+import { moderateMessage } from "./modules/moderate";
 import { reply } from "./util/discord";
 import { silently } from "./util/functions";
 
@@ -29,17 +28,9 @@ Vaius.once("ready", async () => {
     console.log(`Connected as ${Vaius.user.tag} (${Vaius.user.id})`);
     console.log(`I am in ${Vaius.guilds.size} guilds`);
     console.log(`https://discord.com/oauth2/authorize?client_id=${Vaius.user.id}&permissions=8&scope=bot+applications.commands`);
-
-    if (BotState.helloChannelId) {
-        await Vaius.rest.channels.createMessage(BotState.helloChannelId, {
-            content: "I'm back !!! :DDD"
-        });
-        delete BotState.helloChannelId;
-    }
 });
 
 const whitespaceRe = /\s+/;
-const GEN_AI_ID = "974297735559806986";
 
 Vaius.on("messageCreate", msg => handleMessage(msg, false));
 Vaius.on("messageUpdate", (msg, oldMsg) => {
@@ -49,8 +40,8 @@ Vaius.on("messageUpdate", (msg, oldMsg) => {
 });
 
 async function handleMessage(msg: Message, isEdit: boolean) {
-    if (msg.inCachedGuildChannel() && await lobotomiseMaybe(msg)) return;
-    if (msg.author.bot && msg.author.id !== GEN_AI_ID) return;
+    if (msg.inCachedGuildChannel()) return;
+    if (msg.author.bot) return;
     moderateMessage(msg, isEdit);
 
     const lowerContent = msg.content.toLowerCase();
@@ -90,7 +81,7 @@ async function handleMessage(msg: Message, isEdit: boolean) {
 
     if (!noRateLimit && cmd.rateLimits.getOrAdd(msg.author.id)) {
         silently(msg.createReaction("🛑"));
-        silently(msg.createReaction("snailcat:1217891976108576839"));
+        silently(msg.createReaction("🐌"));
         return;
     }
 

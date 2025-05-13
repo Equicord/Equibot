@@ -2,38 +2,16 @@ import { readFileSync, writeFileSync } from "fs";
 import { join } from "path";
 
 import { DATA_DIR } from "~/constants";
-import { SUPPORT_CHANNEL_ID } from "~/env";
 import { run } from "~/util/functions";
 
 const StateFile = join(DATA_DIR, "botState.json");
 
 interface BotState {
-    helloChannelId?: string;
-
-    stickies: Record<string, {
-        message: string;
-        delayMs: number;
-        enabled: boolean;
-    }>,
-
     discordTracker?: {
         stableHash?: string;
         canaryHash?: string;
     },
-
-    stickyThreads: string[];
 }
-
-const defaultState: BotState = {
-    stickies: {
-        [SUPPORT_CHANNEL_ID]: {
-            message: "# Read <#1257025907625951423> before asking for help!",
-            delayMs: 5_000,
-            enabled: true
-        }
-    },
-    stickyThreads: []
-};
 
 const savedState = run(() => {
     try {
@@ -42,7 +20,7 @@ const savedState = run(() => {
         return {};
     }
 });
-const state = { ...defaultState, ...savedState };
+const state = { ...savedState };
 
 function saveSettings() {
     writeFileSync(StateFile, JSON.stringify(state, null, 4));

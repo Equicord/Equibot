@@ -19,18 +19,13 @@ interface ReportData {
     runId: string;
     branch: Branch;
     hash: Partial<Record<"stable" | "canary", string>>;
-    shouldLog: boolean;
-    shouldUpdateStatus: boolean;
     onSubmit?(report: ReportData, data: any): void;
     submitCount: number;
 }
 
 export const DefaultReporterBranch = "dev";
 
-const LogChannelId = "1337479880849362994";
-const StatusChannelId = "1337479816240431115";
-const StableMessageId = "1337500395311992954";
-const CanaryMessageId = "1337500381923774544";
+const LogChannelId = "1371881823369564201";
 
 const pendingReports = new TTLMap<string, ReportData>(
     10 * Millis.MINUTE,
@@ -43,7 +38,7 @@ setInterval(checkVersions, 30 * Millis.SECOND);
 checkVersions();
 
 export async function triggerReportWorkflow({ ref, inputs }: { ref: string, inputs: { discord_branch: Branch; webhook_url?: string; } }) {
-    return await doFetch("https://api.github.com/repos/Vendicated/Vencord/actions/workflows/reportBrokenPlugins.yml/dispatches", {
+    return await doFetch("https://api.github.com/repos/Equicord/Equicord/actions/workflows/reportBrokenPlugins.yml/dispatches", {
         method: "POST",
         headers: {
             Authorization: `Bearer ${GITHUB_WORKFLOW_DISPATCH_PAT}`,
@@ -83,12 +78,10 @@ async function checkVersions() {
     }
 }
 
-type Options = Partial<Pick<ReportData, "shouldLog" | "shouldUpdateStatus" | "onSubmit">> & { ref?: string; };
+type Options = Partial<Pick<ReportData, "onSubmit">> & { ref?: string; };
 
 export async function testDiscordVersion<B extends Branch>(branch: B, hash: Record<B extends "both" ? "stable" | "canary" : B, string>, options: Options = {}) {
     const {
-        shouldLog = true,
-        shouldUpdateStatus = true,
         ref = DefaultReporterBranch,
         onSubmit
     } = options;
@@ -98,8 +91,6 @@ export async function testDiscordVersion<B extends Branch>(branch: B, hash: Reco
         runId,
         branch,
         hash,
-        shouldLog,
-        shouldUpdateStatus,
         onSubmit,
         submitCount: 0
     });
@@ -136,22 +127,7 @@ async function handleReportSubmit(report: ReportData, data: any) {
 
     report.onSubmit?.(report, data);
 
-    if (report.shouldLog) {
-        Vaius.rest.channels.createMessage(LogChannelId, data);
-    }
-
-    const latestHash = report.branch === "canary"
-        ? BotState.discordTracker!.canaryHash
-        : BotState.discordTracker!.stableHash;
-
-    if (!report.shouldUpdateStatus || latestHash !== report.hash[report.branch]) {
-        return;
-    }
-
-    data.embeds[0].description = `Last updated: <t:${Math.round(Date.now() / 1000)}>`;
-
-    const messageId = report.branch === "canary" ? CanaryMessageId : StableMessageId;
-    Vaius.rest.channels.editMessage(StatusChannelId, messageId, data);
+    Vaius.rest.channels.createMessage(LogChannelId, data);
 }
 
 const schema = {

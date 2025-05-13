@@ -9,16 +9,22 @@ import { toCodeblock } from "~/util/text";
 import { hasHigherRoleThan } from "./utils";
 
 const Aliases = makeConstants({
-    donor: DONOR_ROLE_ID,
     d: DONOR_ROLE_ID,
 
-    cute: "1026504932959977532",
-    c: "1026504932959977532",
+    h: "1326406112144265257",
+    f: "1230693249610547231",
 
-    regular: "1026504932959977532",
-    r: "1026504932959977532",
+    pm: "1305732092629356554",
+    ec: "1222677964760682556",
+    eb: "1287079931645263968",
+    ds: "1331437433228623994",
+    vc: "1173343399470964856",
+    v: "1217667142598529064",
 
-    needy: "1088566810976194693"
+    nr: "1269861822077599765",
+    nmm: "1302480459195879514",
+    ns: "1290007556869062762",
+    ny: "1319402584133468171"
 });
 
 function parseArgs(msg: Message<AnyTextableGuildChannel>, args: string[]) {

@@ -21,22 +21,13 @@ const configSchema = object({
 
     GUILD_ID: string(),
 
-    COMMUNITY_CATEGORY_CHANNEL_ID: string(),
-    COMMUNITY_POST_PASS_ROLE_ID: string(),
-
     DEV_CHANNEL_ID: string(),
     SUPPORT_CHANNEL_ID: string(),
-    KNOWN_ISSUES_CHANNEL_ID: string(),
     BOT_CHANNEL_ID: string(),
-    RULES_CHANNEL_ID: string(),
 
     MOD_PERMS_ROLE_ID: string(),
     MOD_ROLE_ID: string(),
     MOD_LOG_CHANNEL_ID: string(),
-
-    MOD_MAIL_CHANNEL_ID: string(),
-    MOD_MAIL_LOG_CHANNEL_ID: string(),
-    MOD_MAIL_BAN_ROLE_ID: string(),
 
     HTTP_SERVER_LISTEN_PORT: pipe(
         string(),
@@ -52,11 +43,6 @@ const configSchema = object({
 
     CONTRIBUTOR_ROLE_ID: string(),
 
-    NINA_CHAT_TOKEN: optional(string()),
-
-    ADVENT_OF_CODE_COOKIE: optional(string()),
-    ADVENT_OF_CODE_CHANNEL_ID: optional(string()),
-
     REPORTER_WEBHOOK_SECRET: string(),
 });
 
@@ -69,21 +55,12 @@ export const {
     NODE_ENV,
     GUILD_ID,
 
-    COMMUNITY_CATEGORY_CHANNEL_ID,
-    COMMUNITY_POST_PASS_ROLE_ID,
-
     DEV_CHANNEL_ID,
-    KNOWN_ISSUES_CHANNEL_ID,
     BOT_CHANNEL_ID,
     MOD_LOG_CHANNEL_ID,
     MOD_PERMS_ROLE_ID,
     MOD_ROLE_ID,
     SUPPORT_CHANNEL_ID,
-    RULES_CHANNEL_ID,
-
-    MOD_MAIL_CHANNEL_ID,
-    MOD_MAIL_LOG_CHANNEL_ID,
-    MOD_MAIL_BAN_ROLE_ID,
 
     HTTP_SERVER_LISTEN_PORT,
     HTTP_DOMAIN,
@@ -94,11 +71,6 @@ export const {
     GITHUB_CLIENT_SECRET,
 
     CONTRIBUTOR_ROLE_ID,
-
-    NINA_CHAT_TOKEN,
-
-    ADVENT_OF_CODE_COOKIE,
-    ADVENT_OF_CODE_CHANNEL_ID,
 
     REPORTER_WEBHOOK_SECRET,
 } = parsed;
