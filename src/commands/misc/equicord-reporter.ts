@@ -8,7 +8,7 @@ defineCommand({
     description: "Run the Equicord reporter workflow",
     usage: "[ref = dev] [branch = both]",
     aliases: ["report", "equicord-reporter", "test-patches", "test"],
-    modOnly: true,
+    ownerOnly: true,
 
     async execute({ msg }, ref = DefaultReporterBranch, branch = "both") {
         testDiscordVersion(
