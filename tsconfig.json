@@ -1,19 +1,28 @@
 {
-  "compilerOptions": {
-    "allowSyntheticDefaultImports": true,
-    "esModuleInterop": true,
-    "lib": ["esnext", "esnext.array", "esnext.asynciterable", "esnext.symbol"],
-    "module": "commonjs",
-    "moduleResolution": "node",
-    "strict": true,
-    "noImplicitAny": false,
-    "target": "ESNEXT",
-    "baseUrl": ".",
-    "paths": {
-        "~/*": ["src/*"],
+    "compilerOptions": {
+        "allowSyntheticDefaultImports": true,
+        "esModuleInterop": true,
+        "lib": [
+            "esnext",
+            "esnext.array",
+            "esnext.asynciterable",
+            "esnext.symbol"
+        ],
+        "module": "CommonJS",
+        "moduleResolution": "node",
+        "strict": true,
+        "noImplicitAny": false,
+        "target": "ESNEXT",
+        "baseUrl": ".",
+        "paths": {
+            "~/*": [
+                "src/*"
+            ],
+        },
+        "skipLibCheck": true,
+        "resolveJsonModule": true
     },
-    "skipLibCheck": true,
-    "resolveJsonModule": true
-  },
-  "include": ["src/**/*"]
+    "include": [
+        "src/**/*"
+    ]
 }

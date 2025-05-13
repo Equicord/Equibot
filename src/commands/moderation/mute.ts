@@ -1,5 +1,3 @@
-import parseDuration from "parse-duration";
-
 import { defineCommand } from "~/Commands";
 import { Millis } from "~/constants";
 import { silently } from "~/util/functions";
@@ -16,6 +14,7 @@ defineCommand({
     guildOnly: true,
     modOnly: true,
     async execute({ msg, reply }, durationString, ...args) {
+        const { default: parseDuration } = await import("parse-duration");
         const duration = parseDuration(durationString);
         if (duration == null || duration < 1 || duration > 28 * Millis.DAY) {
             return reply("Duration must be a valid time span not longer than 28 days");

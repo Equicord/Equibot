@@ -1,4 +1,3 @@
-import { nanoid } from "nanoid";
 import { ButtonStyles, ComponentTypes, CreateMessageOptions, EmbedOptions, InteractionTypes, Message, MessageFlags, TextInputStyles } from "oceanic.js";
 
 import { Emoji, Millis } from "~/constants";
@@ -10,10 +9,15 @@ import { Promiseable } from "./types";
 
 const paginators = new Map<string, Paginator<any>>();
 
+async function generateId() {
+    const { nanoid } = await import("nanoid");
+    return nanoid();
+}
+
 export class Paginator<T> {
     private _timeout: NodeJS.Timeout | undefined = undefined;
 
-    public readonly id = nanoid();
+    public readonly id = generateId();
     public readonly totalPages: number;
 
     public message: Message | null = null;

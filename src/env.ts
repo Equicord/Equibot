@@ -15,7 +15,6 @@ const configSchema = object({
         minLength(1)
     ),
     DISCORD_TOKEN: string(),
-    DATABASE_URL: string(),
 
     NODE_ENV: optional(picklist(["development", "production"])),
 
@@ -26,7 +25,6 @@ const configSchema = object({
     BOT_CHANNEL_ID: string(),
 
     MOD_PERMS_ROLE_ID: string(),
-    MOD_ROLE_ID: string(),
     MOD_LOG_CHANNEL_ID: string(),
 
     HTTP_SERVER_LISTEN_PORT: pipe(
@@ -36,12 +34,7 @@ const configSchema = object({
     ),
     HTTP_DOMAIN: string(),
 
-    GITHUB_PAT: string(),
     GITHUB_WORKFLOW_DISPATCH_PAT: string(),
-    GITHUB_CLIENT_ID: string(),
-    GITHUB_CLIENT_SECRET: string(),
-
-    CONTRIBUTOR_ROLE_ID: string(),
 
     REPORTER_WEBHOOK_SECRET: string(),
 });
@@ -51,7 +44,6 @@ const parsed = mustParse("Invalid environment variables", configSchema, process.
 export const {
     PREFIXES,
     DISCORD_TOKEN,
-    DATABASE_URL,
     NODE_ENV,
     GUILD_ID,
 
@@ -59,18 +51,12 @@ export const {
     BOT_CHANNEL_ID,
     MOD_LOG_CHANNEL_ID,
     MOD_PERMS_ROLE_ID,
-    MOD_ROLE_ID,
     SUPPORT_CHANNEL_ID,
 
     HTTP_SERVER_LISTEN_PORT,
     HTTP_DOMAIN,
 
-    GITHUB_PAT,
     GITHUB_WORKFLOW_DISPATCH_PAT,
-    GITHUB_CLIENT_ID,
-    GITHUB_CLIENT_SECRET,
-
-    CONTRIBUTOR_ROLE_ID,
 
     REPORTER_WEBHOOK_SECRET,
 } = parsed;
