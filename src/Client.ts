@@ -40,7 +40,6 @@ Vaius.on("messageUpdate", (msg, oldMsg) => {
 });
 
 async function handleMessage(msg: Message, isEdit: boolean) {
-    if (msg.inCachedGuildChannel()) return;
     if (msg.author.bot) return;
     moderateMessage(msg, isEdit);
 
