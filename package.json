@@ -4,7 +4,7 @@
     "description": "Discord Bot for the Vencord server",
     "main": "dist/index.js",
     "scripts": {
-        "start": "pnpm build && node . VENBOT",
+        "start": "pnpm build && node . EQUIBOT",
         "build": "node build.mjs",
         "test": "pnpm lint && pnpm testTypes",
         "testTypes": "tsc --noEmit",
