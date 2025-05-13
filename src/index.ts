@@ -1,6 +1,6 @@
 import "source-map-support/register";
-import "../../env";
-import "../../Commands";
+import "./env";
+import "./Commands";
 import "__modules__";
 
 import {
@@ -8,15 +8,15 @@ import {
     DiscordHTTPError
 } from "oceanic.js";
 
-import { Vaius } from "../../Client";
-import { PROD } from "../../constants";
+import { Vaius } from "./Client";
+import { PROD } from "./constants";
 // eslint-disable-next-line no-duplicate-imports
-import { DEV_CHANNEL_ID } from "../../env";
-import { initModListeners } from "../../modules/moderate";
-import { handleCommandInteraction } from "../../SlashCommands";
-import { silently } from "../../util/functions";
-import { inspect } from "../../util/inspect";
-import { toCodeblock } from "../../util/text";
+import { DEV_CHANNEL_ID } from "./env";
+import { initModListeners } from "./modules/moderate";
+import { handleCommandInteraction } from "./SlashCommands";
+import { silently } from "./util/functions";
+import { inspect } from "./util/inspect";
+import { toCodeblock } from "./util/text";
 
 if (PROD) {
     Vaius.once("ready", () => {
