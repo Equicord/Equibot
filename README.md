@@ -1,6 +1,6 @@
 # Equibot
 
-Equibot is a Discord bot used on the [Equicord](https://discord.gg/5Xh2W87egW) Discord server.
+Equibot is a Discord bot used on the [Equicord](https://discord.gg/equicord-1173279886065029291) Discord server.
 
 This bot is extremely specific and not configurable so there is really no reason for you to want to self host it
 
