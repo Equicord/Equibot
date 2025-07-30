@@ -16,6 +16,6 @@ defineCommand({
     description: "Get the source code for this bot",
     usage: null,
     async execute({ reply }) {
-        return reply("I am free software! You can find my Source code at " + await getRemote());
+        return reply(`I am free software! You can find my source code [here](<${await getRemote()}>) `);
     }
 });

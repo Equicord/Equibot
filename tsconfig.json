@@ -8,7 +8,7 @@
             "esnext.asynciterable",
             "esnext.symbol"
         ],
-        "module": "CommonJS",
+        "module": "commonjs",
         "moduleResolution": "node",
         "strict": true,
         "noImplicitAny": false,
@@ -20,9 +20,12 @@
             ],
         },
         "skipLibCheck": true,
-        "resolveJsonModule": true
+        "resolveJsonModule": true,
+        "jsx": "preserve",
+        "allowJs": true,
     },
     "include": [
-        "src/**/*"
+        "src/**/*",
+        "eslint.config.mjs"
     ]
 }
