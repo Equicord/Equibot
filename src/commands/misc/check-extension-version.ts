@@ -5,7 +5,7 @@ interface GithubTag {
     name: string;
 }
 
-const VersionRe = />Version<\/div><div class="[^"]+">(\d+\.\d+\.\d+)<\/div>/;
+const VersionRe = />Version<\/div><div class="[^"]+">(\d+(?:\.\d+)+)<\/div>/;
 
 const getGithubTags = makeCachedJsonFetch<GithubTag[]>("https://api.github.com/repos/Equicord/Equicord/tags");
 
