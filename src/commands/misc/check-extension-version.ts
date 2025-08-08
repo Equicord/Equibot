@@ -12,9 +12,13 @@ const getGithubTags = makeCachedJsonFetch<GithubTag[]>("https://api.github.com/r
 function compareVersions(a: string, b: string) {
     const pa = a.split(".").map(Number);
     const pb = b.split(".").map(Number);
-    for (let i = 0; i < 3; i++) {
-        if (pa[i] > pb[i]) return 1;
-        if (pa[i] < pb[i]) return -1;
+    const len = Math.max(pa.length, pb.length);
+
+    for (let i = 0; i < len; i++) {
+        const na = pa[i] ?? 0;
+        const nb = pb[i] ?? 0;
+        if (na > nb) return 1;
+        if (na < nb) return -1;
     }
     return 0;
 }
