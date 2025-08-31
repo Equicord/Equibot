@@ -15,15 +15,12 @@ async function getDevIDs() {
     }
 
     const res = await fetch("https://raw.githubusercontent.com/Equicord/Equibored/main/devs.json");
-    if (!res.ok) throw new Error(`Failed to fetch devs.json: ${res.status}`);
+    if (!res.ok) throw new Error();
     const json = await res.json();
 
     cachedEquicordDevs = new Set(Object.values(json.equicord).map((dev: any) => dev.id));
     cachedVencordDevs = new Set(Object.values(json.vencord).map((dev: any) => dev.id));
     lastFetched = now;
-
-    console.log("Equicord devs loaded:", Array.from(cachedEquicordDevs));
-    console.log("Vencord devs loaded:", Array.from(cachedVencordDevs));
 
     return { equicord: cachedEquicordDevs, vencord: cachedVencordDevs };
 }
@@ -42,18 +39,11 @@ async function checkIfDev(member: Member) {
                     roles: [...member.roles, ...rolesToAdd],
                     reason: "Identified as Equicord/Vencord contributor"
                 });
-            } catch (e) {
-                console.error("Failed to assign dev roles:", e);
-            }
+            } catch (err) { }
         }
-    } catch (err) {
-        console.error("Error checking dev IDs:", err);
-    }
+    } catch (err) { }
 }
 
 export function initDevListeners() {
-    Vaius.on("guildMemberAdd", async member => {
-        console.log("Member joined:", member.id, member.displayName);
-        await checkIfDev(member);
-    });
+    Vaius.on("guildMemberAdd", checkIfDev);
 }
