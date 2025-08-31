@@ -16,6 +16,7 @@ import { handleCommandInteraction } from "./SlashCommands";
 import { silently } from "./util/functions";
 import { inspect } from "./util/inspect";
 import { toCodeblock } from "./util/text";
+import { initDevListeners } from "./modules/devTracker";
 
 if (PROD) {
     Vaius.once("ready", () => {
@@ -35,6 +36,7 @@ if (PROD) {
 }
 
 initModListeners();
+initDevListeners();
 
 export async function handleError(title: string, err: unknown) {
     if (err instanceof DiscordHTTPError && err.status >= 500)
