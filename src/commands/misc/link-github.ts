@@ -1,7 +1,7 @@
 import { randomUUID } from "crypto";
 import { FastifyReply, FastifyRequest } from "fastify";
 import { AnyTextableChannel, Message } from "oceanic.js";
-import { InferOutput, nullable, number, object, parse, safeParse, string, union } from "valibot";
+import { boolean, InferOutput, nullable, number, object, parse, safeParse, string, union } from "valibot";
 
 import { defineCommand } from "~/Commands";
 import Config from "~/config";
@@ -33,7 +33,8 @@ const sponsorSchema = object({
             tier: object({
                 name: string(),
                 monthlyPriceInDollars: number()
-            })
+            }),
+            isOneTimePayment: union([string(), boolean()])
         }))
     })
 });
@@ -55,63 +56,36 @@ const LinkedRoles: Array<{
             name: "Donor",
             id: Config.roles.donor,
             async check(user, accessToken) {
-                const sponsorTiers: { name: string; monthlyPriceInDollars: number; oneTime: boolean; }[] = [];
-
                 const query = `
                     {
                         user(login: ${JSON.stringify(user.login)}) {
-                            sponsorshipsAsSponsor(
-                                first: 100,
-                                activeOnly: false,
-                                maintainerLogins: ["thororen1234", "verticalsync"]
-                            ) {
-                                nodes {
-                                    sponsorable {
-                                        ... on User { login }
-                                    }
-                                    tier {
-                                        name
-                                        monthlyPriceInDollars
-                                    }
-                                    createdAt
-                                    isOneTimePayment
+                            sponsorshipForViewerAsSponsorable(activeOnly: true) {
+                                tier {
+                                    name
+                                    monthlyPriceInDollars
                                 }
+                                isOneTimePayment
                             }
                         }
                     }
                 `;
-
                 const res = await fetchJson("https://api.github.com/graphql", {
                     method: "POST",
-                    headers: { Authorization: `Bearer ${accessToken}` },
+                    headers: {
+                        Authorization: `Bearer ${pat}`
+                    },
                     body: JSON.stringify({ query })
                 }).catch(() => null);
 
                 if (!res) throw new CheckError("Failed to fetch sponsor info from GitHub");
 
-                const userData = res?.data?.user;
-                if (!userData) return false;
+                const sponsorInfo = safeParse(sponsorSchema, res.data);
+                if (!sponsorInfo.success) throw new CheckError("Failed to parse sponsor info from GitHub");
 
-                const sponsorships = userData.sponsorshipsAsSponsor?.nodes ?? [];
-                if (!sponsorships.length) return false;
+                const sponsor = sponsorInfo.output.user.sponsorshipForViewerAsSponsorable;
+                if (!sponsor || !sponsor.tier) return false;
 
-                const monthlySponsors = sponsorships
-                    .filter(n => n.tier)
-                    .map(n => ({
-                        name: n.tier!.name,
-                        monthlyPriceInDollars: n.tier!.monthlyPriceInDollars,
-                        oneTime: n.isOneTimePayment
-                    }));
-
-                sponsorTiers.push(...monthlySponsors);
-
-                if (!sponsorTiers.length) return false;
-
-                const tiersList = sponsorTiers
-                    .map(t => `${t.name} (${t.oneTime ? "one-time" : "recurring"})`)
-                    .join(", ");
-
-                return `Based on your sponsorship(s): ${tiersList}`;
+                return `Based on your ${sponsor.tier.name} sponsorship (${sponsor.isOneTimePayment ? "one-time" : "recurring"})`;
             }
         },
         {
