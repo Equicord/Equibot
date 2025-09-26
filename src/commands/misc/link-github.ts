@@ -112,7 +112,7 @@ const LinkedRoles: Array<{
                 }
 
                 const commitRes = await fetchJson(
-                    `https://api.github.com/repos/Equicord/Equicord/commits?author=${user.login}&per_page=100`, {
+                    `https://api.github.com/repos/Equicord/Equicord/commits?author=${user.login}&per_page=10000`, {
                     headers: {
                         Authorization: `Bearer ${accessToken}`
                     }
