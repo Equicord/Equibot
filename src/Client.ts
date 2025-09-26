@@ -6,7 +6,7 @@ import Config from "./config";
 import { Emoji, Millis, SUPPORT_ALLOWED_CHANNELS } from "./constants";
 import { BotState } from "./db/botState";
 import { emojiCacheReady, ensureEmojis, getEmojiForReaction } from "./modules/emojiManager";
-import { lobotomiseMaybe, moderateMessage } from "./modules/moderate";
+import { moderateMessage } from "./modules/moderate";
 import { reply } from "./util/discord";
 import { silently } from "./util/functions";
 
@@ -58,7 +58,6 @@ Vaius.on("messageUpdate", (msg, oldMsg) => {
 });
 
 async function handleMessage(msg: Message, isEdit: boolean) {
-    if (msg.inCachedGuildChannel() && await lobotomiseMaybe(msg)) return;
     if (msg.author.bot && msg.author.id !== GEN_AI_ID) return;
     moderateMessage(msg, isEdit);
 

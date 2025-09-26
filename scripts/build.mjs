@@ -33,7 +33,7 @@ async function readDirRecursive(dir, base = "") {
 /**
  * @type {(files: string[], baseDir?: string) => string}
  */
-const makeImportAllCode = (files, baseDir = "") => files.map(f => `require("./${baseDir}${f.replace(/\.[cm]?[tj]sx?$/, "")}")`).join("\n");
+const makeImportAllCode = (files, baseDir = "") => files.map(f => `require("./${baseDir}${f.replace(/\.[cm]?[tj]sx?$/, "").replace(/\\/g, "/")}")`).join("\n");
 
 /**
  * @type {(dir: string, baseDir?: string) => Promise<string>}

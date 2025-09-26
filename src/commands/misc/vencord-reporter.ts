@@ -9,9 +9,9 @@ defineCommand({
     enabled: Config.reporter.enabled,
 
     name: "reporter",
-    description: "Run the Vencord reporter workflow",
+    description: "Run the Equicord reporter workflow",
     usage: "[ref = dev] [branch = both]",
-    aliases: ["report", "vencord-reporter", "test-patches", "test"],
+    aliases: ["report", "equicord-reporter", "test-patches", "test", "rep", "r"],
     modOnly: true,
 
     async execute({ msg }, ref = DefaultReporterBranch, branch = "both") {

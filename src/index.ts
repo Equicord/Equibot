@@ -14,6 +14,7 @@ import { PROD } from "./constants";
 import { BotState } from "./db/botState";
 // eslint-disable-next-line no-duplicate-imports
 import Config from "./config";
+import { initDevListeners } from "./modules/devTracker";
 import { initModListeners } from "./modules/moderate";
 import { handleCommandInteraction } from "./SlashCommands";
 import { silently } from "./util/functions";
@@ -38,6 +39,7 @@ if (PROD) {
 }
 
 initModListeners();
+initDevListeners();
 
 export async function handleError(title: string, err: unknown) {
     if (err instanceof DiscordHTTPError && err.status >= 500)

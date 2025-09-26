@@ -1,83 +1,52 @@
 const Config = {
     "token": "",
-    "prefixes": ["v!", "v?", "v.", "v"],
+    "prefixes": ["e!", "e?", "e.", "eq"],
     // id of the home guild of the bot. used for registering commands, etc
-    "homeGuildId": "1015060230222131221",
+    "homeGuildId": "",
     // "development" | "production"
-    "mode": "development",
+    "mode": "production",
 
     "channels": {
-        // channel where venbot will post moderation logs
-        "modLog": "1156349646965325824",
+        // channel where equibot will post moderation logs
+        "modLog": "",
 
-        // this is where venbot will send information like errors
-        "dev": "1033680203433660458",
+        // this is where equibot will send information like errors
+        "dev": "",
         // used as default for the not-support command and some other features
-        "support": "1026515880080842772",
+        "support": "",
 
         // channels where support commands are allowed.
         // always includes channels.dev and channels.support
         "supportAllowedChannels": [
-            "1345457031426871417", // vesktop support
-            "1024286218801926184", // bot spam
+            "", // bot spam
         ],
     },
 
     "roles": {
         // anyone with this role can execute moderation commands
-        "mod": "1026509424686284924",
+        "mod": "",
 
         // used for github linking and some other things
-        "donor": "1042507929485586532",
+        "donor": "",
         // used for github linking and some other things
-        "contributor": "1026534353167208489",
-        // used for regular cotd
-        "regular": "1026504932959977532",
+        "contributor": "",
 
         // roles that can be added or removed using the role management commands.
-        // always includes roles.donor, roles.regular, and roles.contributor
+        // always includes roles.donor, and roles.contributor
         "manageableRoles": [
-            "1191202487978438656", // programming
-            "1136687385434918992", // image sender
-            "1018310742874791977", // brain rot
-            "1118620309382254654", // can't talk
-            "1173623814211506207", // can't vc
-            "1161815552919076867", // no modmail
-            "1088566810976194693", // needy
-            "1061276426478813245", // no support
-            "1205614728148422716", // no programming
-            "1241355250129178775", // angelsachse (no german)
-            "1136184488498561035", // snippet dev
+            "", // no requests
+            "", // no modmail
+            "", // no support
+            "", // no yappin
+            "", // no media
+            "", // no modmail
         ]
-    },
-
-    // rule command
-    "rules": {
-        "enabled": true,
-        "rulesChannelId": "1015074670963335219"
     },
 
     // known issue command
     "knownIssues": {
         "enabled": true,
-        "knownIssuesForumId": "1257025907625951423"
-    },
-
-    // submission pass command
-    "submissionPass": {
-        "enabled": true,
-        "categoryId": "1256395889354997771",
-        "passRoleId": "1257065526019231945"
-    },
-
-    "modmail": {
-        "enabled": true,
-        "channelId": "1161412933050437682",
-        "logChannelId": "1161449871182659655",
-        // role that will be mentioned (without ping) in new tickets to pull everyone into the thread
-        "modRoleId": "1273266391449079858",
-        // role that will be given to ban users from opening tickets
-        "banRoleId": "1161815552919076867"
+        "knownIssuesForumId": ""
     },
 
     // http server used for some features.
@@ -90,38 +59,27 @@ const Config = {
 
     // link-github command which gives out contributor & donor roles
     "githubLinking": {
-        "enabled": false,
+        "enabled": true,
         "clientId": "",
         "clientSecret": "",
         // Github Personal Access Token. Used to check if user is sponsoring you https://github.com/settings/tokens/new
         "pat": ""
     },
 
-    // Advent of Code private leaderboard tracker
-    "adventOfCode": {
-        "enabled": false,
-        // logged in browser cookie
-        "cookie": "",
-        // channel to post the leaderboard in
-        "channelId": "1312179898550456350",
-        // link to the leaderboard to use
-        "leaderboardUrl": "https://adventofcode.com/2024/leaderboard/private/view/1776680",
-    },
-
     "reporter": {
-        "enabled": false,
+        "enabled": true,
         // Github PAT with workflow dispatch scope. Used to trigger reporter workflow
         "pat": "",
         // generate with `openssl rand -hex 128`
         "webhookSecret": "",
         // channel where each individual report will be posted
-        "logChannelId": "1337479880849362994",
+        "logChannelId": "",
         // channel where the bot will post the latest status of stable and canary
-        "statusChannelId": "1337479816240431115",
+        "statusChannelId": "",
         // message id of the stable status message (must be in statusChannelId)
-        "stableMessageId": "1337500395311992954",
+        "stableMessageId": "",
         // message id of the canary status message (must be in statusChannelId)
-        "canaryMessageId": "1337500381923774544",
+        "canaryMessageId": "",
     }
 };
 

@@ -1,10 +1,10 @@
 {
-    "name": "venbot",
+    "name": "equibot",
     "version": "1.0.0",
-    "description": "Discord Bot for the Vencord server",
+    "description": "Discord Bot for the Equicord server",
     "main": "dist/index.js",
     "scripts": {
-        "start": "pnpm sql:up & pnpm build && node --enable-source-maps . VENBOT",
+        "start": "pnpm sql:up & pnpm build && node --enable-source-maps . EQUIBOT",
         "build": "node scripts/build.mjs",
         "test": "pnpm lint && pnpm testTypes",
         "testTypes": "tsc --noEmit",
@@ -12,8 +12,8 @@
         "lint": "eslint . --ext .js,.ts",
         "lint:fix": "pnpm lint --fix",
         "sql:shell": "sqlite3 data/db.sqlite3",
-        "sql:up": "mkdir -p data && sqlite3 data/db.sqlite3 < sql/create.sql",
-        "sql:down": "mkdir -p data && sqlite3 data/db.sqlite3 < sql/drop.sql",
+        "sql:up": "sqlite3 data/db.sqlite3 < sql/create.sql",
+        "sql:down": "sqlite3 data/db.sqlite3 < sql/drop.sql",
         "sql:types": "kysely-codegen --url data/db.sqlite3",
         "postinstall": "pnpm sql:up && pnpm genTypes"
     },

@@ -37,7 +37,7 @@ const pendingReports = new TTLMap<string, ReportData>(
 );
 
 export async function triggerReportWorkflow({ ref, inputs }: { ref: string, inputs: { discord_branch: Branch; webhook_url?: string; }; }) {
-    return await doFetch("https://api.github.com/repos/Vendicated/Vencord/actions/workflows/reportBrokenPlugins.yml/dispatches", {
+    return await doFetch("https://api.github.com/repos/Equicord/Equicord/actions/workflows/reportBrokenPlugins.yml/dispatches", {
         method: "POST",
         headers: {
             Authorization: `Bearer ${pat}`,

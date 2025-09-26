@@ -3,4 +3,4 @@ aliases: vcd, dbg, debug
 emoji: 🐛
 ---
 
-Please share your Vencord debug info by running the `/vencord-debug` slash command!
+Please share your Equicord debug info by running the `/equicord-debug` slash command!

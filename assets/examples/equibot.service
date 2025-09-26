@@ -1,5 +1,5 @@
 [Unit]
-Description=venbot
+Description=equibot
 
 [Service]
 Type=exec
@@ -7,7 +7,7 @@ Restart=always
 ExecStartPre=pnpm install --frozen-lockfile
 ExecStartPre=pnpm build
 ExecStart=pnpm start
-WorkingDirectory=%h/venbot
+WorkingDirectory=%h/equibot
 
 [Install]
 WantedBy=default.target

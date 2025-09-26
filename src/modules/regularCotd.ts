@@ -1,20 +1,8 @@
 import { createCanvas, loadImage } from "@napi-rs/canvas";
 import { readFile } from "fs/promises";
 import { join } from "path";
-import Config from "~/config";
 
 import { ASSET_DIR } from "~/constants";
-import { randomHexColor } from "~/util/colors";
-import { daily } from "~/util/daily";
-import { getHomeGuild } from "~/util/discord";
-import { fetchJson } from "~/util/fetch";
-
-interface ColorResponse {
-    name: {
-        value: string;
-        closest_named_hex: string;
-    };
-}
 
 export async function drawBlobCatCozy(color: string, size = 512) {
     color = String(color)
@@ -41,27 +29,3 @@ export async function drawBlobCatCozy(color: string, size = 512) {
 
     return canvas.toBuffer("image/png");
 }
-
-export async function rerollCotd(inputHex?: string) {
-    const hexColor = inputHex ?? randomHexColor();
-    const {
-        name: {
-            value: name,
-            closest_named_hex: hex
-        }
-    } = await fetchJson<ColorResponse>("https://www.thecolorapi.com/id?hex=" + hexColor.slice(1));
-
-    const color = parseInt(hex.slice(1), 16);
-    const icon = await drawBlobCatCozy(hex);
-
-    await getHomeGuild()!.editRole(Config.roles.regular, {
-        name: `regular (${name.toLowerCase()})`,
-        color,
-        icon,
-        reason: "Rerolled cozy of the day"
-    });
-
-    return hexColor;
-}
-
-daily(rerollCotd);

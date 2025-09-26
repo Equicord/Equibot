@@ -1,9 +1,7 @@
 import leven from "leven";
-import { ActionRow, Button, ButtonStyles, ComponentMessage, Container, MediaGallery, MediaGalleryItem, Separator, TextDisplay } from "~components";
+import { ActionRow, Button, ButtonStyles, ComponentMessage, Container, TextDisplay } from "~components";
 
-import { SeparatorSpacingSize } from "oceanic.js";
 import { CommandContext, defineCommand } from "~/Commands";
-import { VENCORD_SITE } from "~/constants";
 import { EmojiName, getEmoji } from "~/modules/emojiManager";
 import { makeCachedJsonFetch } from "~/util/fetch";
 import { run } from "~/util/functions";
@@ -34,11 +32,7 @@ interface Trait {
 type PluginReadmes = Record<string, string>;
 
 const fetchPlugins = makeCachedJsonFetch<Plugin[]>(
-    VENCORD_SITE + "/plugins.json"
-);
-
-const fetchPluginReadmes = makeCachedJsonFetch<PluginReadmes>(
-    VENCORD_SITE + "/plugin-readmes.json",
+    "https://raw.githubusercontent.com/Equicord/Equibored/main/plugins.json"
 );
 
 async function sendPluginInfo({ reply }: CommandContext, plugin: Plugin) {
@@ -51,10 +45,6 @@ async function sendPluginInfo({ reply }: CommandContext, plugin: Plugin) {
         target,
         filePath,
     } = plugin;
-
-    const readmes = await fetchPluginReadmes();
-    const readme = readmes[name];
-    const [, imageDescription, image] = readme?.match(/!\[([^\]]*?)\]\((https:[^)]+?)\)/) ?? [];
 
     const traits: Trait[] = [
         {
@@ -100,27 +90,16 @@ async function sendPluginInfo({ reply }: CommandContext, plugin: Plugin) {
                 <TextDisplay>## {name}</TextDisplay>
                 <TextDisplay>{description}</TextDisplay>
 
-
-                {image
-                    ? <>
-                        <Separator divider={false} spacing={SeparatorSpacingSize.SMALL} />
-                        <MediaGallery>
-                            <MediaGalleryItem url={image} description={imageDescription || undefined} />
-                        </MediaGallery>
-                    </>
-                    : <Separator divider={true} spacing={SeparatorSpacingSize.LARGE} />
-                }
-
                 {traits.filter(t => t.shouldShow).map(t => (
                     <TextDisplay>{getEmoji(t.emoji)} {t.name}</TextDisplay>
                 ))}
 
                 <TextDisplay>-# Made by {plugin.authors.map(a => a.name).join(", ")}</TextDisplay>
                 <ActionRow>
-                    <Button style={ButtonStyles.LINK} url={`https://vencord.dev/plugins/${encodeURIComponent(name)}`}>
+                    <Button style={ButtonStyles.LINK} url={`https://equicord.org/plugins/${encodeURIComponent(name)}`}>
                         View Website
                     </Button>
-                    <Button style={ButtonStyles.LINK} url={`https://github.com/Vendicated/Vencord/blob/main/src/plugins/${filePath}`}>
+                    <Button style={ButtonStyles.LINK} url={`https://github.com/Equicord/Equicord/blob/main/${filePath}`}>
                         View Source
                     </Button>
                 </ActionRow>
@@ -138,10 +117,7 @@ defineCommand({
     async execute(ctx, query) {
         const { reply } = ctx;
 
-        if (!query) return reply("Gimme a plugin name silly");
-
-        if (query.toLowerCase() === "shiggy")
-            return reply("https://cdn.discordapp.com/emojis/1024751291504791654.gif?size=48&quality=lossless&name=shiggy");
+        if (!query) return reply("Please give me a plugin name");
 
 
         const plugins = await fetchPlugins();

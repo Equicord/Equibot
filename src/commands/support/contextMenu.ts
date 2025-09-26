@@ -4,13 +4,11 @@ import { Vaius } from "~/Client";
 import { handleCommandInteraction, handleInteraction } from "~/SlashCommands";
 
 import Config from "~/config";
-import { buildFaqEmbed, fetchFaq } from "./faq";
 import { buildIssueEmbed, findThreads } from "./knownIssues";
 import { SupportInstructions, SupportTagList } from "./support";
 
 const enum Commands {
     Support = "Send Support Tag",
-    Faq = "Send FAQ Tag",
     Issue = "Send Known Issue",
 }
 
@@ -18,11 +16,6 @@ Vaius.once("ready", () => {
     Vaius.application.createGuildCommand(Config.homeGuildId, {
         type: ApplicationCommandTypes.MESSAGE,
         name: Commands.Support
-    });
-
-    Vaius.application.createGuildCommand(Config.homeGuildId, {
-        type: ApplicationCommandTypes.MESSAGE,
-        name: Commands.Faq
     });
 
     Vaius.application.createGuildCommand(Config.homeGuildId, {
@@ -47,29 +40,6 @@ handleCommandInteraction({
                 components: [{
                     type: ComponentTypes.STRING_SELECT,
                     customID: `${Commands.Support}:${interaction.data.targetID}`,
-                    options
-                }]
-            }]
-        });
-    }
-});
-
-handleCommandInteraction({
-    name: Commands.Faq,
-    async handle(interaction) {
-        const [_, faqs] = await Promise.all([interaction.defer(MessageFlags.EPHEMERAL), fetchFaq()]);
-        const options = faqs.map(f => ({
-            value: f.question,
-            label: f.question
-        }));
-
-        await interaction.createFollowup({
-            flags: MessageFlags.EPHEMERAL,
-            components: [{
-                type: ComponentTypes.ACTION_ROW,
-                components: [{
-                    type: ComponentTypes.STRING_SELECT,
-                    customID: `${Commands.Faq}:${interaction.data.targetID}`,
                     options
                 }]
             }]
@@ -110,7 +80,6 @@ handleInteraction({
     isMatch: i =>
         i.data.componentType === ComponentTypes.STRING_SELECT && (
             i.data.customID.startsWith(Commands.Support + ":") ||
-            i.data.customID.startsWith(Commands.Faq + ":") ||
             i.data.customID.startsWith(Commands.Issue + ":")
         ),
     async handle(interaction: ComponentInteraction<SelectMenuTypes, AnyTextableChannel>) {
@@ -136,16 +105,6 @@ handleInteraction({
                         content: SupportInstructions[choice].content + `\n\n(Auto-response invoked by ${interaction.user.mention})`
                     });
                     await defer;
-                    break;
-                case Commands.Faq:
-                    const faq = await fetchFaq().then(faqs => faqs.find(f => f.question === choice));
-                    if (!faq)
-                        throw new Error("Unmatched faq question: " + choice);
-
-                    await interaction.channel.createMessage({
-                        ...replyOptions,
-                        embeds: [buildFaqEmbed(faq, interaction.user)],
-                    });
                     break;
                 case Commands.Issue:
                     const threads = await findThreads();

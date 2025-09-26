@@ -28,12 +28,6 @@ const DefaultCaptionsEnglish = {
     originCaption: "you are here"
 };
 
-const DefaultCaptionsGerman = {
-    category: "Keine Kategorie",
-    destCaption: "du solltest hier sein",
-    originCaption: "du bist hier"
-};
-
 defineCommand({
     name: "notsupport",
     aliases: ["ns", "nots"],
@@ -56,7 +50,7 @@ defineCommand({
 
         const [destCaption, currentCaption] = caption.split("|").map(s => s.trim());
 
-        const DefaultCaptions = msg.channelID === "1121201005456011366" ? DefaultCaptionsGerman : DefaultCaptionsEnglish;
+        const DefaultCaptions = DefaultCaptionsEnglish;
 
         const image = await drawNotSupportImage({
             currentCategory: msg.channel.parent?.name || DefaultCaptions.category,

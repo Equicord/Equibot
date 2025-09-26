@@ -55,45 +55,96 @@ const LinkedRoles: Array<{
             name: "Donor",
             id: Config.roles.donor,
             async check(user, accessToken) {
-                const query = `
-                    {
-                        user(login: ${JSON.stringify(user.login)}) {
-                            sponsorshipForViewerAsSponsorable(activeOnly: true) {
-                                tier {
-                                    name
-                                    monthlyPriceInDollars
+                const startOfMonth = new Date();
+                startOfMonth.setDate(1);
+                startOfMonth.setHours(0, 0, 0, 0);
+
+                let after: string | null = null;
+
+                type SponsorshipNode = {
+                    sponsorable: {
+                        __typename: string; login?: string;
+                    };
+                    tier: {
+                        name: string; monthlyPriceInDollars: number;
+                    } | null;
+                    createdAt: string;
+                    isOneTimePayment: boolean;
+                };
+
+                const sponsorTiers: {
+                    name: string; monthlyPriceInDollars: number; oneTime: boolean;
+                }[] = [];
+
+                do {
+                    const query = `
+                        {
+                            user(login: ${JSON.stringify(user.login)}) {
+                                sponsorshipsAsSponsor(
+                                    first: 100,
+                                    ${after ? `after: "${after}"` : ""}
+                                    activeOnly: false,
+                                    maintainerLogins: ["thororen1234"]
+                                ) {
+                                    nodes {
+                                        sponsorable {
+                                            ... on User { login }
+                                        }
+                                        tier {
+                                            name
+                                            monthlyPriceInDollars
+                                        }
+                                        createdAt
+                                        isOneTimePayment
+                                    }
                                 }
                             }
                         }
-                    }
-                `;
-                const res = await fetchJson("https://api.github.com/graphql", {
-                    method: "POST",
-                    headers: {
-                        Authorization: `Bearer ${pat}`
-                    },
-                    body: JSON.stringify({ query })
-                }).catch(() => null);
+                    `;
 
-                if (!res)
-                    throw new CheckError("Failed to fetch sponsor info from GitHub");
+                    const res = await fetchJson("https://api.github.com/graphql", {
+                        method: "POST",
+                        headers: {
+                            Authorization: `Bearer ${accessToken}`
+                        },
+                        body: JSON.stringify({
+                            query
+                        })
+                    }).catch(() => null);
 
-                const sponsorInfo = safeParse(sponsorSchema, res.data);
-                if (!sponsorInfo.success)
-                    throw new CheckError("Failed to parse sponsor info from GitHub");
+                    if (!res) throw new CheckError("Failed to fetch sponsor info from GitHub");
 
-                const sponsorTier = sponsorInfo.output.user.sponsorshipForViewerAsSponsorable?.tier;
-                if (!sponsorTier)
-                    return false;
+                    const data = res.data.user.sponsorshipsAsSponsor.nodes;
 
-                return `Based on your ${sponsorTier.name} sponsorship`;
+                    if (!data) break;
+
+                    const monthlySponsors = data.nodes
+                        .filter(n => n.tier && new Date(n.createdAt) >= startOfMonth)
+                        .map(n => ({
+                            name: n.tier!.name,
+                            monthlyPriceInDollars: n.tier!.monthlyPriceInDollars,
+                            oneTime: n.isOneTimePayment
+                        }));
+
+                    sponsorTiers.push(...monthlySponsors);
+
+                    after = data.pageInfo.hasNextPage ? data.pageInfo.endCursor : null;
+                } while (after);
+
+                if (sponsorTiers.length === 0) return false;
+
+                const tiersList = sponsorTiers
+                    .map(t => `${t.name} (${t.oneTime ? "one-time" : "recurring"})`)
+                    .join(", ");
+
+                return `Based on your sponsorship(s) this month: ${tiersList}`;
             }
         },
         {
             name: "Contributor",
             id: Config.roles.contributor,
             async check(user, accessToken) {
-                const res = await fetchJson(`https://api.github.com/search/commits?q=author:${user.login}+org:Vencord+repo:Vendicated%2FVencord&per_page=1`, {
+                const res = await fetchJson(`https://api.github.com/search/commits?q=author:${user.login}+org:Equicord&per_page=1`, {
                     headers: {
                         Authorization: `Bearer ${accessToken}`
                     }
@@ -203,7 +254,7 @@ enabled && fastify.register(
 
                 const userAsMember = await getAsMemberInHomeGuild(req.query.userId);
                 if (!userAsMember)
-                    return res.status(400).send("You must be in the Vencord server to link your GitHub");
+                    return res.status(400).send("You must be in the Equicord server to link your GitHub");
 
                 clearTimeout(state.timeoutId);
                 githubAuthStates.delete(req.query.userId);
@@ -322,7 +373,7 @@ defineCommand({
 
         const member = await getAsMemberInHomeGuild(msg.author.id);
         if (!member)
-            return reply("You must be in the Vencord server to link your GitHub.");
+            return reply("You must be in the Equicord server to link your GitHub.");
 
         const id = randomUUID();
         const oauthLink = `${Config.httpServer.domain}/github/authorize?userId=${msg.author.id}&state=${id}`;

@@ -4,7 +4,7 @@ import { join } from "path";
 import { makeConstants } from "~/util/objects";
 import Config from "./config";
 
-export const VENCORD_SITE = "https://vencord.dev";
+export const EQUICORD_SITE = "https://equicord.org";
 
 export const ASSET_DIR = join(__dirname, "..", "assets");
 export const DATA_DIR = join(__dirname, "..", "data");
@@ -20,7 +20,6 @@ export const SUPPORT_ALLOWED_CHANNELS = [
 
 export const MANAGEABLE_ROLES = [
     Config.roles.donor,
-    Config.roles.regular,
     Config.roles.contributor,
     ...Config.roles.manageableRoles
 ];

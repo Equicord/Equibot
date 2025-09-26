@@ -28,7 +28,7 @@ defineCommand({
         text = text.replaceAll("\n", "") || msg.referencedMessage?.content!;
 
         if (!text)
-            return reply("https://www.youtube.com/watch?v=hiRacdl02w4");
+            return reply("Please give me a proper input :(");
 
         const map = await requireMap();
 

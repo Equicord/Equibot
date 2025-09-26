@@ -29,7 +29,6 @@ function makeFakeConsole() {
 
 const toRedact = [
     Config.token,
-    Config.adventOfCode.cookie,
     Config.githubLinking.clientSecret,
     Config.githubLinking.pat,
     Config.reporter.pat,
