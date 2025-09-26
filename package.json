@@ -1,5 +1,5 @@
 {
-    "name": "equibot",
+    "name": "venbot",
     "version": "1.0.0",
     "description": "Discord Bot for the Equicord server",
     "main": "dist/index.js",
@@ -15,7 +15,7 @@
         "sql:up": "sqlite3 data/db.sqlite3 < sql/create.sql",
         "sql:down": "sqlite3 data/db.sqlite3 < sql/drop.sql",
         "sql:types": "kysely-codegen --url data/db.sqlite3",
-        "postinstall": "pnpm sql:up && pnpm genTypes"
+        "postinstall": "pnpm sql:up && pnpm genTypes && pnpm rebuild better-sqlite3"
     },
     "keywords": [],
     "author": "Vendicated <vendicated+npm@riseup.net>",
