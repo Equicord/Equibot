@@ -1,7 +1,7 @@
 import { randomUUID } from "crypto";
 import { FastifyReply, FastifyRequest } from "fastify";
 import { AnyTextableChannel, Message } from "oceanic.js";
-import { boolean, InferOutput, nullable, number, object, parse, safeParse, string, union } from "valibot";
+import { InferOutput, nullable, number, object, parse, safeParse, string, union } from "valibot";
 
 import { defineCommand } from "~/Commands";
 import Config from "~/config";
@@ -33,8 +33,7 @@ const sponsorSchema = object({
             tier: object({
                 name: string(),
                 monthlyPriceInDollars: number()
-            }),
-            isOneTimePayment: union([string(), boolean()])
+            })
         }))
     })
 });
@@ -64,7 +63,6 @@ const LinkedRoles: Array<{
                                     name
                                     monthlyPriceInDollars
                                 }
-                                isOneTimePayment
                             }
                         }
                     }
@@ -82,10 +80,10 @@ const LinkedRoles: Array<{
                 const sponsorInfo = safeParse(sponsorSchema, res.data);
                 if (!sponsorInfo.success) throw new CheckError("Failed to parse sponsor info from GitHub");
 
-                const sponsor = sponsorInfo.output.user.sponsorshipForViewerAsSponsorable;
-                if (!sponsor || !sponsor.tier) return false;
+                const sponsorTier = sponsorInfo.output.user.sponsorshipForViewerAsSponsorable?.tier;
+                if (!sponsorTier) return false;
 
-                return `Based on your ${sponsor.tier.name} sponsorship (${sponsor.isOneTimePayment ? "one-time" : "recurring"})`;
+                return `Based on your ${sponsorTier.name} sponsorship`;
             }
         },
         {
