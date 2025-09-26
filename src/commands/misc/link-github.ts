@@ -93,7 +93,24 @@ const LinkedRoles: Array<{
             name: "Contributor",
             id: Config.roles.contributor,
             async check(user, accessToken) {
-                const res = await fetchJson(`https://api.github.com/repos/Equicord/Equicord/commits?author=${user.login}&per_page=1`, {
+                const prRes = await fetchJson(`https://api.github.com/search/issues?q=author:${user.login}+org:Equicord+is:pr+is:merged&per_page=1`, {
+                    headers: {
+                        Authorization: `Bearer ${accessToken}`
+                    }
+                }).catch(() => null);
+
+                if (!prRes)
+                    throw new CheckError("Failed to fetch user events from GitHub");
+
+                const prs = safeParse(eventsSchema, prRes);
+                if (!prs.success)
+                    throw new CheckError("Failed to parse user events from GitHub");
+
+                if (prs.output.total_count > 0)
+                    return `Based on ${prs.output.total_count} merged pull requests`;
+
+                const res = await fetchJson(`https://api.github.com/search/commits?q=author:${user.login}+org:Equicord&per_page=1`, {
+                //const res = await fetchJson(`https://api.github.com/repos/Equicord/Equicord/commits?author=${user.login}&per_page=1`, {
                     headers: {
                         Authorization: `Bearer ${accessToken}`
                     }
