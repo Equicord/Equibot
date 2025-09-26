@@ -46,6 +46,32 @@ const commitsSchema = object({
     length: number()
 });
 
+async function countCommitsByAuthor(userLogin, accessToken) {
+    const perPage = 100;
+    let page = 1;
+    let total = 0;
+
+    while (true) {
+        const url = `https://api.github.com/repos/Equicord/Equicord/commits?author=${userLogin}&per_page=${perPage}&page=${page}`;
+        const res = await fetchJson(url, {
+            headers: { Authorization: `Bearer ${accessToken}` }
+        }).catch(() => null);
+
+        if (!res) throw new CheckError("Failed to fetch user commits from GitHub");
+
+        const parsed = safeParse(commitsSchema, res);
+        if (!parsed.success) throw new CheckError("Failed to parse user commits from GitHub");
+
+        if (!parsed.output.length) break;
+        total += parsed.output.length;
+
+        if (parsed.output.length < perPage) break;
+        page++;
+    }
+
+    return total;
+}
+
 type User = InferOutput<typeof userSchema>;
 
 class CheckError extends Error { }
@@ -111,19 +137,8 @@ const LinkedRoles: Array<{
                     if (org.success) total += org.output.total_count;
                 }
 
-                const commitRes = await fetchJson(
-                    `https://api.github.com/repos/Equicord/Equicord/commits?author=${user.login}&per_page=10000`, {
-                    headers: {
-                        Authorization: `Bearer ${accessToken}`
-                    }
-                }).catch(() => null);
-
-                if (!commitRes) throw new CheckError("Failed to fetch user commits from GitHub");
-
-                const commits = safeParse(commitsSchema, commitRes);
-                if (!commits.success) throw new CheckError("Failed to parse user commits from GitHub");
-
-                total += commits.output.length;
+                const repoTotal = await countCommitsByAuthor(user.login, accessToken);
+                total += repoTotal;
 
                 if (total === 0) return false;
                 return `Based on ${total} commits`;
