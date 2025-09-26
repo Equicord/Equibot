@@ -10,13 +10,11 @@ const Config = {
         // channel where equibot will post moderation logs
         "modLog": "",
 
-        // this is where equibot will send information like errors
-        "dev": "",
         // used as default for the not-support command and some other features
         "support": "",
 
         // channels where support commands are allowed.
-        // always includes channels.dev and channels.support
+        // always includes channels.support
         "supportAllowedChannels": [
             "", // bot spam
         ],
@@ -30,6 +28,8 @@ const Config = {
         "donor": "",
         // used for github linking and some other things
         "contributor": "",
+        // vencord contrib
+        "vencordContrib": "",
 
         // roles that can be added or removed using the role management commands.
         // always includes roles.donor, and roles.contributor

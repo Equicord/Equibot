@@ -130,6 +130,8 @@ async function handleReportSubmit(report: ReportData, data: any) {
 
     report.onSubmit?.(report, data);
 
+    Vaius.rest.channels.createMessage(logChannelId, data);
+
     const latestHash = report.branch === "canary"
         ? BotState.discordTracker!.canaryHash
         : BotState.discordTracker!.stableHash;
@@ -137,8 +139,6 @@ async function handleReportSubmit(report: ReportData, data: any) {
     if (!report.shouldUpdateStatus || latestHash !== report.hash[report.branch]) {
         return;
     }
-
-    Vaius.rest.channels.createMessage(logChannelId, data);
 
     data.embeds[0].description = `Last updated: <t:${Math.round(Date.now() / 1000)}>`;
 

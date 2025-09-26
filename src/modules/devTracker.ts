@@ -1,8 +1,6 @@
 import { Member } from "oceanic.js";
+import Config from "~/config";
 import { Vaius } from "../Client";
-
-const EQUICORD_CONTRIB_ROLE = "1222677964760682556";
-const VENCORD_CONTRIB_ROLE = "1173343399470964856";
 
 let cachedEquicordDevs: Set<string> | null = null;
 let cachedVencordDevs: Set<string> | null = null;
@@ -26,12 +24,13 @@ async function getDevIDs() {
 }
 
 async function checkIfDev(member: Member) {
+    const { contributor, vencordContrib } = Config.roles;
     try {
         const { equicord, vencord } = await getDevIDs();
         const rolesToAdd: string[] = [];
 
-        if (equicord.has(member.id)) rolesToAdd.push(EQUICORD_CONTRIB_ROLE);
-        if (vencord.has(member.id)) rolesToAdd.push(VENCORD_CONTRIB_ROLE);
+        if (equicord.has(member.id)) rolesToAdd.push(contributor);
+        if (vencord.has(member.id)) rolesToAdd.push(vencordContrib);
 
         if (rolesToAdd.length > 0) {
             try {

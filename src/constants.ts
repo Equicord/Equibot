@@ -13,7 +13,6 @@ mkdirSync(DATA_DIR, { recursive: true });
 export const PROD = Config.mode === "production";
 
 export const SUPPORT_ALLOWED_CHANNELS = [
-    Config.channels.dev,
     Config.channels.support,
     ...Config.channels.supportAllowedChannels
 ];
@@ -21,6 +20,7 @@ export const SUPPORT_ALLOWED_CHANNELS = [
 export const MANAGEABLE_ROLES = [
     Config.roles.donor,
     Config.roles.contributor,
+    Config.roles.vencordContrib,
     ...Config.roles.manageableRoles
 ];
 
