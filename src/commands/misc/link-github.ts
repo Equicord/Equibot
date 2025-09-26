@@ -93,7 +93,7 @@ const LinkedRoles: Array<{
             name: "Contributor",
             id: Config.roles.contributor,
             async check(user, accessToken) {
-                const res = await fetchJson(`https://api.github.com/search/commits?q=author:${user.login}+org:Equicord&per_page=1`, {
+                const res = await fetchJson(`https://api.github.com/repos/Equicord/Equicord/commits?author=${user.login}&per_page=1`, {
                     headers: {
                         Authorization: `Bearer ${accessToken}`
                     }
@@ -106,10 +106,10 @@ const LinkedRoles: Array<{
                 if (!events.success)
                     throw new CheckError("Failed to parse user events from GitHub");
 
-                if (!events.output.total_count)
+                if (!events.output.length)
                     return false;
 
-                return `Based on ${events.output.total_count} commits`;
+                return `Based on ${events.output.length}+ commits`;
             }
         }
     ];
