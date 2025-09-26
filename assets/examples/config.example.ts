@@ -63,7 +63,9 @@ const Config = {
         "clientId": "",
         "clientSecret": "",
         // Github Personal Access Token. Used to check if user is sponsoring you https://github.com/settings/tokens/new
-        "pat": ""
+        "pats": [
+            ""
+        ]
     },
 
     "reporter": {

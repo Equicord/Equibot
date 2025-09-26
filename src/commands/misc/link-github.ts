@@ -14,7 +14,7 @@ import { getAsMemberInHomeGuild, sendDm } from "~/util/discord";
 import { fetchJson } from "~/util/fetch";
 import { silently } from "~/util/functions";
 
-const { clientId, clientSecret, enabled, pat } = Config.githubLinking;
+const { clientId, clientSecret, enabled, pats } = Config.githubLinking;
 
 export const githubAuthStates = new Map<string, {
     id: string;
@@ -67,23 +67,26 @@ const LinkedRoles: Array<{
                         }
                     }
                 `;
-                const res = await fetchJson("https://api.github.com/graphql", {
-                    method: "POST",
-                    headers: {
-                        Authorization: `Bearer ${pat}`
-                    },
-                    body: JSON.stringify({ query })
-                }).catch(() => null);
 
-                if (!res) throw new CheckError("Failed to fetch sponsor info from GitHub");
+                for (const pat of pats) {
+                    const res = await fetchJson("https://api.github.com/graphql", {
+                        method: "POST",
+                        headers: {
+                            Authorization: `Bearer ${pat}`
+                        },
+                        body: JSON.stringify({ query })
+                    }).catch(() => null);
 
-                const sponsorInfo = safeParse(sponsorSchema, res.data);
-                if (!sponsorInfo.success) throw new CheckError("Failed to parse sponsor info from GitHub");
+                    if (!res) continue;
 
-                const sponsorTier = sponsorInfo.output.user.sponsorshipForViewerAsSponsorable?.tier;
-                if (!sponsorTier) return false;
+                    const sponsorInfo = safeParse(sponsorSchema, res.data);
+                    if (!sponsorInfo.success) continue;
 
-                return `Based on your ${sponsorTier.name} sponsorship`;
+                    const sponsorTier = sponsorInfo.output.user.sponsorshipForViewerAsSponsorable?.tier;
+                    if (sponsorTier) return `Based on your ${sponsorTier.name} sponsorship`;
+                }
+
+                return false;
             }
         },
         {
@@ -183,7 +186,7 @@ enabled && fastify.register(
                 });
 
                 if (!githubResponse.ok)
-                    return res.status(400).send("Failed to authorise with GitHub");
+                    return res.status(400).send("Failed to authorize with GitHub");
 
                 const { access_token: accessToken } = await githubResponse.json() as any;
 
@@ -325,7 +328,7 @@ defineCommand({
         const oauthLink = `${Config.httpServer.domain}/github/authorize?userId=${msg.author.id}&state=${id}`;
 
         const sentMessage = await sendDm(msg.author, {
-            content: `To link your GitHub account, please authorise [here](<${oauthLink}>)\n\nThis link will expire in 5 minutes.`
+            content: `To link your GitHub account, please authorize [here](<${oauthLink}>)\n\nThis link will expire in 5 minutes.`
         });
 
         if (!sentMessage)
