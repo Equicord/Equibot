@@ -63,7 +63,7 @@ const LinkedRoles: Array<{
                             sponsorshipsAsSponsor(
                                 first: 100,
                                 activeOnly: false,
-                                maintainerLogins: ["thororen1234"]
+                                maintainerLogins: ["thororen1234", "verticalsync"]
                             ) {
                                 nodes {
                                     sponsorable {
