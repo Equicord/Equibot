@@ -55,9 +55,7 @@ const LinkedRoles: Array<{
             name: "Donor",
             id: Config.roles.donor,
             async check(user, accessToken) {
-                const sponsorTiers: {
-                    name: string; monthlyPriceInDollars: number; oneTime: boolean;
-                }[] = [];
+                const sponsorTiers: { name: string; monthlyPriceInDollars: number; oneTime: boolean; }[] = [];
 
                 const query = `
                     {
@@ -85,26 +83,20 @@ const LinkedRoles: Array<{
 
                 const res = await fetchJson("https://api.github.com/graphql", {
                     method: "POST",
-                    headers: {
-                        Authorization: `Bearer ${accessToken}`
-                    },
-                    body: JSON.stringify({
-                        query
-                    })
+                    headers: { Authorization: `Bearer ${accessToken}` },
+                    body: JSON.stringify({ query })
                 }).catch(() => null);
 
                 if (!res) throw new CheckError("Failed to fetch sponsor info from GitHub");
 
                 const userData = res?.data?.user;
-                if (!userData) {
-                    throw new CheckError("GitHub user data not found or token lacks permissions");
-                }
+                if (!userData) return false;
 
                 const sponsorships = userData.sponsorshipsAsSponsor?.nodes ?? [];
-
                 if (!sponsorships.length) return false;
 
                 const monthlySponsors = sponsorships
+                    .filter(n => n.tier)
                     .map(n => ({
                         name: n.tier!.name,
                         monthlyPriceInDollars: n.tier!.monthlyPriceInDollars,
@@ -113,7 +105,7 @@ const LinkedRoles: Array<{
 
                 sponsorTiers.push(...monthlySponsors);
 
-                if (sponsorTiers.length === 0) return false;
+                if (!sponsorTiers.length) return false;
 
                 const tiersList = sponsorTiers
                     .map(t => `${t.name} (${t.oneTime ? "one-time" : "recurring"})`)
