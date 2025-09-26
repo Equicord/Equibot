@@ -141,7 +141,7 @@ async function handleReportSubmit(report: ReportData, data: any) {
     data.embeds[0].description = `Last updated: <t:${Math.round(Date.now() / 1000)}>`;
 
     const messageId = report.branch === "canary" ? canaryMessageId : stableMessageId;
-    Vaius.rest.channels.editMessage(latestChanId, messageId, data);
+    Vaius.rest.channels.editMessage(logChannelId, messageId, data);
     Vaius.rest.channels.createMessage(statusChannelId, data);
 }
 
