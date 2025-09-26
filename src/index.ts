@@ -25,15 +25,15 @@ if (PROD) {
     Vaius.once("ready", () => {
         Vaius.application.createGlobalCommand({
             type: ApplicationCommandTypes.CHAT_INPUT,
-            name: "owo",
-            description: "owo",
+            name: "stare",
+            description: "stare...",
         });
     });
 
     handleCommandInteraction({
-        name: "owo",
+        name: "stare",
         handle(i) {
-            i.createMessage({ content: "owo " });
+            i.createMessage({ content: "dance dance" });
         }
     });
 }
