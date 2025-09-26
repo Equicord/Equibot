@@ -55,81 +55,63 @@ const LinkedRoles: Array<{
             name: "Donor",
             id: Config.roles.donor,
             async check(user, accessToken) {
-                const startOfMonth = new Date();
-                startOfMonth.setDate(1);
-                startOfMonth.setHours(0, 0, 0, 0);
-
-                let after: string | null = null;
-
-                type SponsorshipNode = {
-                    sponsorable: {
-                        __typename: string; login?: string;
-                    };
-                    tier: {
-                        name: string; monthlyPriceInDollars: number;
-                    } | null;
-                    createdAt: string;
-                    isOneTimePayment: boolean;
-                };
-
                 const sponsorTiers: {
                     name: string; monthlyPriceInDollars: number; oneTime: boolean;
                 }[] = [];
 
-                do {
-                    const query = `
-                        {
-                            user(login: ${JSON.stringify(user.login)}) {
-                                sponsorshipsAsSponsor(
-                                    first: 100,
-                                    ${after ? `after: "${after}"` : ""}
-                                    activeOnly: false,
-                                    maintainerLogins: ["thororen1234"]
-                                ) {
-                                    nodes {
-                                        sponsorable {
-                                            ... on User { login }
-                                        }
-                                        tier {
-                                            name
-                                            monthlyPriceInDollars
-                                        }
-                                        createdAt
-                                        isOneTimePayment
+                const query = `
+                    {
+                        user(login: ${JSON.stringify(user.login)}) {
+                            sponsorshipsAsSponsor(
+                                first: 100,
+                                activeOnly: false,
+                                maintainerLogins: ["thororen1234"]
+                            ) {
+                                nodes {
+                                    sponsorable {
+                                        ... on User { login }
                                     }
+                                    tier {
+                                        name
+                                        monthlyPriceInDollars
+                                    }
+                                    createdAt
+                                    isOneTimePayment
                                 }
                             }
                         }
-                    `;
+                    }
+                `;
 
-                    const res = await fetchJson("https://api.github.com/graphql", {
-                        method: "POST",
-                        headers: {
-                            Authorization: `Bearer ${accessToken}`
-                        },
-                        body: JSON.stringify({
-                            query
-                        })
-                    }).catch(() => null);
+                const res = await fetchJson("https://api.github.com/graphql", {
+                    method: "POST",
+                    headers: {
+                        Authorization: `Bearer ${accessToken}`
+                    },
+                    body: JSON.stringify({
+                        query
+                    })
+                }).catch(() => null);
 
-                    if (!res) throw new CheckError("Failed to fetch sponsor info from GitHub");
+                if (!res) throw new CheckError("Failed to fetch sponsor info from GitHub");
 
-                    const data = res.data.user.sponsorshipsAsSponsor.nodes;
+                const userData = res?.data?.user;
+                if (!userData) {
+                    throw new CheckError("GitHub user data not found or token lacks permissions");
+                }
 
-                    if (!data) break;
+                const sponsorships = userData.sponsorshipsAsSponsor?.nodes ?? [];
 
-                    const monthlySponsors = data.nodes
-                        .filter(n => n.tier && new Date(n.createdAt) >= startOfMonth)
-                        .map(n => ({
-                            name: n.tier!.name,
-                            monthlyPriceInDollars: n.tier!.monthlyPriceInDollars,
-                            oneTime: n.isOneTimePayment
-                        }));
+                if (!sponsorships.length) return false;
 
-                    sponsorTiers.push(...monthlySponsors);
+                const monthlySponsors = sponsorships
+                    .map(n => ({
+                        name: n.tier!.name,
+                        monthlyPriceInDollars: n.tier!.monthlyPriceInDollars,
+                        oneTime: n.isOneTimePayment
+                    }));
 
-                    after = data.pageInfo.hasNextPage ? data.pageInfo.endCursor : null;
-                } while (after);
+                sponsorTiers.push(...monthlySponsors);
 
                 if (sponsorTiers.length === 0) return false;
 
@@ -137,7 +119,7 @@ const LinkedRoles: Array<{
                     .map(t => `${t.name} (${t.oneTime ? "one-time" : "recurring"})`)
                     .join(", ");
 
-                return `Based on your sponsorship(s) this month: ${tiersList}`;
+                return `Based on your sponsorship(s): ${tiersList}`;
             }
         },
         {
