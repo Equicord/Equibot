@@ -2,7 +2,6 @@ import leven from "leven";
 import { ActionRow, Button, ButtonStyles, ComponentMessage, Container, TextDisplay } from "~components";
 
 import { CommandContext, defineCommand } from "~/Commands";
-import { EmojiName, getEmoji } from "~/modules/emojiManager";
 import { makeCachedJsonFetch } from "~/util/fetch";
 import { run } from "~/util/functions";
 
@@ -24,12 +23,9 @@ interface Plugin {
 }
 
 interface Trait {
-    emoji: EmojiName;
     name: string;
     shouldShow: boolean;
 }
-
-type PluginReadmes = Record<string, string>;
 
 const fetchPlugins = makeCachedJsonFetch<Plugin[]>(
     "https://raw.githubusercontent.com/Equicord/Equibored/main/plugins.json"
@@ -48,37 +44,30 @@ async function sendPluginInfo({ reply }: CommandContext, plugin: Plugin) {
 
     const traits: Trait[] = [
         {
-            emoji: "plugin_required",
             name: "This plugin is required",
             shouldShow: required,
         },
         {
-            emoji: "plugin_default_enabled",
             name: "This plugin is enabled by default",
             shouldShow: enabledByDefault,
         },
         {
-            emoji: "plugin_commands",
             name: "This plugin has chat commands",
             shouldShow: hasCommands,
         },
         {
-            emoji: "plugin_desktop",
             name: "This plugin is desktop only",
             shouldShow: target === "desktop",
         },
         {
-            emoji: "plugin_discord_desktop",
             name: "This plugin is discord desktop only",
             shouldShow: target === "discordDesktop",
         },
         {
-            emoji: "plugin_web",
             name: "This plugin is web only",
             shouldShow: target === "web",
         },
         {
-            emoji: "plugin_dev",
             name: "This plugin is development build only",
             shouldShow: target === "dev",
         },
@@ -91,7 +80,7 @@ async function sendPluginInfo({ reply }: CommandContext, plugin: Plugin) {
                 <TextDisplay>{description}</TextDisplay>
 
                 {traits.filter(t => t.shouldShow).map(t => (
-                    <TextDisplay>{getEmoji(t.emoji)} {t.name}</TextDisplay>
+                    <TextDisplay>{t.name}</TextDisplay>
                 ))}
 
                 <TextDisplay>-# Made by {plugin.authors.map(a => a.name).join(", ")}</TextDisplay>

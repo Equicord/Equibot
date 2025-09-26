@@ -2,7 +2,6 @@ import { ChannelTypes } from "oceanic.js";
 
 import { defineCommand } from "~/Commands";
 import { Emoji } from "~/constants";
-import { getEmoji } from "~/modules/emojiManager";
 import { silently } from "~/util/functions";
 import { makeConstants } from "~/util/objects";
 
@@ -46,7 +45,7 @@ defineCommand({
         createMessage({
             content: `${topicText} ${channel.mention}`,
             embeds: [{
-                title: `${getEmoji(emojiName)}  ${channel.name}`,
+                title: `${channel.name}`,
                 color: 0x2b2d31,
                 description: topic,
                 footer: { text: footer },

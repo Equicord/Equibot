@@ -5,7 +5,6 @@ import { CommandContext, Commands } from "./Commands";
 import Config from "./config";
 import { Emoji, Millis, SUPPORT_ALLOWED_CHANNELS } from "./constants";
 import { BotState } from "./db/botState";
-import { emojiCacheReady, ensureEmojis, getEmojiForReaction } from "./modules/emojiManager";
 import { moderateMessage } from "./modules/moderate";
 import { reply } from "./util/discord";
 import { silently } from "./util/functions";
@@ -23,8 +22,6 @@ export const Vaius = new Client({
 
 export let OwnerId: string;
 Vaius.once("ready", async () => {
-    ensureEmojis();
-
     Vaius.rest.oauth.getApplication().then(app => {
         OwnerId = app.ownerID;
     });
@@ -60,8 +57,6 @@ Vaius.on("messageUpdate", (msg, oldMsg) => {
 async function handleMessage(msg: Message, isEdit: boolean) {
     if (msg.author.bot && msg.author.id !== GEN_AI_ID) return;
     moderateMessage(msg, isEdit);
-
-    await emojiCacheReady;
 
     const lowerContent = msg.content.toLowerCase();
 
@@ -100,7 +95,6 @@ async function handleMessage(msg: Message, isEdit: boolean) {
 
     if (!noRateLimit && cmd.rateLimits.getOrAdd(msg.author.id)) {
         silently(msg.createReaction("🛑"));
-        silently(msg.createReaction(getEmojiForReaction("snailcat")));
         return;
     }
 
