@@ -15,7 +15,7 @@
         "sql:up": "sqlite3 data/db.sqlite3 < sql/create.sql",
         "sql:down": "sqlite3 data/db.sqlite3 < sql/drop.sql",
         "sql:types": "kysely-codegen --url data/db.sqlite3",
-        "postinstall": "pnpm sql:up && pnpm genTypes && pnpm rebuild better-sqlite3"
+        "postinstall": "pnpm sql:up && pnpm genTypes"
     },
     "keywords": [],
     "author": "Vendicated <vendicated+npm@riseup.net>",

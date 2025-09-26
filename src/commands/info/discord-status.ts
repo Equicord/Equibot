@@ -58,7 +58,7 @@ interface DiscordIncdentsResponse {
 
 defineCommand({
     name: "discord-status",
-    aliases: ["dstatus", "ds"],
+    aliases: ["dstatus", "ds", "status"],
     description: "Check if discord incidents are happening",
     usage: null,
     async execute({ reply }) {

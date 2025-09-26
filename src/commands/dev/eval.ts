@@ -45,6 +45,15 @@ function redactCredentials(str: string) {
     return str;
 }
 
+function redactPaths(str) {
+    const homeDir = process.env.HOME || process.env.USERPROFILE;
+    const projectDir = __dirname;
+
+    return str
+        .replaceAll(homeDir, "~")
+        .replaceAll(projectDir, "equibot");
+}
+
 defineCommand({
     name: "eval",
     description: "Evaluate javascript code",
@@ -73,8 +82,8 @@ defineCommand({
 
         try {
             var result = await eval(script);
-        } catch (e: any) {
-            var result = e;
+        } catch (e) {
+            var result = redactPaths(e.toString());
         }
 
         if (typeof result === "function") result = result.toString();

@@ -10,7 +10,7 @@ import { makeEmbedSpaces, snakeToTitle, stripIndent, toInlineCode, toTitle } fro
 
 defineCommand({
     name: "help",
-    aliases: ["theylp", "shelp", "shiglp", "yardim", "yardım", "h", "?"],
+    aliases: ["h", "?"],
     description: "List all commands or get help for a specific command",
     usage: "[command]",
     async execute(ctx, commandName) {
