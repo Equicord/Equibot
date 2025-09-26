@@ -8,8 +8,7 @@ import { reply } from "~/util/discord";
 import { isNonNullish } from "~/util/guards";
 
 const ignoreRoles = new Set([
-    "1166731271943237662", "1166731270542340146", "1166731273155379220", // Announcement Roles
-    "1017523851342663783", // Server Booster
+    "1267567672233689130", // Server Booster
 ]);
 
 const shouldIgnoreRole = (roleId: string, guild: Guild) => ignoreRoles.has(roleId) || !!guild.roles.get(roleId)?.managed;
