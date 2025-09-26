@@ -75,7 +75,7 @@ async function sendPluginInfo({ reply }: CommandContext, plugin: Plugin) {
 
     return reply(
         <ComponentMessage>
-            <Container accentColor={0xdd7878}>
+            <Container accentColor={0x828282}>
                 <TextDisplay>## {name}</TextDisplay>
                 <TextDisplay>{description}</TextDisplay>
 

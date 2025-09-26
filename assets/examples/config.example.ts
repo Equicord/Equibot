@@ -76,8 +76,6 @@ const Config = {
         "logChannelId": "",
         // channel where the bot will post the latest status of stable and canary
         "statusChannelId": "",
-        // latest chan id for below
-        "latestChanId": "",
         // message id of the stable status message (must be in latestChanId)
         "stableMessageId": "",
         // message id of the canary status message (must be in latestChanId)

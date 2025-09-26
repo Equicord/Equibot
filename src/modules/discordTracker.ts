@@ -27,7 +27,7 @@ interface ReportData {
 
 export const DefaultReporterBranch = "dev";
 
-const { canaryMessageId, enabled, logChannelId, pat, stableMessageId, latestChanId, webhookSecret } = Config.reporter;
+const { canaryMessageId, enabled, logChannelId, pat, stableMessageId, statusChannelId, webhookSecret } = Config.reporter;
 
 const pendingReports = new TTLMap<string, ReportData>(
     10 * Millis.MINUTE,
@@ -130,8 +130,6 @@ async function handleReportSubmit(report: ReportData, data: any) {
 
     report.onSubmit?.(report, data);
 
-    Vaius.rest.channels.createMessage(logChannelId, data);
-
     const latestHash = report.branch === "canary"
         ? BotState.discordTracker!.canaryHash
         : BotState.discordTracker!.stableHash;
@@ -144,6 +142,7 @@ async function handleReportSubmit(report: ReportData, data: any) {
 
     const messageId = report.branch === "canary" ? canaryMessageId : stableMessageId;
     Vaius.rest.channels.editMessage(latestChanId, messageId, data);
+    Vaius.rest.channels.createMessage(statusChannelId, data);
 }
 
 const schema = {
