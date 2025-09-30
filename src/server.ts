@@ -34,7 +34,7 @@ if (enabled) {
 
     // defer listen to allow for fastify plugins to be registered before starting the server
     setImmediate(() => {
-        fastify.listen({ port: port }, err => {
+        fastify.listen({ port: port, host: "0.0.0.0" }, err => {
             if (err) {
                 fastify.log.error(err);
                 process.exit(1);
