@@ -43,12 +43,6 @@ const Config = {
         ]
     },
 
-    // known issue command
-    "knownIssues": {
-        "enabled": true,
-        "knownIssuesForumId": ""
-    },
-
     // http server used for some features.
     // github linking and reporter both depend on this server
     "httpServer": {

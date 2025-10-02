@@ -4,7 +4,6 @@ import { Vaius } from "~/Client";
 import { handleCommandInteraction, handleInteraction } from "~/SlashCommands";
 
 import Config from "~/config";
-import { buildIssueEmbed, findThreads } from "./knownIssues";
 import { SupportInstructions, SupportTagList } from "./support";
 
 const enum Commands {
@@ -106,29 +105,8 @@ handleInteraction({
                     });
                     await defer;
                     break;
-                case Commands.Issue:
-                    const threads = await findThreads();
-                    if (!threads)
-                        return interaction.createFollowup({ content: "I can't find any posts :d", flags: MessageFlags.EPHEMERAL });
-
-                    const issue = threads.find(t => t.name === choice);
-
-                    if (!issue)
-                        throw new Error("Unmatched issue name: " + choice);
-
-                    await interaction.channel.createMessage({
-                        ...replyOptions,
-                        embeds: [
-                            await buildIssueEmbed(
-                                issue,
-                                interaction.user,
-                                interaction.guildID!
-                            )
-                        ],
-                    });
-                    break;
                 default:
-                    followUp = "tf did u do";
+                    followUp = "uh oh";
                     break;
             }
 
