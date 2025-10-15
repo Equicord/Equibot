@@ -87,7 +87,7 @@ export async function moderateNick(member: Member) {
         .replace(/[\u0300-\u036f]/g, "")
         .replace(/[^A-Za-z0-9 ]/g, "")
         .trim()
-        || member.username.replace(HoistCharactersRegex, "").trim()
+        || member.username.replace(/[^A-Za-z0-9 ]/g, "").trim()
         || "unknown username";
 
     if (name !== normalizedName)
