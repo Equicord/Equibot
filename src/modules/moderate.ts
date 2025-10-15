@@ -76,20 +76,13 @@ export async function moderateMessage(msg: Message, isEdit: boolean) {
     }
 }
 
-const HoistCharactersRegex = /^[!"#$%'+,.*-]+/;
-
 export async function moderateNick(member: Member) {
     if (member.bot || !member.guild.permissionsOf(Vaius.user.id).has("MANAGE_NICKNAMES")) return;
 
     const name = member.displayName;
-    const normalizedName = name
-        .normalize("NFKC")
-        .replace(HoistCharactersRegex, "")
-        .replaceAll(/[\u3099-\u309C]/g, "") // renders as a space and can be used for "empty" usernames
-        .replaceAll("﷽", "")
-        .trim()
-        || member.username.replace(HoistCharactersRegex, "").trim()
-        || "lame username";
+    const normalizedName = name.replace(/[^A-Za-z0-9]/g, "")
+        || member.username.replace(/[^A-Za-z0-9]/g, "")
+        || "unknown username";
 
     if (name !== normalizedName)
         silently(member.edit({ nick: normalizedName }));
