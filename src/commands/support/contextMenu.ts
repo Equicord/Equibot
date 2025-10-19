@@ -8,18 +8,12 @@ import { SupportInstructions, SupportTagList } from "./support";
 
 const enum Commands {
     Support = "Send Support Tag",
-    Issue = "Send Known Issue",
 }
 
 Vaius.once("ready", () => {
     Vaius.application.createGuildCommand(Config.homeGuildId, {
         type: ApplicationCommandTypes.MESSAGE,
         name: Commands.Support
-    });
-
-    Vaius.application.createGuildCommand(Config.homeGuildId, {
-        type: ApplicationCommandTypes.MESSAGE,
-        name: Commands.Issue
     });
 });
 
@@ -46,40 +40,11 @@ handleCommandInteraction({
     }
 });
 
-handleCommandInteraction({
-    name: Commands.Issue,
-    async handle(interaction) {
-        const [_, issues] = await Promise.all([interaction.defer(MessageFlags.EPHEMERAL), findThreads()]);
-
-        if (!issues?.length) {
-            return interaction.createFollowup({ content: "No issues found.", flags: MessageFlags.EPHEMERAL });
-        }
-
-        const options = issues.map(({ name }) => ({
-            value: name,
-            label: name
-        }));
-
-        await interaction.createFollowup({
-            flags: MessageFlags.EPHEMERAL,
-            components: [{
-                type: ComponentTypes.ACTION_ROW,
-                components: [{
-                    type: ComponentTypes.STRING_SELECT,
-                    customID: `${Commands.Issue}:${interaction.data.targetID}`,
-                    options
-                }]
-            }]
-        });
-    }
-});
-
 handleInteraction({
     type: InteractionTypes.MESSAGE_COMPONENT,
     isMatch: i =>
         i.data.componentType === ComponentTypes.STRING_SELECT && (
-            i.data.customID.startsWith(Commands.Support + ":") ||
-            i.data.customID.startsWith(Commands.Issue + ":")
+            i.data.customID.startsWith(Commands.Support + ":")
         ),
     async handle(interaction: ComponentInteraction<SelectMenuTypes, AnyTextableChannel>) {
         const [command, targetId] = interaction.data.customID.split(":");
