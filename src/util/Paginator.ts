@@ -5,7 +5,6 @@ import { handleInteraction } from "~/SlashCommands";
 import { silently } from "~/util/functions";
 
 import { randomUUID } from "crypto";
-import { getEmojiData } from "~/modules/emojiManager";
 import { reply } from "./discord";
 import { Promiseable } from "./types";
 
@@ -120,35 +119,35 @@ export class Paginator<T> implements BasePaginator {
                         type: ComponentTypes.BUTTON,
                         customID: `paginator:first:${id}`,
                         style: ButtonStyles.SECONDARY,
-                        emoji: getEmojiData("nav_first_page"),
+                        emoji: { name: Emoji.DoubleLeft },
                         disabled: isFirstPage,
                     },
                     {
                         type: ComponentTypes.BUTTON,
                         customID: `paginator:prev:${id}`,
                         style: ButtonStyles.SECONDARY,
-                        emoji: getEmojiData("nav_chevron_left"),
+                        emoji: { name: Emoji.Left },
                         disabled: isFirstPage,
                     },
                     {
                         type: ComponentTypes.BUTTON,
                         customID: `paginator:go-to-modal:${id}`,
                         style: ButtonStyles.SECONDARY,
-                        emoji: getEmojiData("nav_dots"),
+                        emoji: { name: Emoji.InputNumbers },
                         disabled: totalPages === 1,
                     },
                     {
                         type: ComponentTypes.BUTTON,
                         customID: `paginator:next:${id}`,
                         style: ButtonStyles.SECONDARY,
-                        emoji: getEmojiData("nav_chevron_right"),
+                        emoji: { name: Emoji.Right },
                         disabled: isLastPage,
                     },
                     {
                         type: ComponentTypes.BUTTON,
                         customID: `paginator:last:${id}`,
                         style: ButtonStyles.SECONDARY,
-                        emoji: getEmojiData("nav_last_page"),
+                        emoji: { name: Emoji.DoubleRight },
                         disabled: isLastPage,
                     }
                 ]
