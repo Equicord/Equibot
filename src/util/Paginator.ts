@@ -1,10 +1,11 @@
-import { ButtonStyles, ComponentTypes, CreateMessageOptions, EmbedOptions, InteractionTypes, Message, MessageFlags, TextInputStyles } from "oceanic.js";
+import { ButtonStyles, ComponentTypes, CreateMessageOptions, EmbedOptions, GuildComponentSelectMenuInteraction, InteractionTypes, Message, MessageFlags, TextInputStyles } from "oceanic.js";
 
 import { Emoji, Millis } from "~/constants";
 import { handleInteraction } from "~/SlashCommands";
 import { silently } from "~/util/functions";
 
 import { randomUUID } from "crypto";
+import { getEmojiData } from "~/modules/emojiManager";
 import { reply } from "./discord";
 import { Promiseable } from "./types";
 
@@ -118,36 +119,36 @@ export class Paginator<T> implements BasePaginator {
                     {
                         type: ComponentTypes.BUTTON,
                         customID: `paginator:first:${id}`,
-                        style: ButtonStyles.PRIMARY,
-                        emoji: { name: Emoji.DoubleLeft },
+                        style: ButtonStyles.SECONDARY,
+                        emoji: getEmojiData("nav_first_page"),
                         disabled: isFirstPage,
                     },
                     {
                         type: ComponentTypes.BUTTON,
                         customID: `paginator:prev:${id}`,
-                        style: ButtonStyles.PRIMARY,
-                        emoji: { name: Emoji.Left },
+                        style: ButtonStyles.SECONDARY,
+                        emoji: getEmojiData("nav_chevron_left"),
                         disabled: isFirstPage,
                     },
                     {
                         type: ComponentTypes.BUTTON,
-                        customID: `paginator:go-to:${id}`,
-                        style: ButtonStyles.PRIMARY,
-                        emoji: { name: Emoji.InputNumbers },
+                        customID: `paginator:go-to-modal:${id}`,
+                        style: ButtonStyles.SECONDARY,
+                        emoji: getEmojiData("nav_dots"),
                         disabled: totalPages === 1,
                     },
                     {
                         type: ComponentTypes.BUTTON,
                         customID: `paginator:next:${id}`,
-                        style: ButtonStyles.PRIMARY,
-                        emoji: { name: Emoji.Right },
+                        style: ButtonStyles.SECONDARY,
+                        emoji: getEmojiData("nav_chevron_right"),
                         disabled: isLastPage,
                     },
                     {
                         type: ComponentTypes.BUTTON,
                         customID: `paginator:last:${id}`,
-                        style: ButtonStyles.PRIMARY,
-                        emoji: { name: Emoji.DoubleRight },
+                        style: ButtonStyles.SECONDARY,
+                        emoji: getEmojiData("nav_last_page"),
                         disabled: isLastPage,
                     }
                 ]
@@ -205,7 +206,7 @@ handleInteraction({
                 flags: MessageFlags.EPHEMERAL
             });
 
-        if (action !== "go-to")
+        if (action !== "go-to-modal")
             await interaction.deferUpdate();
 
         switch (action) {
@@ -222,9 +223,15 @@ handleInteraction({
                 await paginator.lastPage();
                 break;
             case "go-to":
+                if (!interaction.isSelectMenuComponentInteraction()) return;
+
+                const page = Number((interaction as GuildComponentSelectMenuInteraction).data.values.getStrings()[0]);
+                await paginator.navigateTo(page);
+                break;
+            case "go-to-modal":
                 await interaction.createModal({
                     title: "Go To Page",
-                    customID: `paginator:go-to-submit:${id}`,
+                    customID: `paginator:go-to-modal-submit:${id}`,
                     components: [{
                         type: ComponentTypes.ACTION_ROW,
                         components: [{
@@ -245,7 +252,7 @@ handleInteraction({
 
 handleInteraction({
     type: InteractionTypes.MODAL_SUBMIT,
-    isMatch: i => i.data.customID.startsWith("paginator:go-to-submit:"),
+    isMatch: i => i.data.customID.startsWith("paginator:go-to-modal-submit:"),
     async handle(interaction) {
         const [, , id] = interaction.data.customID.split(":");
         const paginator = paginators.get(id);

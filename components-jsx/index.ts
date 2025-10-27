@@ -1,8 +1,11 @@
 export * from "./ActionRow";
 export * from "./Button";
+export * from "./ChannelSelect";
 export * from "./ComponentMessage";
 export * from "./Container";
 export * from "./File";
+export * from "./FileUpload";
+export * from "./Label";
 export * from "./MediaGallery";
 export * from "./MediaGalleryItem";
 export * from "./MediaItem";
@@ -15,3 +18,4 @@ export * from "./TextDisplay";
 export * from "./TextInput";
 export * from "./Thumbnail";
 export * from "./UserSelect";
+

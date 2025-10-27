@@ -1,5 +1,8 @@
 import { defineCommand } from "~/Commands";
-import { doFetch, makeCachedJsonFetch } from "~/util/fetch";
+import { Millis } from "~/constants";
+import { execFileP } from "~/util/childProcess";
+import { makeCachedJsonFetch } from "~/util/fetch";
+import { ttlLazy, ttlLazyFailure } from "~/util/lazy";
 
 interface GithubTag {
     name: string;
@@ -23,17 +26,22 @@ function compareVersions(a: string, b: string) {
     return 0;
 }
 
+const getChromeVersion = ttlLazy(async () => {
+    // for some reason, nodejs fetch times out while curl works fine
+    const { stdout } = await execFileP("curl", ["https://chromewebstore.google.com/detail/equicord-web/mcambpfmpjnncfoodejdmehedbkjepmi"]);
+
+    const version = VersionRe.exec(stdout)?.[1];
+    return version ?? ttlLazyFailure;
+}, 5 * Millis.MINUTE);
+
 defineCommand({
     name: "check-extension-version",
     description: "Check the version of the extension",
     aliases: ["extversion", "ext", "ev"],
     usage: null,
     async execute({ reply }) {
-        const res = await doFetch("https://chromewebstore.google.com/detail/equicord-web/mcambpfmpjnncfoodejdmehedbkjepmi")
-            .then(res => res.text());
-
-        const version = VersionRe.exec(res)?.[1];
-        if (!version) return reply("Failed to look up the Equicord Chrome Extension version :( Try again later!");
+        const version = await getChromeVersion();
+        if (!version) return reply("Failed to look up the Vencord Chrome Extension version :( Try again later!");
 
         const [latestTag] = await getGithubTags();
         const latestVersion = latestTag.name.replace(/^v/, "");

@@ -1,10 +1,11 @@
-import { ButtonStyles, CreateMessageOptions, Message, MessageComponent, MessageFlags } from "oceanic.js";
+import { ButtonStyles, CreateMessageOptions, Message, MessageComponent, MessageFlags, SeparatorSpacingSize } from "oceanic.js";
 
-import { Emoji, Millis } from "~/constants";
+import { Millis } from "~/constants";
 import { silently } from "~/util/functions";
 
 import { randomUUID } from "crypto";
-import { ActionRow, Button, Container, TextDisplay } from "~components";
+import { getEmojiData } from "~/modules/emojiManager";
+import { ActionRow, Button, Container, Separator, TextDisplay } from "~components";
 import { reply } from "./discord";
 import { BasePaginator, paginators } from "./Paginator";
 import { Promiseable } from "./types";
@@ -18,6 +19,7 @@ export class PaginatorCv2<T> implements BasePaginator {
     public message: Message | null = null;
     public userId: string = "";
     public currentPage = 0;
+    public isDestroyed = false;
 
     public getPageData: (page: number) => T[] = this._getPageData;
     public getTitle = (page: number) => this.title;
@@ -49,7 +51,7 @@ export class PaginatorCv2<T> implements BasePaginator {
     }
 
     async create(targetMessage: Message) {
-        await this.destroy();
+        await this.destroy(true);
 
         this.message = await reply(targetMessage, await this.buildMessageData(0));
 
@@ -58,10 +60,14 @@ export class PaginatorCv2<T> implements BasePaginator {
         paginators.set(this.id, this);
     }
 
-    async destroy() {
+    async destroy(isReset = false) {
+        if (!isReset) {
+            this.isDestroyed = true;
+        }
+
         if (this.message) {
             // might error if the message is deleted
-            silently(this.message.edit({ components: [] }));
+            silently(this.message!.edit(await this.buildMessageData(this.currentPage, true)));
             this.message = null;
         }
 
@@ -106,49 +112,55 @@ export class PaginatorCv2<T> implements BasePaginator {
         }
     }
 
-    private async buildMessageData(page: number) {
+    private async buildMessageData(page: number, noNav = false) {
         const { id, totalPages, totalPagesWithTableOfContents } = this;
         const isFirstPage = page === 0;
         const isLastPage = page === totalPagesWithTableOfContents - 1;
 
+        const { body, footer } = await this.buildComponents(page);
+
         return {
             flags: MessageFlags.IS_COMPONENTS_V2,
             components: <>
-                <Container>
-                    {await this.buildComponents(page)}
+                <Container accentColor={0x5865F2}>
+                    {body}
+                    {!noNav && <>
+                        <Separator spacing={SeparatorSpacingSize.LARGE} />
+                        <ActionRow>
+                            <Button
+                                customID={`paginator:first:${id}`}
+                                style={ButtonStyles.SECONDARY}
+                                emoji={getEmojiData("nav_first_page")}
+                                disabled={isFirstPage}
+                            />
+                            <Button
+                                customID={`paginator:prev:${id}`}
+                                style={ButtonStyles.SECONDARY}
+                                emoji={getEmojiData("nav_chevron_left")}
+                                disabled={isFirstPage}
+                            />
+                            <Button
+                                customID={`paginator:go-to-modal:${id}`}
+                                style={ButtonStyles.SECONDARY}
+                                emoji={getEmojiData("nav_dots")}
+                                disabled={totalPages === 1}
+                            />
+                            <Button
+                                customID={`paginator:next:${id}`}
+                                style={ButtonStyles.SECONDARY}
+                                emoji={getEmojiData("nav_chevron_right")}
+                                disabled={isLastPage}
+                            />
+                            <Button
+                                customID={`paginator:last:${id}`}
+                                style={ButtonStyles.SECONDARY}
+                                emoji={getEmojiData("nav_last_page")}
+                                disabled={isLastPage}
+                            />
+                        </ActionRow>
+                    </>}
+                    {footer}
                 </Container>
-                <ActionRow>
-                    <Button
-                        customID={`paginator:first:${id}`}
-                        style={ButtonStyles.PRIMARY}
-                        emoji={{ name: Emoji.DoubleLeft }}
-                        disabled={isFirstPage}
-                    />
-                    <Button
-                        customID={`paginator:prev:${id}`}
-                        style={ButtonStyles.PRIMARY}
-                        emoji={{ name: Emoji.Left }}
-                        disabled={isFirstPage}
-                    />
-                    <Button
-                        customID={`paginator:go-to:${id}`}
-                        style={ButtonStyles.PRIMARY}
-                        emoji={{ name: Emoji.InputNumbers }}
-                        disabled={totalPages === 1}
-                    />
-                    <Button
-                        customID={`paginator:next:${id}`}
-                        style={ButtonStyles.PRIMARY}
-                        emoji={{ name: Emoji.Right }}
-                        disabled={isLastPage}
-                    />
-                    <Button
-                        customID={`paginator:last:${id}`}
-                        style={ButtonStyles.PRIMARY}
-                        emoji={{ name: Emoji.DoubleRight }}
-                        disabled={isLastPage}
-                    />
-                </ActionRow>
             </>
         } satisfies CreateMessageOptions;
     }
@@ -167,11 +179,14 @@ export class PaginatorCv2<T> implements BasePaginator {
             : page;
 
         let footerText = isTableOfContents
-            ? "Table of Contents"
+            ? null
             : `Page ${actualPage + 1}/${this.totalPages}`;
 
         if (this.footerExtra) {
-            footerText += `  •  ${this.footerExtra}`;
+            if (footerText)
+                footerText += `  •  ${this.footerExtra}`;
+            else
+                footerText = this.footerExtra;
         }
 
         const data = isTableOfContents
@@ -182,13 +197,13 @@ export class PaginatorCv2<T> implements BasePaginator {
             ? this.title
             : this.getTitle(actualPage);
 
-        return (
-            <>
+        return {
+            body: <>
                 <TextDisplay># {title}</TextDisplay>
                 {typeof data === "string" ? <TextDisplay>{data}</TextDisplay> : data}
-                <TextDisplay>-# {footerText}</TextDisplay>
-            </>
-        );
+            </>,
+            footer: footerText ? <TextDisplay>-# {footerText}</TextDisplay> : null
+        };
     }
 
     private startTimeout() {

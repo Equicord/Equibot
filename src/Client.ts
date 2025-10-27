@@ -3,7 +3,7 @@ import { AnyTextableChannel, Client, Message } from "oceanic.js";
 import { handleError } from ".";
 import { CommandContext, Commands } from "./Commands";
 import Config from "./config";
-import { Emoji, Millis, SUPPORT_ALLOWED_CHANNELS } from "./constants";
+import { Emoji, Millis } from "./constants";
 import { BotState } from "./db/botState";
 import { moderateMessage } from "./modules/moderate";
 import { reply } from "./util/discord";
@@ -91,7 +91,7 @@ async function handleMessage(msg: Message, isEdit: boolean) {
             return silently(msg.createReaction(Emoji.Anger));
     }
 
-    const noRateLimit = SUPPORT_ALLOWED_CHANNELS.includes(msg.channel?.id!) || msg.member?.permissions.has("MANAGE_MESSAGES");
+    const noRateLimit = msg.member?.permissions.has("MANAGE_MESSAGES");
 
     if (!noRateLimit && cmd.rateLimits.getOrAdd(msg.author.id)) {
         silently(msg.createReaction("🛑"));
