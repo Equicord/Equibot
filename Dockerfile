@@ -11,6 +11,5 @@ RUN mkdir -p data
 
 COPY . .
 RUN pnpm install --frozen-lockfile
-RUN pnpm build
 
 CMD ["pnpm", "start"]
