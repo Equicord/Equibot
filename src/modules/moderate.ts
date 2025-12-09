@@ -39,17 +39,17 @@ async function moderateMultiChannelSpam(msg: Message<AnyTextableGuildChannel>) {
             if (!channelsMessaged.size)
                 channelsMessagedUserMap.delete(msg.author.id);
         }
-    }, 15 * Millis.SECOND);
+    }, 5 * Millis.SECOND);
 
     if (channelsMessaged.size < 3) return false;
 
     await msg.member.edit({
         communicationDisabledUntil: until(1 * Millis.HOUR),
-        reason: "Messaged >=3 different channels within 15 seconds"
+        reason: "Messaged >=3 different channels within 5 seconds"
     });
 
     logAutoModAction({
-        content: `Muted <@${msg.author.id}> for messaging >=3 different channels within 15 seconds`,
+        content: `Muted <@${msg.author.id}> for messaging >=3 different channels within 5 seconds`,
         embeds: [makeEmbedForMessage(msg)]
     });
 
@@ -222,13 +222,21 @@ export function initModListeners() {
     });
 
 }
-export async function lobotomiseMaybe(msg: Message<AnyTextableGuildChannel>) {
-    if (!msg.referencedMessage || msg.content !== "mods crush this person's skull") return false;
+
+const forbiddenMessages = [
+    "mods crush this person's skull",
+    "mods crush this persons skull",
+    "skull crush",
+    "free candy"
+];
+
+export async function lobotomiseMaybe(msg: Message) {
+    if (!msg.referencedMessage || !forbiddenMessages.includes(msg.content)) return false;
 
     try {
         await msg.referencedMessage.member!.edit({
             communicationDisabledUntil: until(10 * Millis.MINUTE),
-            reason: "showing screenshot of automodded message"
+            reason: "skull crushed"
         });
 
         silently(msg.referencedMessage.delete());

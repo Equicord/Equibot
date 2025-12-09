@@ -46,3 +46,14 @@ export function makeCachedJsonFetch<T>(url: string, ttl = 5 * Millis.MINUTE) {
         ttl
     );
 }
+
+export async function fetchJsons(urls: string[]) {
+    const responses = await Promise.all(urls.map(url => fetch(url)));
+
+    responses.forEach((res, i) => {
+        if (!res.ok) throw new Error(`Failed to fetch URL at index ${i}: ${urls[i]}`);
+    });
+    const jsons = await Promise.all(responses.map(res => res.json()));
+
+    return jsons;
+}
