@@ -3,7 +3,6 @@ import { Vaius } from "~/Client";
 import { Commands, defineCommand } from "~/Commands";
 import Config from "~/config";
 import { Emoji } from "~/constants";
-import { getEmoji } from "~/modules/emojiManager";
 import { handleCommandInteraction, handleInteraction } from "~/SlashCommands";
 import { formatLanguage, GoogleLanguageMap, Locale, translate } from "~/util/translate";
 import { ComponentMessage, Container, Separator, TextDisplay } from "~components";
@@ -16,7 +15,7 @@ async function doTranslate(content: string, sourceLanguage: Locale, targetLangua
             <Container>
                 <TextDisplay>{text}</TextDisplay>
                 <Separator divider={false} spacing={SeparatorSpacingSize.SMALL} />
-                <TextDisplay>-# {getEmoji("google_translate")}  {formatLanguage(src)} {"->"} {formatLanguage(targetLanguage)}</TextDisplay>
+                <TextDisplay>-# {formatLanguage(src)} {"->"} {formatLanguage(targetLanguage)}</TextDisplay>
             </Container>
         </ComponentMessage>
     );
@@ -33,9 +32,7 @@ defineCommand({
 
         if (!content) return react(Emoji.QuestionMark);
 
-        const defaultLanguage = msg.channelID === "1121201005456011366" ? "de" : "en";
-
-        return reply(await doTranslate(content, "auto", defaultLanguage));
+        return reply(await doTranslate(content, "auto", "en"));
     },
 });
 
