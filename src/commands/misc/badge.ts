@@ -10,7 +10,7 @@ import { buffer } from "stream/consumers";
 import Config from "~/config";
 import { spawnP } from "~/util/childProcess";
 import { getHomeGuild } from "~/util/discord";
-import { OwnerId, Vaius } from "../../Client";
+import { Vaius } from "../../Client";
 import { PROD } from "../../constants";
 import { fetchBuffer } from "../../util/fetch";
 
@@ -89,7 +89,7 @@ handleInteraction({
     type: InteractionTypes.APPLICATION_COMMAND,
     isMatch: i => i.data.name.startsWith(`${Name}-`),
     async handle(i) {
-        if (i.user.id !== OwnerId) return;
+        if (Config.badges.includes(i.user.id)) return;
 
         // if (i.user.id !== OwnerId) {
         //     if (i.guildID !== GUILD_ID || !i.member?.roles.includes(MOD_ROLE_ID))
