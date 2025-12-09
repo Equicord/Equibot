@@ -12,8 +12,8 @@ import {
 import { Vaius } from "./Client";
 import { PROD } from "./constants";
 // eslint-disable-next-line no-duplicate-imports
-import { initDevListeners } from "./modules/devTracker";
 import { initModListeners } from "./modules/moderate";
+import { initRoleListeners } from "./modules/roleTracker";
 import { handleCommandInteraction } from "./SlashCommands";
 import { silently } from "./util/functions";
 import { inspect } from "./util/inspect";
@@ -36,7 +36,7 @@ if (PROD) {
 }
 
 initModListeners();
-initDevListeners();
+initRoleListeners();
 
 export async function handleError(title: string, err: unknown) {
     if (err instanceof DiscordHTTPError && err.status >= 500)
