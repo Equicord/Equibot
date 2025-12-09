@@ -249,7 +249,7 @@ handleInteraction({
 
         const newBadgeData = {
             tooltip: tooltip,
-            badge: `https://badges.equicord.org/badges/${user.id}/${fileName}`
+            badge: `https://badge.equicord.org/badges/${user.id}/${fileName}`
         };
 
         const before = data.options.getInteger("before");
