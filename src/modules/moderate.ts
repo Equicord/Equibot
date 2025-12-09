@@ -1,9 +1,7 @@
 import { spawn } from "child_process";
-import { readdir, readFile } from "fs/promises";
-import { AnyTextableGuildChannel, AutoModerationActionTypes, EmbedOptions, Member, Message, MessageTypes } from "oceanic.js";
-import { join } from "path";
+import { AnyTextableGuildChannel, AutoModerationActionTypes, EmbedOptions, Member, Message } from "oceanic.js";
 
-import { reply, sendDm } from "~/util/discord";
+import { reply } from "~/util/discord";
 import { silently } from "~/util/functions";
 import { until } from "~/util/time";
 
@@ -12,47 +10,7 @@ import { isTruthy } from "~/util/guards";
 import { logAutoModAction } from "~/util/logAction";
 import { handleError } from "..";
 import { Vaius } from "../Client";
-import { ASSET_DIR, Millis } from "../constants";
-
-// matches nothing
-let imageHostRegex = /^(?!a)a/;
-
-const annoyingDomainsDir = join(ASSET_DIR, "annoying-domains");
-readdir(annoyingDomainsDir)
-    .then(files =>
-        Promise.all(
-            files
-                .filter(f => f !== "README.md")
-                .map(async s => {
-                    const content = await readFile(join(annoyingDomainsDir, s), "utf8");
-                    return content.trim().split("\n");
-                }))
-    ).then(domains => {
-        const list = domains
-            .flat()
-            .filter(Boolean)
-            .map(d => d.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, "\\$&"));
-
-        imageHostRegex = new RegExp(`https?://(\\w+\\.)?(${list.join("|")})`, "i");
-
-        console.log(`Loaded ${list.length} image hosts`);
-    });
-
-const makeSnippetChannelRules = (language?: string) => (m: Message) => {
-    switch (m.type) {
-        case MessageTypes.CHANNEL_PINNED_MESSAGE:
-        case MessageTypes.THREAD_CREATED:
-            return "";
-    }
-
-    if (!language) return;
-
-    if (m.content.includes("```")) return;
-    if (m.content.includes("https://")) return;
-    if (m.attachments?.some(a => a.filename?.endsWith(`.${language}`))) return;
-
-    return `Please only post ${language} snippets. They must be enclosed in a proper codeblock. To ask questions or discuss snippets, make a thread.`;
-};
+import { Millis } from "../constants";
 
 function makeEmbedForMessage(message: Message): EmbedOptions {
     return {
@@ -113,7 +71,6 @@ export async function moderateMessage(msg: Message, isEdit: boolean) {
     const moderationFunctions = [
         !isEdit && moderateMultiChannelSpam,
         moderateInvites,
-        moderateImageHosts,
         moderateSuspiciousFiles
     ].filter(isTruthy);
 
@@ -136,17 +93,6 @@ export async function moderateNick(member: Member) {
 
     if (name !== normalizedName)
         silently(member.edit({ nick: normalizedName }));
-}
-
-export async function moderateImageHosts(msg: Message) {
-    if (!imageHostRegex.test(msg.content))
-        return false;
-
-    return silently(msg.delete().then(() =>
-        sendDm(msg.author, {
-            content: "cdn.discordapp.com is a free and great way to share images! (Please stop using stupid image hosts)"
-        })
-    ));
 }
 
 const inviteRe = /discord(?:(?:app)?\.com\/invite|\.gg)\/([a-z0-9-]+)/ig;
@@ -181,6 +127,8 @@ async function getInviteImage(code: string) {
 }
 
 export async function moderateInvites(msg: Message) {
+    if (!Config.moderation.invites) return false;
+
     for (const [, code] of msg.content.matchAll(inviteRe)) {
         const inviteData = await Vaius.rest.channels.getInvite(code, {}).catch(() => null);
         if (!inviteData?.guildID || !inviteData.guild) continue;
@@ -210,7 +158,7 @@ export async function moderateInvites(msg: Message) {
 const suspiciousFileExtensions = new Set<string>(JSON.parse('["7z","ade","adp","arj","apk","application","appx","appxbundle","asx","bas","bat","cab","cer","chm","cmd","cnt","cpl","crt","csh","deb","der","diagcab","dll","dmg","docm","dotm","ex","ex_","exe","fxp","gadget","grp","gz","hlp","hpj","hta","htc","inf","ins","ipa","iso","isp","its","jar","jnlp","jse","ksh","lib","lnk","mad","maf","mag","mam","maq","mar","mas","mat","mau","mav","maw","mcf","mda","mdb","mde","mdt","mdw","mdz","msc","msh","msh1","msh1xml","msh2","msh2xml","mshxml","msi","msix","msixbundle","msp","mst","msu","nsh","ops","osd","pcd","pif","pkg","pl","plg","potm","ppam","ppsm","pptm","prf","prg","printerexport","ps1","ps1xml","ps2","ps2xml","psc1","psc2","psd1","psdm1","pst","py","pyc","pyo","pyw","pyz","pyzw","rar","reg","rpm","scf","scr","sct","shb","shs","sldm","sys","theme","tmp","url","vb","vbe","vbp","vbs","vhd","vhdx","vsmacros","vsw","vxd","webpnp","ws","wsc","wsf","wsh","xbap","xlam","xll","xlsm","xltm","xnk","z","zip"]'));
 
 async function moderateSuspiciousFiles(msg: Message<AnyTextableGuildChannel>) {
-    if (msg.member.roles.includes(Config.roles.regular)) return false;
+    if (msg.member.roles.includes(Config.roles.regular) || msg.member.roles.includes(Config.roles.fileWhitelist)) return false;
 
     for (const attachment of msg.attachments.values()) {
         const ext = attachment.filename?.split(".").pop()?.toLowerCase();

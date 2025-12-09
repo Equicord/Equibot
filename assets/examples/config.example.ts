@@ -24,6 +24,7 @@ const Config = {
     },
 
     "moderation": {
+        "invites": true,
         // guilds members may share invites to. always includes homeGuildId
         "inviteAllowedGuilds": [
             "1173279886065029291", // equicord
@@ -64,6 +65,8 @@ const Config = {
         "vencordContrib": "",
 
         "regular": "",
+
+        "fileWhitelist": "",
 
         // roles that can be added or removed using the role management commands.
         // always includes roles.donor, and roles.contributor
