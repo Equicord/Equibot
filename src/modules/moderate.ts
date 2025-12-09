@@ -223,15 +223,8 @@ export function initModListeners() {
 
 }
 
-const forbiddenMessages = [
-    "mods crush this person's skull",
-    "mods crush this persons skull",
-    "skull crush",
-    "free candy"
-];
-
 export async function lobotomiseMaybe(msg: Message) {
-    if (!msg.referencedMessage || !forbiddenMessages.includes(msg.content)) return false;
+    if (!msg.referencedMessage || msg.content !== "mods crush this person's skull") return false;
 
     try {
         await msg.referencedMessage.member!.edit({
