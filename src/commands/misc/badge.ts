@@ -276,9 +276,11 @@ handleInteraction({
         const before = data.options.getInteger("before");
         if (before != null) {
             BadgeData[user.id].splice(before, 0, newBadgeData);
+            logBadgeAction("Added", user, newBadgeData);
         } else {
             const existingBadge = BadgeData[user.id][index];
             if (existingBadge) {
+                logBadgeAction("Edited", user, existingBadge, newBadgeData);
                 const fileName = new URL(existingBadge.badge).pathname.split("/").pop()!;
                 rmSync(`${badgesForUser(user.id)}/${fileName}`, { force: true });
             }
@@ -288,9 +290,6 @@ handleInteraction({
 
         mkdirSync(badgesForUser(user.id), { recursive: true });
         writeFileSync(`${badgesForUser(user.id)}/${fileName}`, imgData);
-
-        const added = data.name === NameAdd;
-        logBadgeAction(added ? "Added" : "Edited", user, newBadgeData);
 
         saveBadges();
 
