@@ -142,14 +142,20 @@ handleInteraction({
             const newFolder = badgesForUser(newUser.id);
 
             if (BadgeData[newUser.id]) {
-                const files = readdirSync(oldFolder);
+                mkdirSync(newFolder, { recursive: true });
+
+                let files: string[] = [];
+                try {
+                    files = readdirSync(oldFolder);
+                } catch {
+                    files = [];
+                }
+
                 for (const file of files) {
                     const oldPath = `${oldFolder}/${file}`;
                     const newPath = `${newFolder}/${file}`;
-
                     renameSync(oldPath, newPath);
                 }
-
                 rmSync(oldFolder, { recursive: true, force: true });
             } else {
                 renameSync(oldFolder, newFolder);
