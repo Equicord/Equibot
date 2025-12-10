@@ -10,7 +10,7 @@ import { buffer } from "stream/consumers";
 import Config from "~/config";
 import { spawnP } from "~/util/childProcess";
 import { getHomeGuild } from "~/util/discord";
-import { logAutoModAction } from "~/util/logAction";
+import { logBadgeAction } from "~/util/logAction";
 import { OwnerId, Vaius } from "../../Client";
 import { PROD } from "../../constants";
 import { fetchBuffer } from "../../util/fetch";
@@ -111,13 +111,14 @@ handleInteraction({
             cpSync(badgesForUser(oldUser.id), badgesForUser(newUser.id), { recursive: true });
 
             BadgeData[newUser.id] = BadgeData[oldUser.id].map(b => {
-                const badgeUrl = b.badge.replace(oldUser.id, newUser.id);
-                logAutoModAction(`Copied badge from [${b.tooltip}](<${badgeUrl}>) to ${newUser.mention}`);
-
-                return ({
+                const badge = {
                     ...b,
-                    badge: badgeUrl
-                });
+                    badge: b.badge.replace(oldUser.id, newUser.id)
+                };
+
+                logBadgeAction("Copied", user, badge);
+
+                return badge;
             });
             saveBadges();
 
@@ -158,7 +159,12 @@ handleInteraction({
             const oldBadgeData = BadgeData[oldUser.id];
             oldBadgeData.forEach(b => {
                 const badgeUrl = b.badge.replace(oldUser.id, newUser.id);
-                logAutoModAction(`Moved badge from [${b.tooltip}](<${badgeUrl}>) to ${newUser.mention}`);
+                const badge = {
+                    ...b,
+                    badge: badgeUrl
+                };
+
+                logBadgeAction("Moved", user, badge);
 
                 b.badge = badgeUrl;
             });
@@ -183,11 +189,13 @@ handleInteraction({
                     flags: MessageFlags.EPHEMERAL
                 });
 
+            BadgeData[user.id].map(badge => {
+                logBadgeAction("Removed", user, badge);
+            });
+
             rmSync(badgesForUser(user.id), { recursive: true, force: true });
 
             delete BadgeData[user.id];
-
-            logAutoModAction(`Removed all badges from ${user.mention}`);
 
             saveBadges();
 
@@ -211,7 +219,7 @@ handleInteraction({
             if (BadgeData[user.id].length === 0)
                 delete BadgeData[user.id];
 
-            logAutoModAction(`Removed badge [${existingBadge.tooltip}](<${existingBadge.badge}>) from ${user.mention}`);
+            logBadgeAction("Removed", user, existingBadge);
 
             saveBadges();
 
@@ -281,11 +289,8 @@ handleInteraction({
         mkdirSync(badgesForUser(user.id), { recursive: true });
         writeFileSync(`${badgesForUser(user.id)}/${fileName}`, imgData);
 
-        if (data.name === NameAdd) {
-            logAutoModAction(`Added badge [${newBadgeData.tooltip}](<${newBadgeData.badge}>) to ${user.mention}`);
-        } else if (data.name === NameEdit) {
-            logAutoModAction(`Edited badge [${newBadgeData.tooltip}](<${newBadgeData.badge}>) on ${user.mention}`);
-        }
+        const added = data.name === NameAdd;
+        logBadgeAction(added ? "Added" : "Edited", user, newBadgeData);
 
         saveBadges();
 
