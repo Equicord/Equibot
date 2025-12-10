@@ -303,7 +303,7 @@ handleInteraction({
         if (guild) {
             const member = await guild.getMember(user.id).catch(() => null);
             if (member && !member.roles.includes(Config.roles.donor))
-                await member.addRole(Config.roles.donor); {
+                await member.addRole(Config.roles.donor, "Donor badge has been added"); {
             }
         }
 
