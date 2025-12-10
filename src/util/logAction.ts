@@ -22,7 +22,7 @@ export function logBadgeAction(type: string, user: { mention: string; }, badge: 
     }
 
     if (type === "Copied" || type === "Moved") {
-        message = `${type} badge\nfrom:\nUser: ${user.mention}\nTooltip: ${badge.tooltip}\nUrl: ${badge.badge}\nto:\nUser: ${newUser?.mention}\nTooltip: ${editedBadge?.tooltip}\nUrl: ${editedBadge?.badge}`;
+        message = `${type} badge\nfrom:\nUser: ${user.mention}\nTooltip: ${badge.tooltip}\nUrl: ${badge.badge}\nto:\nUser: ${newUser?.mention}\nTooltip: ${badge.tooltip}\nUrl: ${badge.badge}`;
     }
 
     Vaius.rest.channels.createMessage(Config.channels.autoModLog, { content: message });

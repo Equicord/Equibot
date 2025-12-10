@@ -116,7 +116,7 @@ handleInteraction({
                     badge: b.badge.replace(oldUser.id, newUser.id)
                 };
 
-                logBadgeAction("Copied", newUser, badge);
+                logBadgeAction("Copied", oldUser, badge, badge, newUser);
 
                 return badge;
             });
@@ -170,7 +170,7 @@ handleInteraction({
                     badge: badgeUrl
                 };
 
-                logBadgeAction("Moved", newUser, badge);
+                logBadgeAction("Moved", oldUser, badge, badge, newUser);
 
                 b.badge = badgeUrl;
             });
