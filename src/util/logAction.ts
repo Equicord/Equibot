@@ -17,7 +17,7 @@ export function logBadgeAction(type: string, user: { mention: string; }, badge: 
 
     let message = `${type} badge:\nUser: ${user.mention}\nTooltip: ${badge.tooltip}\nUrl: ${badge.badge}`;
 
-    if (type === "Edited") {
+    if (type === "Edited" || type === "Copied" || type === "Moved") {
         message = `${type} badge\nfrom:\nUser: ${user.mention}\nTooltip: ${badge.tooltip}\nUrl: ${badge.badge}\nto:\nUser: ${user.mention}\nTooltip: ${editedBadge?.tooltip}\nUrl: ${editedBadge?.badge}`;
     }
 
