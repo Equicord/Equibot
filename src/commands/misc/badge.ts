@@ -276,7 +276,6 @@ handleInteraction({
         const before = data.options.getInteger("before");
         if (before != null) {
             BadgeData[user.id].splice(before, 0, newBadgeData);
-            logBadgeAction("Added", user, newBadgeData);
         } else {
             const existingBadge = BadgeData[user.id][index];
             if (existingBadge) {
@@ -287,6 +286,8 @@ handleInteraction({
 
             BadgeData[user.id][index] = newBadgeData;
         }
+
+        if (data.name === NameAdd) logBadgeAction("Added", user, newBadgeData);
 
         mkdirSync(badgesForUser(user.id), { recursive: true });
         writeFileSync(`${badgesForUser(user.id)}/${fileName}`, imgData);
