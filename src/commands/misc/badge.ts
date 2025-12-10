@@ -282,7 +282,7 @@ handleInteraction({
         writeFileSync(`${badgesForUser(user.id)}/${fileName}`, imgData);
 
         if (data.name === NameAdd) {
-            logAutoModAction(`Added badge [${newBadgeData.tooltip}](<${newBadgeData.badge}>) to ${user.mention})`);
+            logAutoModAction(`Added badge [${newBadgeData.tooltip}](<${newBadgeData.badge}>) to ${user.mention}`);
         } else if (data.name === NameEdit) {
             logAutoModAction(`Edited badge [${newBadgeData.tooltip}](<${newBadgeData.badge}>) on ${user.mention}`);
         }
