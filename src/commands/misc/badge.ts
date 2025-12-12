@@ -13,7 +13,7 @@ import { getHomeGuild } from "~/util/discord";
 import { logBadgeAction } from "~/util/logAction";
 import { OwnerId, Vaius } from "../../Client";
 import { PROD } from "../../constants";
-import { fetchBuffer } from "../../util/fetch";
+import { doFetch } from "../../util/fetch";
 
 const BasePath = "/app/badges";
 const BadgeJson = `${BasePath}/badges.json`;
@@ -36,6 +36,10 @@ const NameRemove = Name + "-remove";
 const NameRemoveAll = Name + "-remove-all";
 const NameMove = Name + "-move";
 const NameCopy = Name + "-copy";
+const NameDefault = Name + "-default";
+
+const DefaultBadgeUrl = "https://badge.equicord.org/badges/228013858302853120/5ccb20b71543343979cb1795df34c131d6502fc0.webp";
+const DefaultBadgeTooltip = "Equicord Donor";
 
 const description = "kiss you discord";
 
@@ -123,6 +127,44 @@ handleInteraction({
             saveBadges();
 
             return i.createMessage({
+                content: "Done!",
+                flags: MessageFlags.EPHEMERAL
+            });
+        }
+
+        if (data.name === NameDefault) {
+            const user = data.options.getUser("user", true);
+
+            i.defer(MessageFlags.EPHEMERAL);
+
+            const res = await doFetch(DefaultBadgeUrl);
+            const imgData = Buffer.from(await res.arrayBuffer());
+
+            const hash = createHash("sha1").update(imgData).digest("hex");
+            const fileName = `${hash}.webp`;
+
+            BadgeData[user.id] ??= [];
+
+            const newBadgeData = {
+                tooltip: DefaultBadgeTooltip,
+                badge: `https://badge.equicord.org/badges/${user.id}/${fileName}`
+            };
+
+            BadgeData[user.id].push(newBadgeData);
+            logBadgeAction("Added", user, newBadgeData);
+
+            mkdirSync(badgesForUser(user.id), { recursive: true });
+            writeFileSync(`${badgesForUser(user.id)}/${fileName}`, imgData);
+
+            saveBadges();
+
+            if (guild) {
+                const member = await guild.getMember(user.id).catch(() => null);
+                if (member && !member.roles.includes(Config.roles.donor))
+                    await member.addRole(Config.roles.donor, "Donor badge has been added");
+            }
+
+            return i.createFollowup({
                 content: "Done!",
                 flags: MessageFlags.EPHEMERAL
             });
@@ -257,9 +299,33 @@ handleInteraction({
 
         i.defer(MessageFlags.EPHEMERAL);
 
-        let imgData: Buffer = await fetchBuffer(url);
-        let ext = new URL(url).pathname.split(".").pop()!;
+        let imgData: Buffer;
+        let ext: string;
         let footer = "";
+
+        {
+            const res = await doFetch(url);
+            imgData = Buffer.from(await res.arrayBuffer());
+
+            const pathname = new URL(url).pathname;
+            const lastSegment = pathname.split("/").pop() ?? "";
+            const dotIndex = lastSegment.lastIndexOf(".");
+
+            if (dotIndex !== -1 && dotIndex < lastSegment.length - 1) {
+                ext = lastSegment.slice(dotIndex + 1);
+            } else {
+                const contentType = res.headers.get("content-type") ?? "";
+                const mimeToExt: Record<string, string> = {
+                    "image/png": "png",
+                    "image/jpeg": "jpg",
+                    "image/gif": "gif",
+                    "image/webp": "webp",
+                    "image/svg+xml": "svg",
+                    "image/apng": "apng"
+                };
+                ext = mimeToExt[contentType.split(";")[0]] ?? "png";
+            }
+        }
 
         if (optimize) {
             let sizes: [number, number];
@@ -439,5 +505,12 @@ Vaius.once("ready", () => {
             OldUser,
             NewUser
         ]
+    });
+
+    registerCommand({
+        type: ApplicationCommandTypes.CHAT_INPUT,
+        name: NameDefault,
+        description,
+        options: [RequiredUser]
     });
 });
