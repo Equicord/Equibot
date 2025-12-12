@@ -16,7 +16,7 @@ RUN corepack enable
 
 RUN apk update && apk add --no-cache sqlite
 
-COPY package*.json ./
+COPY package*.json pnpm-*.yaml ./
 RUN pnpm install --prod --frozen-lockfile
 COPY --from=build /app/dist ./dist
 
