@@ -24,6 +24,7 @@ RUN mkdir -p data
 
 COPY package*.json pnpm-*.yaml ./
 COPY sql ./sql
+copy scripts/genTypes.mjs ./scripts/genTypes.mjs
 RUN pnpm install --prod --frozen-lockfile
 COPY --from=build /app/dist ./dist
 
