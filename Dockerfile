@@ -1,7 +1,7 @@
 FROM node:lts-alpine AS build
 WORKDIR /app
 
-COPY package*.json ./
+COPY package*.json pnpm-*.yaml ./
 RUN pnpm install --frozen-lockfile
 
 COPY . .
