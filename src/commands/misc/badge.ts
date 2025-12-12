@@ -38,7 +38,7 @@ const NameMove = Name + "-move";
 const NameCopy = Name + "-copy";
 const NameDefault = Name + "-default";
 
-const DefaultBadgeUrl = "https://badge.equicord.org/badges/228013858302853120/5ccb20b71543343979cb1795df34c131d6502fc0.webp";
+const DefaultBadgeUrl = "https://badge.equicord.org/donor.webp";
 const DefaultBadgeTooltip = "Equicord Donor";
 
 const description = "kiss you discord";
