@@ -46,7 +46,7 @@ const description = "kiss you discord";
 async function optimizeImage(imgData: Buffer, ext: string) {
     const { child } = ext === "gif"
         ? spawnP("gifsicle", ["-O3", "--colors", "256", "--resize", "64x64"], {})
-        : spawnP("convert", ["-", "-resize", "64x64", "-quality", "75", "WEBP:-"], {});
+        : spawnP("convert", ["-", "-background", "none", "-resize", "64x64", "-quality", "75", "WEBP:-"], {});
 
     child.stdin!.end(imgData);
 
