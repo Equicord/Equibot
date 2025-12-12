@@ -209,7 +209,7 @@ if (enabled) {
             const data = req.body as string;
             const signature = req.headers["x-signature"] as string;
 
-            const mac = createHmac("sha256", webhookSecret)
+            const mac = createHmac("sha256", webhookSecret ?? "")
                 .update(data)
                 .digest();
             const expected = Buffer.from(signature.replace("sha256=", ""), "hex");

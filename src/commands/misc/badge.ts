@@ -307,7 +307,7 @@ handleInteraction({
             const res = await doFetch(url);
             imgData = Buffer.from(await res.arrayBuffer());
 
-            const pathname = new URL(url).pathname;
+            const { pathname } = new URL(url);
             const lastSegment = pathname.split("/").pop() ?? "";
             const dotIndex = lastSegment.lastIndexOf(".");
 

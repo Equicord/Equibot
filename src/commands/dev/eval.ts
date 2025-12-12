@@ -82,7 +82,7 @@ defineCommand({
 
         try {
             var result = await eval(script);
-        } catch (e) {
+        } catch (e: any) {
             var result = redactPaths(e.toString());
         }
 

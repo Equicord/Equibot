@@ -11,7 +11,6 @@ import {
 
 import { Vaius } from "./Client";
 import { PROD } from "./constants";
-// eslint-disable-next-line no-duplicate-imports
 import { initModListeners } from "./modules/moderate";
 import { initRoleListeners } from "./modules/roleTracker";
 import { handleCommandInteraction } from "./SlashCommands";

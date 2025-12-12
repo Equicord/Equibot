@@ -1,15 +1,23 @@
-FROM node:lts
+FROM node:lts-alpine AS build
+WORKDIR /app
+
+COPY package*.json ./
+RUN pnpm install --frozen-lockfile
+
+COPY . .
+RUN pnpm build
+
+FROM node:lts-alpine
 WORKDIR /app
 
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
 RUN corepack enable
 
-RUN apt-get update && apt-get install -y sqlite3 && rm -rf /var/lib/apt/lists/*
+RUN apk update && apk add --no-cache sqlite
 
-RUN mkdir -p data
-
-COPY . .
-RUN pnpm install --frozen-lockfile
+COPY package*.json ./
+RUN pnpm install --prod --frozen-lockfile
+COPY --from=build /app/dist ./dist
 
 CMD ["pnpm", "start"]

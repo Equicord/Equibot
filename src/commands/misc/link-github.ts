@@ -14,7 +14,7 @@ import { getAsMemberInHomeGuild, sendDm } from "~/util/discord";
 import { fetchJson } from "~/util/fetch";
 import { silently } from "~/util/functions";
 
-const { clientId, clientSecret, enabled, pats } = Config.githubLinking;
+const { clientId, clientSecret, enabled, pat } = Config.githubLinking;
 
 export const githubAuthStates = new Map<string, {
     id: string;
@@ -98,23 +98,21 @@ const LinkedRoles: Array<{
                     }
                 `;
 
-                for (const pat of pats) {
-                    const res = await fetchJson("https://api.github.com/graphql", {
-                        method: "POST",
-                        headers: {
-                            Authorization: `Bearer ${pat}`
-                        },
-                        body: JSON.stringify({ query })
-                    }).catch(() => null);
+                const res = await fetchJson("https://api.github.com/graphql", {
+                    method: "POST",
+                    headers: {
+                        Authorization: `Bearer ${pat}`
+                    },
+                    body: JSON.stringify({ query })
+                }).catch(() => null);
 
-                    if (!res) continue;
+                if (!res) return false;
 
-                    const sponsorInfo = safeParse(sponsorSchema, res.data);
-                    if (!sponsorInfo.success) continue;
+                const sponsorInfo = safeParse(sponsorSchema, res.data);
+                if (!sponsorInfo.success) return false;
 
-                    const sponsorTier = sponsorInfo.output.user.sponsorshipForViewerAsSponsorable?.tier;
-                    if (sponsorTier) return `Based on your ${sponsorTier.name} sponsorship`;
-                }
+                const sponsorTier = sponsorInfo.output.user.sponsorshipForViewerAsSponsorable?.tier;
+                if (sponsorTier) return `Based on your ${sponsorTier.name} sponsorship`;
 
                 return false;
             }
@@ -183,7 +181,7 @@ enabled && fastify.register(
             [],
             (req, res) => {
                 const params = new URLSearchParams({
-                    client_id: clientId,
+                    client_id: clientId ?? "",
                     redirect_uri: getRedirectUri(req.query.userId),
                     state: req.query.state,
                     allow_signup: "false"

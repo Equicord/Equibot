@@ -1,7 +1,8 @@
 node_modules
 dist
+Dockerfile
 .env
 .git
+.dockerignore
 .gitignore
 *.md
-src/config.ts
