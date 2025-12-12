@@ -11,7 +11,7 @@ Nevertheless it is still available under a free software license so you can easi
 Prequisites: git, nodejs, pnpm
 
 1. Clone the repository
-2. Copy `assets/examples/config.example.ts` to `src/config.ts` and fill in all values. Many modules can be disabled via their `enabled` config value.
+2. Open `src/config.ts` and edit all the values. Many modules can be disabled via their `enabled` config value.
     If you disable a module, you don't need to fill in any other config values for it.
 
 ## Running
@@ -19,15 +19,7 @@ Prequisites: git, nodejs, pnpm
 1. Run `pnpm install` to install dependencies
 2. Run `pnpm start` to start the bot
 
-## Running as a service
-
-1. Copy `assets/examples/equibot.service` to your systemd service directory. Tweak the `WorkingDirectory` value to wherever you cloned the repo.
-2. Enable & Start the `equibot` systemd service via `systemctl [--user] enable --now equibot`
-
 ## HTTP Server
 
 The bot includes a HTTP server that is used for some modules (namely GitHub linking and the Equicord reporter). If you want to enable it,
 you also have to set up a reverse proxy to forward traffic to the bot.
-
-I suggest [Caddy](https://caddyserver.com/). You can find an example Caddyfile in `assets/examples/Caddyfile`. The Caddyfile and `config.ts` file
-should have matching domains and port.
