@@ -43,39 +43,52 @@ defineCommand({
     name: "check-extension-version",
     description: "Check the version of the extension",
     aliases: ["extversion", "ext", "ev"],
-    usage: null,
-    async execute({ reply }) {
+    usage: "[chrome|firefox|edge]",
+    async execute(context, ...args) {
+        const { reply } = context;
+
         const browsers = [
-            { name: "Chrome", getVersion: getChromeVersion },
-            { name: "Firefox", getVersion: getFirefoxVersion },
-            { name: "Edge", getVersion: getEdgeVersion }
+            { name: "chrome", displayName: "Chrome", getVersion: getChromeVersion },
+            { name: "firefox", displayName: "Firefox", getVersion: getFirefoxVersion },
+            { name: "edge", displayName: "Edge", getVersion: getEdgeVersion }
         ];
 
         const [latestTag] = await getGithubTags();
         const latestVersion = latestTag.name.replace(/^v/, "");
+        const firstArg = args[0]?.toLowerCase();
+
+        let filteredBrowsers = browsers;
+
+        if (firstArg) {
+            filteredBrowsers = browsers.filter(b => b.name === firstArg);
+            if (filteredBrowsers.length === 0) {
+                await reply(`Unknown browser "${args[0]}". Please use chrome, firefox, or edge.`);
+                return;
+            }
+        }
 
         const messages: string[] = [];
 
         await Promise.all(
-            browsers.map(async ({ name, getVersion }) => {
+            filteredBrowsers.map(async ({ displayName, getVersion }) => {
                 const version = await getVersion();
                 if (!version) {
-                    messages.push(`Failed to look up the Equicord ${name} Extension version :(`);
+                    messages.push(`Failed to look up the Equicord ${displayName} Extension version :(`);
                     return;
                 }
 
                 const cmp = compareVersions(version, latestVersion);
 
                 if (cmp === 0) {
-                    messages.push(`The Equicord ${name} Extension is up to date! (v${version})`);
+                    messages.push(`The Equicord ${displayName} Extension is up to date! (v${version})`);
                 } else if (cmp > 0) {
-                    messages.push(`The Equicord ${name} Extension is newer than the latest GitHub release! (v${version} vs v${latestVersion})`);
+                    messages.push(`The Equicord ${displayName} Extension is newer than the latest GitHub release! (v${version} vs v${latestVersion})`);
                 } else {
-                    messages.push(`The Equicord ${name} Extension is out of date! (v${version} vs v${latestVersion})`);
+                    messages.push(`The Equicord ${displayName} Extension is out of date! (v${version} vs v${latestVersion})`);
                 }
             })
         );
 
-        reply(messages.join("\n"));
+        await reply(messages.join("\n"));
     }
 });
