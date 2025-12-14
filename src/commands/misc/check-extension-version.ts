@@ -9,7 +9,7 @@ interface GithubTag {
 }
 
 const VersionRe = />Version<\/(?:div|dt)><(?:div|dd) class="[^"]+">(\d+(?:\.\d+)+)<\/(?:div|dd)>/;
-const EdgeVersionRe = /Version (\d+(?:\.\d+)+)/;
+const EdgeVersionRe = /"version"\s*:\s*"([^"]+)"/;
 
 const getGithubTags = makeCachedJsonFetch<GithubTag[]>("https://api.github.com/repos/Equicord/Equicord/tags");
 
@@ -37,7 +37,7 @@ function getBrowserVersion(url: string, versionRe: RegExp) {
 
 const getChromeVersion = getBrowserVersion("https://chromewebstore.google.com/detail/equicord-web/mcambpfmpjnncfoodejdmehedbkjepmi", VersionRe);
 const getFirefoxVersion = getBrowserVersion("https://addons.mozilla.org/en-US/firefox/addon/equicord-web/", VersionRe);
-const getEdgeVersion = getBrowserVersion("https://microsoftedge.microsoft.com/addons/detail/equicord-web/nelknkpngcgdndlgikhfmldidjdjljgd", EdgeVersionRe);
+const getEdgeVersion = getBrowserVersion("https://microsoftedge.microsoft.com/addons/getproductdetailsbycrxid/nelknkpngcgdndlgikhfmldidjdjljgd", EdgeVersionRe);
 
 defineCommand({
     name: "check-extension-version",
