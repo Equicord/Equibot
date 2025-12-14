@@ -8,7 +8,8 @@ interface GithubTag {
     name: string;
 }
 
-const VersionRe = />Version<\/div><div class="[^"]+">(\d+(?:\.\d+)+)<\/div>/;
+const VersionRe = />Version<\/(?:div|dt)><(?:div|dd) class="[^"]+">(\d+(?:\.\d+)+)<\/(?:div|dd)>/;
+const EdgeVersionRe = /Version (\d+(?:\.\d+)+)/;
 
 const getGithubTags = makeCachedJsonFetch<GithubTag[]>("https://api.github.com/repos/Equicord/Equicord/tags");
 
@@ -26,13 +27,17 @@ function compareVersions(a: string, b: string) {
     return 0;
 }
 
-const getChromeVersion = ttlLazy(async () => {
-    // for some reason, nodejs fetch times out while curl works fine
-    const { stdout } = await execFileP("curl", ["https://chromewebstore.google.com/detail/equicord-web/mcambpfmpjnncfoodejdmehedbkjepmi"]);
+function getBrowserVersion(url: string, versionRe: RegExp) {
+    return ttlLazy(async () => {
+        const { stdout } = await execFileP("curl", [url]);
+        const version = versionRe.exec(stdout)?.[1];
+        return version ?? ttlLazyFailure;
+    }, 5 * Millis.MINUTE);
+}
 
-    const version = VersionRe.exec(stdout)?.[1];
-    return version ?? ttlLazyFailure;
-}, 5 * Millis.MINUTE);
+const getChromeVersion = getBrowserVersion("https://chromewebstore.google.com/detail/equicord-web/mcambpfmpjnncfoodejdmehedbkjepmi", VersionRe);
+const getFirefoxVersion = getBrowserVersion("https://addons.mozilla.org/en-US/firefox/addon/equicord-web/", VersionRe);
+const getEdgeVersion = getBrowserVersion("https://microsoftedge.microsoft.com/addons/detail/equicord-web/nelknkpngcgdndlgikhfmldidjdjljgd", EdgeVersionRe);
 
 defineCommand({
     name: "check-extension-version",
@@ -40,23 +45,37 @@ defineCommand({
     aliases: ["extversion", "ext", "ev"],
     usage: null,
     async execute({ reply }) {
-        const version = await getChromeVersion();
-        if (!version) return reply("Failed to look up the Vencord Chrome Extension version :( Try again later!");
+        const browsers = [
+            { name: "Chrome", getVersion: getChromeVersion },
+            { name: "Firefox", getVersion: getFirefoxVersion },
+            { name: "Edge", getVersion: getEdgeVersion }
+        ];
 
         const [latestTag] = await getGithubTags();
         const latestVersion = latestTag.name.replace(/^v/, "");
 
-        const cmp = compareVersions(version, latestVersion);
+        const messages: string[] = [];
 
-        let message;
-        if (cmp === 0) {
-            message = `The Equicord Chrome Extension is up to date! (v${version})`;
-        } else if (cmp > 0) {
-            message = `The Equicord Chrome Extension is newer than the latest GitHub release! (v${version} vs v${latestVersion})`;
-        } else {
-            message = `The Equicord Chrome Extension is out of date! (v${version} vs v${latestVersion})`;
-        }
+        await Promise.all(
+            browsers.map(async ({ name, getVersion }) => {
+                const version = await getVersion();
+                if (!version) {
+                    messages.push(`Failed to look up the Equicord ${name} Extension version :(`);
+                    return;
+                }
 
-        reply(message);
+                const cmp = compareVersions(version, latestVersion);
+
+                if (cmp === 0) {
+                    messages.push(`The Equicord ${name} Extension is up to date! (v${version})`);
+                } else if (cmp > 0) {
+                    messages.push(`The Equicord ${name} Extension is newer than the latest GitHub release! (v${version} vs v${latestVersion})`);
+                } else {
+                    messages.push(`The Equicord ${name} Extension is out of date! (v${version} vs v${latestVersion})`);
+                }
+            })
+        );
+
+        reply(messages.join("\n"));
     }
 });
