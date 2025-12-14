@@ -22,10 +22,9 @@ RUN apk update && apk add --no-cache sqlite curl && mkdir -p data
 
 COPY package*.json pnpm-*.yaml ./
 COPY sql ./sql
-copy assets ./assets
+COPY assets ./assets
 RUN pnpm install --prod --frozen-lockfile
-COPY --from=build /app/dist ./dist
 
-RUN pnpm install --prod --frozen-lockfile
+COPY --from=build /app/dist ./dist
 
 CMD ["pnpm", "start"]
