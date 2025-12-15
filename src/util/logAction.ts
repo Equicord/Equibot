@@ -2,14 +2,14 @@ import { CreateMessageOptions } from "oceanic.js";
 import { Vaius } from "~/Client";
 import Config from "~/config";
 
-export function logAutoModAction(data: string | CreateMessageOptions) {
-    if (!Config.channels.autoModLog) return;
+function logAction(channelId: string, data: string | CreateMessageOptions) {
+    if (!channelId) return;
 
     if (typeof data === "string") {
         data = { content: data };
     }
 
-    Vaius.rest.channels.createMessage(Config.channels.autoModLog, data);
+    Vaius.rest.channels.createMessage(channelId, data);
 }
 
 export function logBadgeAction(type: string, user: { mention: string; }, badge: { tooltip: string; badge: string; }, editedBadge?: { tooltip: string; badge: string; }, newUser?: { mention: string; }) {
@@ -28,13 +28,6 @@ export function logBadgeAction(type: string, user: { mention: string; }, badge: 
     Vaius.rest.channels.createMessage(Config.channels.autoModLog, { content: message });
 }
 
-
-export function logModerationAction(data: string | CreateMessageOptions) {
-    if (!Config.channels.modLog) return;
-
-    if (typeof data === "string") {
-        data = { content: data };
-    }
-
-    Vaius.rest.channels.createMessage(Config.channels.modLog, data);
-}
+export const logAutoModAction = (data: string | CreateMessageOptions) => logAction(Config.channels.autoModLog, data);
+export const logModerationAction = (data: string | CreateMessageOptions) => logAction(Config.channels.modLog, data);
+export const logBotAuditAction = (data: string | CreateMessageOptions) => logAction(Config.channels.botAuditLog, data);

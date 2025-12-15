@@ -1,23 +1,14 @@
-import { AnyTextableChannel, ApplicationCommandTypes, ComponentInteraction, ComponentTypes, InteractionTypes, MessageFlags, SelectMenuTypes } from "oceanic.js";
+import { AnyTextableChannel, ComponentInteraction, ComponentTypes, InteractionTypes, MessageFlags, SelectMenuTypes } from "oceanic.js";
 
-import { Vaius } from "~/Client";
-import { handleCommandInteraction, handleInteraction } from "~/SlashCommands";
+import { handleInteraction, registerMessageCommand } from "~/SlashCommands";
 
-import Config from "~/config";
 import { SupportInstructions, SupportTagList } from "./support";
 
 const enum Commands {
     Support = "Send Support Tag",
 }
 
-Vaius.once("ready", () => {
-    Vaius.application.createGuildCommand(Config.homeGuildId, {
-        type: ApplicationCommandTypes.MESSAGE,
-        name: Commands.Support
-    });
-});
-
-handleCommandInteraction({
+registerMessageCommand({
     name: Commands.Support,
     async handle(interaction) {
         const options = SupportTagList.map(tags => ({

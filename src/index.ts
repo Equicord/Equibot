@@ -5,7 +5,6 @@ import "./Commands";
 import "__modules__";
 
 import {
-    ApplicationCommandTypes,
     DiscordHTTPError
 } from "oceanic.js";
 
@@ -13,26 +12,8 @@ import { Vaius } from "./Client";
 import { PROD } from "./constants";
 import { initModListeners } from "./modules/moderate";
 import { initRoleListeners } from "./modules/roleTracker";
-import { handleCommandInteraction } from "./SlashCommands";
 import { silently } from "./util/functions";
 import { inspect } from "./util/inspect";
-
-if (PROD) {
-    Vaius.once("ready", () => {
-        Vaius.application.createGlobalCommand({
-            type: ApplicationCommandTypes.CHAT_INPUT,
-            name: "stare",
-            description: "stare...",
-        });
-    });
-
-    handleCommandInteraction({
-        name: "stare",
-        handle(i) {
-            i.createMessage({ content: "dance dance" });
-        }
-    });
-}
 
 initModListeners();
 initRoleListeners();
