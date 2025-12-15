@@ -52,10 +52,8 @@ async function checkIfDevOrDonor(member: Member) {
 
         if (rolesToAdd.length > 0) {
             try {
-                const newRoles = rolesToAdd.filter(role => !member.roles.includes(role));
-
                 await member.edit({
-                    roles: [...member.roles, ...newRoles],
+                    roles: [...member.roles, ...rolesToAdd],
                     reason: "Acknowledged as a Contributor and/or Donor"
                 });
             } catch (err) { }
