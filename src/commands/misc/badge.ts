@@ -238,7 +238,13 @@ handleInteraction({
                 });
 
             BadgeData[user.id].map(badge => {
-                logBadgeAction("Removed", user, badge);
+                const fileName = new URL(badge.badge).pathname.split("/").pop()!;
+                const contents = readFileSync(`${badgesForUser(user.id)}/${fileName}`);
+                const file = {
+                    name: fileName,
+                    contents,
+                };
+                logBadgeAction("Removed", user, badge, undefined, undefined, file);
             });
 
             rmSync(badgesForUser(user.id), { recursive: true, force: true });
@@ -261,19 +267,25 @@ handleInteraction({
             });
 
             const fileName = new URL(existingBadge.badge).pathname.split("/").pop()!;
+            const contents = readFileSync(`${badgesForUser(user.id)}/${fileName}`);
             rmSync(`${badgesForUser(user.id)}/${fileName}`, { force: true });
 
             BadgeData[user.id].splice(existingBadgeIndex!, 1);
             if (BadgeData[user.id].length === 0)
                 delete BadgeData[user.id];
 
-            logBadgeAction("Removed", user, existingBadge);
+            const file = {
+                name: fileName,
+                contents,
+            };
+
+            logBadgeAction("Removed", user, existingBadge, undefined, undefined, file);
 
             saveBadges();
 
             return i.createMessage({
                 content: "Done!",
-                flags: MessageFlags.EPHEMERAL
+                flags: MessageFlags.EPHEMERAL,
             });
         }
 
@@ -342,7 +354,7 @@ handleInteraction({
 
         const newBadgeData = {
             tooltip: tooltip,
-            badge: `https://badge.equicord.org/badges/${user.id}/${fileName}`
+            badge: `https://badge.equicord.org/badges/${user.id}/${fileName}`,
         };
 
         const before = data.options.getInteger("before");

@@ -13,6 +13,8 @@ const Config = {
         // channel where venbot will post moderation logs
         "modLog": "1371890339169701908",
 
+        "botAuditLog": "1371890339169701908",
+
         // used as default for the not-support command and some other features
         "support": "1297590739911573585",
 

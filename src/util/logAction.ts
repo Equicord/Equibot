@@ -12,8 +12,8 @@ function logAction(channelId: string, data: string | CreateMessageOptions) {
     Vaius.rest.channels.createMessage(channelId, data);
 }
 
-export function logBadgeAction(type: string, user: { mention: string; }, badge: { tooltip: string; badge: string; }, editedBadge?: { tooltip: string; badge: string; }, newUser?: { mention: string; }) {
-    if (!Config.channels.autoModLog) return;
+export function logBadgeAction(type: string, user: { mention: string; }, badge: { tooltip: string; badge: string; }, editedBadge?: { tooltip: string; badge: string; }, newUser?: { mention: string; }, file?: { name: string, contents: Buffer<ArrayBuffer>; }) {
+    if (!Config.channels.botAuditLog) return;
 
     let message = `${type} badge:\nUser: ${user.mention}\nTooltip: ${badge.tooltip}\nUrl: ${badge.badge}`;
 
@@ -25,7 +25,16 @@ export function logBadgeAction(type: string, user: { mention: string; }, badge: 
         message = `${type} badge\nfrom:\nUser: ${user.mention}\nTooltip: ${badge.tooltip}\nUrl: ${badge.badge}\nto:\nUser: ${newUser?.mention}\nTooltip: ${badge.tooltip}\nUrl: ${badge.badge}`;
     }
 
-    Vaius.rest.channels.createMessage(Config.channels.autoModLog, { content: message });
+    const options: any = { content: message };
+
+    if (file) {
+        options.files = [{
+            name: file.name,
+            contents: file.contents
+        }];
+    }
+
+    Vaius.rest.channels.createMessage(Config.channels.autoModLog, options);
 }
 
 export const logAutoModAction = (data: string | CreateMessageOptions) => logAction(Config.channels.autoModLog, data);
