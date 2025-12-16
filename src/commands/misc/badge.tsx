@@ -1,9 +1,9 @@
 import { createHash } from "crypto";
 import { cpSync, mkdirSync, readdirSync, readFileSync, renameSync, rmSync, writeFileSync } from "fs";
-import { ApplicationCommandOptions, ApplicationCommandOptionTypes, ApplicationCommandTypes, ApplicationIntegrationTypes, CreateChatInputApplicationCommandOptions, InteractionContextTypes, InteractionTypes, MessageFlags } from "oceanic.js";
+import { MessageFlags } from "oceanic.js";
 
 import { ZWSP } from "~/constants";
-import { handleInteraction } from "~/SlashCommands";
+import { ChatInputCommandOptions, CommandInteractionHandler, registerChatInputCommand } from "~/SlashCommands";
 import { run } from "~/util/functions";
 
 import { buffer } from "stream/consumers";
@@ -11,7 +11,8 @@ import Config from "~/config";
 import { spawnP } from "~/util/childProcess";
 import { getHomeGuild } from "~/util/discord";
 import { logBadgeAction } from "~/util/logAction";
-import { OwnerId, Vaius } from "../../Client";
+import { CommandAttachmentOption, CommandBooleanOption, CommandIntegerOption, CommandStringOption, CommandUserOption } from "~components";
+import { OwnerId } from "../../Client";
 import { PROD } from "../../constants";
 import { doFetch } from "../../util/fetch";
 
@@ -41,8 +42,6 @@ const NameDefault = Name + "-default";
 const DefaultBadgeUrl = "https://badge.equicord.org/donor.webp";
 const DefaultBadgeTooltip = "Equicord Donor";
 
-const description = "kiss you discord";
-
 async function optimizeImage(imgData: Buffer, ext: string) {
     const { child } = ext === "gif"
         ? spawnP("gifsicle", ["-O3", "--colors", "256", "--resize", "64x64"], {})
@@ -60,27 +59,6 @@ async function optimizeImage(imgData: Buffer, ext: string) {
     ] as const;
 }
 
-handleInteraction({
-    type: InteractionTypes.APPLICATION_COMMAND_AUTOCOMPLETE,
-    isMatch: i => i.data.name.startsWith(`${Name}-`),
-    handle(i) {
-        const user = i.data.options.getUserOption("user")!;
-        const oldBadgeInput = i.data.options.getOptions().find(opt => opt.name === "badge" || opt.name === "before")!.value as string;
-        const existingBadges = BadgeData[user.value];
-
-        return i.result(
-            existingBadges
-                ?.map((b, i) => ({
-                    name: `${i} - ${b.tooltip === ZWSP ? "<ZWSP>" : b.tooltip}`,
-                    value: String(i)
-                }))
-                .filter(b => b.name.toLowerCase().includes(oldBadgeInput.toLowerCase()))
-                .slice(0, 25)
-            ?? []
-        );
-    }
-});
-
 function normaliseCdnUrl(rawUrl: string) {
     const url = new URL(rawUrl);
     if (url.host !== "cdn.discordapp.com" || url.pathname.includes("/attachments/")) return rawUrl;
@@ -90,9 +68,7 @@ function normaliseCdnUrl(rawUrl: string) {
     return url.toString();
 }
 
-handleInteraction({
-    type: InteractionTypes.APPLICATION_COMMAND,
-    isMatch: i => i.data.name.startsWith(`${Name}-`),
+const handler: CommandInteractionHandler = {
     async handle(i) {
         if (i.user.id !== OwnerId) {
             if (!i.member?.roles.includes(Config.roles.mod))
@@ -389,140 +365,86 @@ handleInteraction({
             content: `Done!${footer && "\n\n-# " + footer}`,
             flags: MessageFlags.EPHEMERAL
         });
-    }
-});
+    },
+    autoComplete(i) {
+        const user = i.data.options.getUserOption("user")!;
+        const oldBadgeInput = i.data.options.getOptions().find(opt => opt.name === "badge" || opt.name === "before")!.value as string;
+        const existingBadges = BadgeData[user.value];
 
-function registerCommand(data: CreateChatInputApplicationCommandOptions) {
-    Vaius.application.createGuildCommand(Config.homeGuildId, {
+        return i.result(
+            existingBadges
+                ?.map((b, i) => ({
+                    name: `${i} - ${b.tooltip === ZWSP ? "<ZWSP>" : b.tooltip}`,
+                    value: String(i)
+                }))
+                .filter(b => b.name.toLowerCase().includes(oldBadgeInput.toLowerCase()))
+                .slice(0, 25)
+            ?? []
+        );
+    }
+};
+
+function registerCommand(data: ChatInputCommandOptions) {
+    registerChatInputCommand({
         ...data,
         defaultMemberPermissions: "0",
-    });
-
-    Vaius.application.createGlobalCommand({
-        ...data,
-        contexts: [InteractionContextTypes.BOT_DM, InteractionContextTypes.GUILD, InteractionContextTypes.PRIVATE_CHANNEL],
-        integrationTypes: [ApplicationIntegrationTypes.USER_INSTALL]
-    });
+    }, handler);
 }
 
-Vaius.once("ready", () => {
-    const RequiredUser: ApplicationCommandOptions = {
-        name: "user",
-        type: ApplicationCommandOptionTypes.USER,
-        description,
-        required: true
-    };
-    const Tooltip = (required: boolean) => ({
-        name: "tooltip",
-        type: ApplicationCommandOptionTypes.STRING,
-        description,
-        required
-    } as ApplicationCommandOptions);
-    const ExistingBadge = (name: string, required = true) => ({
-        name,
-        description,
-        type: ApplicationCommandOptionTypes.INTEGER,
-        autocomplete: true,
-        required
-    } as ApplicationCommandOptions);
-    const Image: ApplicationCommandOptions = {
-        name: "image",
-        type: ApplicationCommandOptionTypes.ATTACHMENT,
-        description
-    };
-    const ImageUrl: ApplicationCommandOptions = {
-        name: "image-url",
-        type: ApplicationCommandOptionTypes.STRING,
-        description
-    };
-    const OldUser: ApplicationCommandOptions = {
-        name: "old-user",
-        type: ApplicationCommandOptionTypes.USER,
-        description,
-        required: true
-    };
-    const NewUser: ApplicationCommandOptions = {
-        name: "new-user",
-        type: ApplicationCommandOptionTypes.USER,
-        description,
-        required: true
-    };
-    const Optimize: ApplicationCommandOptions = {
-        name: "optimize",
-        type: ApplicationCommandOptionTypes.BOOLEAN,
-        description: "optimize images",
-        required: false
-    };
+const RequiredUser = <CommandUserOption name="user" required />;
+const NewUser = <CommandUserOption name="new-user" required />;
+const OldUser = <CommandUserOption name="old-user" required />;
+const Optimize = <CommandBooleanOption name="optimize" />;
+const Image = <CommandAttachmentOption name="image" />;
+const ImageUrl = <CommandStringOption name="image-url" />;
+const makeTooltip = (required: boolean) => <CommandStringOption name="tooltip" required={required} />;
+const makeExistingBadge = (name: string, required = true) => <CommandIntegerOption name={name} required={required} autocomplete />;
 
-    registerCommand({
-        type: ApplicationCommandTypes.CHAT_INPUT,
-        name: NameAdd,
-        description,
-        options: [
-            RequiredUser,
-            Tooltip(true),
-            ImageUrl,
-            Image,
-            ExistingBadge("before", false),
-            Optimize
-        ]
-    });
+registerCommand({
+    name: NameAdd,
+    options: [
+        RequiredUser,
+        makeTooltip(true),
+        ImageUrl,
+        Image,
+        makeExistingBadge("before", false),
+        Optimize
+    ]
+});
 
-    registerCommand({
-        type: ApplicationCommandTypes.CHAT_INPUT,
-        name: NameEdit,
-        description,
-        options: [
-            RequiredUser,
-            ExistingBadge("badge"),
-            Tooltip(false),
-            ImageUrl,
-            Image,
-            Optimize
-        ]
-    });
+registerCommand({
+    name: NameEdit,
+    options: [
+        RequiredUser,
+        makeExistingBadge("badge"),
+        makeTooltip(false),
+        ImageUrl,
+        Image,
+        Optimize
+    ]
+});
 
-    registerCommand({
-        type: ApplicationCommandTypes.CHAT_INPUT,
-        name: NameRemove,
-        description,
-        options: [
-            RequiredUser,
-            ExistingBadge("badge")
-        ]
-    });
+registerCommand({
+    name: NameRemove,
+    options: [RequiredUser, makeExistingBadge("badge")]
+});
 
-    registerCommand({
-        type: ApplicationCommandTypes.CHAT_INPUT,
-        name: NameRemoveAll,
-        description,
-        options: [RequiredUser]
-    });
+registerCommand({
+    name: NameRemoveAll,
+    options: [RequiredUser]
+});
 
-    registerCommand({
-        type: ApplicationCommandTypes.CHAT_INPUT,
-        name: NameMove,
-        description,
-        options: [
-            OldUser,
-            NewUser
-        ]
-    });
+registerCommand({
+    name: NameMove,
+    options: [OldUser, NewUser]
+});
 
-    registerCommand({
-        type: ApplicationCommandTypes.CHAT_INPUT,
-        name: NameCopy,
-        description,
-        options: [
-            OldUser,
-            NewUser
-        ]
-    });
+registerCommand({
+    name: NameCopy,
+    options: [OldUser, NewUser]
+});
 
-    registerCommand({
-        type: ApplicationCommandTypes.CHAT_INPUT,
-        name: NameDefault,
-        description,
-        options: [RequiredUser]
-    });
+registerCommand({
+    name: NameDefault,
+    options: [RequiredUser]
 });
