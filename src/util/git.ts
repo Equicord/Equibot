@@ -1,4 +1,3 @@
-
 import { makeLazy } from "./lazy";
 
 export const getGitRemote = makeLazy(async () => {
@@ -6,6 +5,5 @@ export const getGitRemote = makeLazy(async () => {
 });
 
 export const getGitCommitHash = makeLazy(async () => {
-    const { stdout } = await execFileP("git", ["rev-parse", "HEAD"]);
-    return stdout.trim();
+    return process.env.GIT_COMMIT ?? "unknown";
 });

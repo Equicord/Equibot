@@ -14,7 +14,7 @@ defineCommand({
 
         const rows = [
             [
-                "Venbot Version",
+                "Equibot Version",
                 `[${toInlineCode(gitHash.slice(0, 7))}](${gitRemote}/commit/${gitHash})`
             ],
             [

@@ -1,6 +1,9 @@
 FROM node:lts-alpine AS build
 WORKDIR /app
 
+ARG GIT_COMMIT
+ENV GIT_COMMIT=$GIT_COMMIT
+
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
 RUN corepack enable
@@ -13,6 +16,9 @@ RUN pnpm build
 
 FROM node:lts-alpine
 WORKDIR /app
+
+ARG GIT_COMMIT
+ENV GIT_COMMIT=$GIT_COMMIT
 
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
