@@ -1,16 +1,29 @@
-import Sqlite from "better-sqlite3";
-import { Kysely, SqliteDialect } from "kysely";
-// generate via `pnpm sql:types`
-import type { DB } from "kysely-codegen";
+import { Kysely, PostgresDialect } from "kysely";
+import { Pool } from "pg";
 
-const sqlite = new Sqlite("./data/db.sqlite3");
-sqlite.pragma("journal_mode = WAL");
+export interface DB {
+    stickyRoles: {
+        id: string;
+        roleIds: string;
+    };
 
-const dialect = new SqliteDialect({
-    database: sqlite
+    linkedGitHubs: {
+        githubId: string;
+        discordId: string;
+    };
+}
+
+const pool = new Pool({
+    connectionString: process.env.POSTGRES_URI
 });
 
-export const db = new Kysely<DB>({ dialect });
+const dialect = new PostgresDialect({
+    pool
+});
+
+export const db = new Kysely<DB>({
+    dialect
+});
 
 export const enum ExpressionType {
     EMOJI = "emoji",
