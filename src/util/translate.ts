@@ -1,4 +1,4 @@
-import { fetchGoogle } from "./fetch";
+import { fetchJson } from "./fetch";
 import { toInlineCode } from "./text";
 
 interface TranslationData {
@@ -33,7 +33,7 @@ export async function translate(text: string, sourceLang: Locale, targetLang: Lo
     });
 
     try {
-        const { sourceLanguage, translation }: GoogleData = await fetchGoogle(url).then(res => res.json());
+        const { sourceLanguage, translation }: GoogleData = await fetchJson(url);
 
         return {
             src: sourceLanguage,
