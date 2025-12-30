@@ -81,6 +81,8 @@ defineCommand({
             ...ids.donors
         ]);
 
+        const sentMessage = await reply(`Starting sync for ${allIDs.size} users...`);
+
         for (const userID of allIDs) {
             let member: Member;
 
@@ -100,11 +102,8 @@ defineCommand({
             }
         }
 
-        return reply(
-            "Sync complete.\n" +
-            `Applied: ${applied}\n` +
-            `Skipped: ${skipped}\n` +
-            `Failed: ${failed}`
-        );
+        return sentMessage.edit({
+            content: `Sync complete.\nApplied: ${applied}\nSkipped: ${skipped}\nFailed: ${failed}`
+        });
     },
 });
