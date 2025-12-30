@@ -30,32 +30,31 @@ async function getDevAndBadgeIDs() {
     return { equicord, vencord, donors: donorsSet };
 }
 
-async function applyDevDonorRoles(
-    member: Member,
-    ids: Awaited<ReturnType<typeof getDevAndBadgeIDs>>
-) {
-    if (member.bot) return false;
+async function applyDevDonorRoles(member: Member, ids: Awaited<ReturnType<typeof getDevAndBadgeIDs>>) {
+    if (member.bot) return 0;
 
     const { contributor, vencordContrib, donor } = Config.roles;
     const { equicord, vencord, donors } = ids;
+
     const rolesToAdd: string[] = [];
 
     if (equicord.has(member.id) && !member.roles.includes(contributor)) rolesToAdd.push(contributor);
     if (vencord.has(member.id) && !member.roles.includes(vencordContrib)) rolesToAdd.push(vencordContrib);
     if (donors.has(member.id) && !member.roles.includes(donor)) rolesToAdd.push(donor);
-    if (!rolesToAdd.length) return false;
+
+    if (!rolesToAdd.length) return 0;
 
     await member.edit({
         roles: [...member.roles, ...rolesToAdd],
         reason: "Manually synced contributor/donor roles"
     });
 
-    return true;
+    return rolesToAdd.length;
 }
 
 defineCommand({
-    name: "syncroles",
-    aliases: ["syncrole", "applyroles", "sr", "ar"],
+    name: "sync-roles",
+    aliases: ["syncroles", "roles", "syncrole", "applyroles", "sr", "ar"],
     description: "Applies Equicord/Vencord contributor and donor roles to all listed users in this guild.",
     usage: null,
     guildOnly: true,
@@ -93,8 +92,8 @@ defineCommand({
             }
 
             try {
-                const updated = await applyDevDonorRoles(member, ids);
-                if (updated) applied++;
+                const added = await applyDevDonorRoles(member, ids);
+                if (added > 0) applied += added;
                 else skipped++;
             } catch {
                 failed++;
