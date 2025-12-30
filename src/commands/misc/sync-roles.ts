@@ -4,7 +4,7 @@ import Config from "~/config";
 import { fetchJsons } from "~/util/fetch";
 
 const DEVS_JSON = "https://raw.githubusercontent.com/Equicord/Equibored/main/devs.json";
-const DONORS_JSON = "https://raw.githubusercontent.com/Equicord/Equibored/main/badges.json";
+const DONORS_JSON = "https://badge.equicord.org/badges.json";
 
 async function getDevAndBadgeIDs() {
     const [devs, donors] = await fetchJsons([DEVS_JSON, DONORS_JSON]);

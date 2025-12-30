@@ -10,7 +10,7 @@ let cachedDonors: Set<string> | null = null;
 let lastFetched = 0;
 
 const DEVS_JSON = "https://raw.githubusercontent.com/Equicord/Equibored/main/devs.json";
-const DONORS_JSON = "https://raw.githubusercontent.com/Equicord/Equibored/main/badges.json";
+const DONORS_JSON = "https://badge.equicord.org/badges.json";
 
 async function getDevAndBadgeIDs() {
     const now = Date.now();
