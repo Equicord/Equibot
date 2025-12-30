@@ -11,6 +11,7 @@ export async function restart(channelId: string) {
 
 defineCommand({
     name: "restart",
+    aliases: ["reboot"],
     description: "Restart the bot",
     usage: null,
     ownerOnly: true,
