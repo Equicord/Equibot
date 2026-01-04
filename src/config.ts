@@ -114,9 +114,9 @@ const Config = {
         // channel where the bot will post the latest status of stable and canary
         "statusChannelId": "1420915039417929778",
         // message id of the stable status message (must be in statusChannelId)
-        "stableMessageId": "1420937487819345960",
+        "stableMessageId": "1421025558682271844",
         // message id of the canary status message (must be in statusChannelId)
-        "canaryMessageId": "1420937486447808635",
+        "canaryMessageId": "1421025557281243228",
     }
 };
 
