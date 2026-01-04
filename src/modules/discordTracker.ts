@@ -146,7 +146,7 @@ async function handleReportSubmit(report: ReportData, data: any) {
     if (descriptionTooLarge || contentLength > 6000) {
         data.embeds.forEach((embed, i) => {
             if (i !== 0) {
-                embed.description = "The report is too long to display here. Please check [on GitHub](https://github.com/Vendicated/Vencord/actions/workflows/reportBrokenPlugins.yml).";
+                embed.description = "The report is too long to display here. Please check [on GitHub](https://github.com/Equicord/Equicord/actions/workflows/reportBrokenPlugins.yml).";
             }
         });
     }
@@ -159,9 +159,7 @@ async function handleReportSubmit(report: ReportData, data: any) {
         ? BotState.discordTracker!.canaryHash
         : BotState.discordTracker!.stableHash;
 
-    if (!report.shouldUpdateStatus || latestHash !== report.hash[report.branch]) {
-        return;
-    }
+    if (!report.shouldUpdateStatus) return;
 
     const time = Math.round(Date.now() / 1000);
 
