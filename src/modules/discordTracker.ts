@@ -159,7 +159,7 @@ async function handleReportSubmit(report: ReportData, data: any) {
         ? BotState.discordTracker!.canaryHash
         : BotState.discordTracker!.stableHash;
 
-    if (!report.shouldUpdateStatus) return;
+    if (!report.shouldUpdateStatus || latestHash !== report.hash[report.branch]) return;
 
     const time = Math.round(Date.now() / 1000);
 
