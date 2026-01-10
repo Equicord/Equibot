@@ -281,13 +281,13 @@ enabled && fastify.register(
                     const githubId = String(githubUser.id);
 
                     const existingLink = await t
-                        .selectFrom("linkedGitHubs")
+                        .selectFrom("linkedgithubs")
                         .select("discordId")
                         .where("githubId", "=", githubId)
                         .where("discordId", "!=", req.query.userId)
                         .executeTakeFirst();
 
-                    await t.insertInto("linkedGitHubs")
+                    await t.insertInto("linkedgithubs")
                         .values({
                             discordId: req.query.userId,
                             githubId: githubId

@@ -2,12 +2,12 @@ import { Kysely, PostgresDialect } from "kysely";
 import { Pool } from "pg";
 
 export interface DB {
-    stickyRoles: {
+    stickyroles: {
         id: string;
         roleIds: string;
     };
 
-    linkedGitHubs: {
+    linkedgithubs: {
         githubId: string;
         discordId: string;
     };

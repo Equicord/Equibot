@@ -17,7 +17,7 @@ Vaius.on("guildMemberAdd", async member => {
     if (member.guild.id !== Config.homeGuildId) return;
 
     const sticky = await db
-        .selectFrom("stickyRoles")
+        .selectFrom("stickyroles")
         .select("roleIds")
         .where("id", "=", member.id)
         .executeTakeFirst();
@@ -45,7 +45,7 @@ Vaius.on("guildAuditLogEntryCreate", async (maybeUncachedGuild, entry) => {
             await removeStickyRoles(entry.targetID);
     } else {
         await db
-            .insertInto("stickyRoles")
+            .insertInto("stickyroles")
             .values({
                 id: entry.targetID,
                 roleIds: roleIds.join(",")
@@ -79,8 +79,8 @@ defineCommand({
             })
             .filter(isNonNullish);
 
-        await db.deleteFrom("stickyRoles").execute();
-        await db.insertInto("stickyRoles").values(rows).execute();
+        await db.deleteFrom("stickyroles").execute();
+        await db.insertInto("stickyroles").values(rows).execute();
 
         await reply(msg, { content: `Saved ${rows.length} users' roles!` });
     },
@@ -88,7 +88,7 @@ defineCommand({
 
 export function removeStickyRoles(memberId: string) {
     return db
-        .deleteFrom("stickyRoles")
+        .deleteFrom("stickyroles")
         .where("id", "=", memberId)
         .execute();
 }
