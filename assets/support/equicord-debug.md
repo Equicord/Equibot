@@ -1,5 +1,5 @@
 ---
-aliases: vcd, dbg, debug
+aliases: vcd, dbg, debug, ecd
 emoji: 🐛
 ---
 
