@@ -26,7 +26,7 @@ export function buildFaqEmbed(faq: Faq, invoker: User): EmbedOptions {
                 .replace(/```.+?```/gs, m => m.replaceAll("\n", "%NEWLINE%"))
                 .replace(/(?<!\n)\n(?![\n\-*])/g, "")
                 .replaceAll("%NEWLINE%", "\n"),
-        color: 0xdd7878,
+        color: 0x565656,
         footer: { text: `Auto-response invoked by ${invoker.tag}` },
     };
 }
