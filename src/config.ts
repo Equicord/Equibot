@@ -66,6 +66,9 @@ const Config = {
         // vencord contrib
         "vencordContrib": "1173343399470964856",
 
+        // vip
+        "vip": "1217667142598529064",
+
         "regular": "1230693249610547231",
         "fileWhitelist": "1448056449187188880",
 

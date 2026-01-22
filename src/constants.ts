@@ -21,6 +21,8 @@ export const MANAGEABLE_ROLES = [
     Config.roles.donor,
     Config.roles.contributor,
     Config.roles.vencordContrib,
+    Config.roles.vip,
+    Config.roles.fileWhitelist,
     ...Config.roles.manageableRoles
 ];
 
