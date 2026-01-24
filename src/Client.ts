@@ -5,7 +5,8 @@ import { CommandContext, Commands } from "./Commands";
 import Config from "./config";
 import { Emoji, Millis } from "./constants";
 import { BotState } from "./db/botState";
-import { lobotomiseMaybe, moderateMessage } from "./modules/moderate";
+import { moderateMessage } from "./modules/moderation";
+import { lobotomiseMaybe } from "./modules/moderation/lobotomy";
 import { reply } from "./util/discord";
 import { silently } from "./util/functions";
 

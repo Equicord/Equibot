@@ -10,6 +10,7 @@ import {
 
 import { Vaius } from "./Client";
 import { PROD } from "./constants";
+
 import { initModListeners } from "./modules/moderate";
 import { initRoleListeners } from "./modules/roleTracker";
 import { silently } from "./util/functions";
