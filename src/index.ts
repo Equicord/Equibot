@@ -11,7 +11,7 @@ import {
 import { Vaius } from "./Client";
 import { PROD } from "./constants";
 
-import { initModListeners } from "./modules/moderate";
+import { initModListeners } from "./modules/moderation/listeners";
 import { initRoleListeners } from "./modules/roleTracker";
 import { silently } from "./util/functions";
 import { inspect } from "./util/inspect";
