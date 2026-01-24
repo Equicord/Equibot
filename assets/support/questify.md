@@ -20,4 +20,4 @@ If it says `Discord Desktop` in the `Client` section, you can auto complete all 
 
 If it says `Equibop`, `Goofcord`, `Web`, `UserScript`, **or anything other than** `Discord Desktop`, you **cannot** auto complete `Play Game/Activity Quests` Quests.
 
-<https://equicord.org/assets/plugins/questify/settings.png>
+[Settings Image](https://equicord.org/assets/plugins/questify/settings.png)
