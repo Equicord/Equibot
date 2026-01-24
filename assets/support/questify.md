@@ -1,7 +1,15 @@
 ---
-aliases: questify-broken, quests, autobroken
+aliases: questify, quests, quest
 emoji: 🇶
 ---
+
+## Where did QuestCompleter go?
+
+**QuestCompleter** was deprecated in favor of **Questify**.
+
+## How do I auto complete Quests?
+
+**Questify** can auto complete Quests if you enable the settings in the image below.
 
 ## Questify isn't auto completing Quests
 
@@ -15,3 +23,5 @@ If it says `Discord Desktop` in the `Client` section, you can auto complete all 
 - Task in Activity Quests
 
 If it says `Equibop`, `Goofcord`, `Web`, `UserScript`, **or anything other than** `Discord Desktop`, you **cannot** auto complete `Play Game/Activity Quests` Quests.
+
+<https://equicord.org/assets/plugins/questify/settings.png>
