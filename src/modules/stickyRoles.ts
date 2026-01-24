@@ -18,12 +18,12 @@ Vaius.on("guildMemberAdd", async member => {
 
     const sticky = await db
         .selectFrom("stickyroles")
-        .select("roleIds")
+        .select("roleids")
         .where("id", "=", member.id)
         .executeTakeFirst();
 
     if (!sticky) return;
-    await member.edit({ roles: sticky.roleIds.split(","), reason: "Sticky Roles" });
+    await member.edit({ roles: sticky.roleids.split(","), reason: "Sticky Roles" });
 });
 
 Vaius.on("guildAuditLogEntryCreate", async (maybeUncachedGuild, entry) => {
@@ -37,10 +37,10 @@ Vaius.on("guildAuditLogEntryCreate", async (maybeUncachedGuild, entry) => {
     const member = entry.targetID && await guild.getMember(entry.targetID).catch(() => null);
     if (!member) return;
 
-    const roleIds = member.roles
+    const roleids = member.roles
         .filter(roleId => !shouldIgnoreRole(roleId, guild));
 
-    if (roleIds.length === 0) {
+    if (roleids.length === 0) {
         if (entry.changes!.some(c => c.key === "$remove"))
             await removeStickyRoles(entry.targetID);
     } else {
@@ -48,12 +48,12 @@ Vaius.on("guildAuditLogEntryCreate", async (maybeUncachedGuild, entry) => {
             .insertInto("stickyroles")
             .values({
                 id: entry.targetID,
-                roleIds: roleIds.join(",")
+                roleids: roleids.join(",")
             })
             .onConflict(oc => oc
                 .column("id")
                 .doUpdateSet({
-                    roleIds: eb => eb.ref("excluded.roleIds")
+                    roleids: eb => eb.ref("excluded.roleids")
                 })
             )
             .execute();
@@ -75,7 +75,7 @@ defineCommand({
             .map(m => {
                 const roles = m.roles.filter(roleId => !shouldIgnoreRole(roleId, msg.guild));
                 if (!roles.length) return null;
-                return ({ id: m.id, roleIds: roles.join(",") });
+                return ({ id: m.id, roleids: roles.join(",") });
             })
             .filter(isNonNullish);
 

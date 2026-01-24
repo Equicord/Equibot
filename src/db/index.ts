@@ -4,12 +4,12 @@ import { Pool } from "pg";
 export interface DB {
     stickyroles: {
         id: string;
-        roleIds: string;
+        roleids: string;
     };
 
     linkedgithubs: {
-        githubId: string;
-        discordId: string;
+        githubid: string;
+        discordid: string;
     };
 }
 

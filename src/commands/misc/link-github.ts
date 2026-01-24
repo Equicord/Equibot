@@ -278,25 +278,25 @@ enabled && fastify.register(
                 }
 
                 const existingLink = await db.transaction().execute(async t => {
-                    const githubId = String(githubUser.id);
+                    const githubid = String(githubUser.id);
 
                     const existingLink = await t
                         .selectFrom("linkedgithubs")
-                        .select("discordId")
-                        .where("githubId", "=", githubId)
-                        .where("discordId", "!=", req.query.userId)
+                        .select("discordid")
+                        .where("githubid", "=", githubid)
+                        .where("discordid", "!=", req.query.userId)
                         .executeTakeFirst();
 
                     await t.insertInto("linkedgithubs")
                         .values({
-                            discordId: req.query.userId,
-                            githubId: githubId
+                            discordid: req.query.userId,
+                            githubid: githubid
                         })
                         .onConflict(oc =>
                             oc
-                                .column("githubId")
+                                .column("githubid")
                                 .doUpdateSet(eb => ({
-                                    discordId: eb.ref("excluded.discordId")
+                                    discordid: eb.ref("excluded.discordid")
                                 }))
                         )
                         .execute();
@@ -305,14 +305,14 @@ enabled && fastify.register(
                 }).catch(() => null);
 
                 if (existingLink) {
-                    const previousMember = await getAsMemberInHomeGuild(existingLink.discordId);
+                    const previousMember = await getAsMemberInHomeGuild(existingLink.discordid);
                     if (previousMember) {
                         silently(previousMember.edit({
                             roles: previousMember.roles.filter(role => !rolesToAdd.some(r => r.id === role)),
                             reason: `Linked new Discord account ${req.query.userId} to GitHub ${githubUser.login}`
                         }));
                     } else {
-                        removeStickyRoles(existingLink.discordId);
+                        removeStickyRoles(existingLink.discordid);
                     }
                 }
 

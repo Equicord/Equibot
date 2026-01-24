@@ -79,13 +79,63 @@ async function checkVersions() {
 
 type Options = Partial<Pick<ReportData, "shouldLog" | "shouldUpdateStatus" | "onSubmit">> & { ref?: string; };
 
-export async function testDiscordVersion<B extends Branch>(branch: B, hash: Record<B extends "both" ? "stable" | "canary" : B, string>, options: Options = {}) {
-    const {
-        shouldLog = true,
-        shouldUpdateStatus = true,
-        ref = DefaultReporterBranch,
-        onSubmit
-    } = options;
+async function createTemporaryBranchForForkPR(pr: any): Promise<string> {
+    const tempBranch = `pr-${pr.number}`;
+    const { sha } = pr.head;
+
+    const res = await doFetch("https://api.github.com/repos/Equicord/Equicord/git/refs", {
+        method: "POST",
+        headers: {
+            Authorization: `Bearer ${pat}`,
+            Accept: "application/vnd.github+json"
+        },
+        body: JSON.stringify({
+            ref: `refs/heads/${tempBranch}`,
+            sha
+        })
+    });
+
+    if (!res.ok) throw new Error("Failed to create temporary branch for fork PR");
+    return tempBranch;
+}
+
+async function deleteTemporaryBranch(branch: string) {
+    await doFetch(`https://api.github.com/repos/Equicord/Equicord/git/refs/heads/${branch}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${pat}` }
+    });
+}
+
+async function resolveRef(ref: string): Promise<{ refName: string; isTemp?: boolean; }> {
+    const match = ref.match(/(?:pull\/)?(\d+)/);
+    if (!match) return { refName: ref };
+
+    const prNumber = match[1];
+
+    const res = await doFetch(`https://api.github.com/repos/Equicord/Equicord/pulls/${prNumber}`, {
+        headers: {
+            Authorization: `Bearer ${pat}`,
+            Accept: "application/vnd.github+json"
+        }
+    });
+
+    if (!res.ok) throw new Error(`PR #${prNumber} not found`);
+    const pr = await res.json();
+
+    if (pr.head.repo.full_name === "Equicord/Equicord") return { refName: pr.head.ref };
+
+    const tempBranch = await createTemporaryBranchForForkPR(pr);
+    return { refName: tempBranch, isTemp: true };
+}
+
+export async function testDiscordVersion<B extends Branch>(
+    branch: B,
+    hash: Record<B extends "both" ? "stable" | "canary" : B, string>,
+    options: Options = {}
+) {
+    const { shouldLog = true, shouldUpdateStatus = true, ref = DefaultReporterBranch, onSubmit } = options;
+
+    const { refName, isTemp } = await resolveRef(ref);
 
     const runId = randomUUID();
     pendingReports.set(runId, {
@@ -98,13 +148,21 @@ export async function testDiscordVersion<B extends Branch>(branch: B, hash: Reco
         submitCount: 0
     });
 
-    await triggerReportWorkflow({
-        ref,
-        inputs: {
-            discord_branch: branch,
-            webhook_url: `${Config.httpServer.domain}/reporter/webhook?runId=${runId}`
+    try {
+        await triggerReportWorkflow({
+            ref: refName,
+            inputs: {
+                discord_branch: branch,
+                webhook_url: `${Config.httpServer.domain}/reporter/webhook?runId=${runId}`
+            }
+        });
+    } finally {
+        if (isTemp) {
+            setTimeout(() => {
+                deleteTemporaryBranch(refName).catch(console.error);
+            }, 2 * Millis.MINUTE);
         }
-    });
+    }
 }
 
 async function handleReportSubmit(report: ReportData, data: any) {
