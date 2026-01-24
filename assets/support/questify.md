@@ -3,10 +3,6 @@ aliases: questify, quests, quest
 emoji: 🇶
 ---
 
-## Where did QuestCompleter go?
-
-**QuestCompleter** was deprecated in favor of **Questify**.
-
 ## How do I auto complete Quests?
 
 **Questify** can auto complete Quests if you enable the settings in the image below.
