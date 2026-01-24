@@ -30,7 +30,7 @@ export const DefaultReporterBranch = "dev";
 
 const { canaryMessageId, enabled, logChannelId, pat, stableMessageId, statusChannelId, webhookSecret } = Config.reporter;
 
-const pendingReports = new TTLMap<string, ReportData>(
+const pendingReports = new TTLMap<string, ReportData & { ref?: string, prNumber?: number; }>(
     10 * Millis.MINUTE,
     (_id, report) => Vaius.rest.channels.createMessage(logChannelId, {
         content: `Timed out while testing ${report.branch} ${report.hash[report.branch] || "with unknown hash"}`,
@@ -106,11 +106,11 @@ async function deleteTemporaryBranch(branch: string) {
     });
 }
 
-async function resolveRef(ref: string): Promise<{ refName: string; isTemp?: boolean; }> {
+async function resolveRef(ref: string): Promise<{ refName: string; isTemp?: boolean; prNumber?: number; }> {
     const match = ref.match(/(?:pull\/)?(\d+)/);
     if (!match) return { refName: ref };
 
-    const prNumber = match[1];
+    const prNumber = parseInt(match[1], 10);
 
     const res = await doFetch(`https://api.github.com/repos/Equicord/Equicord/pulls/${prNumber}`, {
         headers: {
@@ -122,10 +122,10 @@ async function resolveRef(ref: string): Promise<{ refName: string; isTemp?: bool
     if (!res.ok) throw new Error(`PR #${prNumber} not found`);
     const pr = await res.json();
 
-    if (pr.head.repo.full_name === "Equicord/Equicord") return { refName: pr.head.ref };
+    if (pr.head.repo.full_name === "Equicord/Equicord") return { refName: pr.head.ref, prNumber };
 
     const tempBranch = await createTemporaryBranchForForkPR(pr);
-    return { refName: tempBranch, isTemp: true };
+    return { refName: tempBranch, isTemp: true, prNumber };
 }
 
 export async function testDiscordVersion<B extends Branch>(
@@ -135,9 +135,9 @@ export async function testDiscordVersion<B extends Branch>(
 ) {
     const { shouldLog = true, shouldUpdateStatus = true, ref = DefaultReporterBranch, onSubmit } = options;
 
-    const { refName, isTemp } = await resolveRef(ref);
-
+    const { refName, isTemp, prNumber } = await resolveRef(ref);
     const runId = randomUUID();
+
     pendingReports.set(runId, {
         runId,
         branch,
@@ -145,7 +145,8 @@ export async function testDiscordVersion<B extends Branch>(
         shouldLog,
         shouldUpdateStatus,
         onSubmit,
-        submitCount: 0
+        submitCount: 0,
+        prNumber,
     });
 
     try {
@@ -165,7 +166,7 @@ export async function testDiscordVersion<B extends Branch>(
     }
 }
 
-async function handleReportSubmit(report: ReportData, data: any) {
+async function handleReportSubmit(report: ReportData & { ref?: string, prNumber?: number; }, data: any) {
     const shouldRemoveFromPending = report.branch !== "both" || ++report.submitCount === 2;
     if (shouldRemoveFromPending) {
         pendingReports.delete(report.runId);
@@ -183,13 +184,17 @@ async function handleReportSubmit(report: ReportData, data: any) {
         ...data,
         allowedMentions: { parse: [] }
     };
-    // trolley
     data.embeds[0].author.iconURL = data.embeds[0].author.icon_url;
+
+    let prLinkText = "";
+    if (report.prNumber) {
+        prLinkText = `[PR #${report.prNumber}](https://github.com/Equicord/Equicord/pull/${report.prNumber})`;
+        data.embeds[0].description = `${prLinkText}\n${data.embeds[0].description || ""}`;
+    }
 
     let descriptionTooLarge = false;
     const contentLength = data.embeds.reduce((total: number, embed: EmbedOptions) => {
         if (embed.description && embed.description.length > 4096) descriptionTooLarge = true;
-
         const lengths = [
             total,
             embed.title?.length || 0,
@@ -197,7 +202,6 @@ async function handleReportSubmit(report: ReportData, data: any) {
             embed.author?.name?.length || 0,
             embed.footer?.text?.length || 0
         ];
-
         return lengths.reduce((a, b) => a + b, 0);
     }, 0);
 
@@ -217,10 +221,9 @@ async function handleReportSubmit(report: ReportData, data: any) {
         ? BotState.discordTracker!.canaryHash
         : BotState.discordTracker!.stableHash;
 
-    if (!report.shouldUpdateStatus || latestHash !== report.hash[report.branch]) return;
+    if (!report.shouldUpdateStatus || latestHash !== report.hash[report.branch] || report.prNumber) return;
 
     const time = Math.round(Date.now() / 1000);
-
     data.embeds[0].description = `Last updated: <t:${time}:R> @ <t:${time}:f>`;
 
     const messageId = report.branch === "canary" ? canaryMessageId : stableMessageId;
