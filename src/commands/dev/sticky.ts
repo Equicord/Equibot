@@ -7,9 +7,10 @@ import { toCodeblock } from "~/util/text";
 defineCommand({
     name: "sticky",
     description: "Set the sticky message",
+    aliases: ["stick", "note", "n"],
     modOnly: true,
     guildOnly: true,
-    usage: "<create/set | delete/remove | on | off | delay | list> [value]",
+    usage: "<create/update/set | delete/remove | on | off | delay | list> [value]",
     rawContent: true,
     execute({ reply, react, msg, prefix, commandName }, content) {
         let response: string | undefined;
@@ -69,6 +70,7 @@ defineCommand({
                 break;
 
             case "create":
+            case "update":
             case "set":
                 state.message = [value, ...extra].join(" ");
                 state.enabled = true;
