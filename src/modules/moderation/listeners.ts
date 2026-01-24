@@ -1,10 +1,9 @@
 import { AutoModerationActionTypes } from "oceanic.js";
 import { Vaius } from "~/Client";
+import { Millis } from "~/constants";
 import { logAutoModAction } from "~/util/logAction";
+import { until } from "~/util/time";
 import { moderateNick } from "./nicknames";
-
-// for some reason, the scam bots LOVE posting to this channel
-const GERMAN_CHANNEL_ID = "1121201005456011366";
 
 export function initModListeners() {
     Vaius.on("guildMemberUpdate", moderateNick);
@@ -16,7 +15,7 @@ export function initModListeners() {
         const includesPing = ["@everyone", "@here"].some(s => data.content.includes(s));
         const includesInvite = ["discord.gg/", "discord.com/invite", "discordapp.com/invite"].some(s => data.content.includes(s));
 
-        const isSteamScam = (["[steamcommunity.com", "$ gift"].some(s => data.content.includes(s)) || channel?.id === GERMAN_CHANNEL_ID) &&
+        const isSteamScam = (["[steamcommunity.com", "$ gift"].some(s => data.content.includes(s))) &&
             ["https://u.to", "https://sc.link", "https://e.vg", "https://is.gd"].some(s => data.content.includes(s));
 
         const isMediaFireScam = data.content.includes("bro") && data.content.includes("mediafire") && data.content.includes("found");
@@ -32,13 +31,12 @@ export function initModListeners() {
         const isScam = isSteamScam || isMediaFireScam || isRobloxScam || isMrBeastScam;
 
         if (isScam) {
-            await Vaius.rest.guilds.createBan(guild.id, user.id, {
+            await Vaius.rest.guilds.editMember(guild.id, user.id, {
+                communicationDisabledUntil: until(1 * Millis.WEEK),
                 reason: `scams (hacked account): ${data.content}`,
-                deleteMessageDays: 1
             });
-            await Vaius.rest.guilds.removeBan(guild.id, user.id, "soft-ban");
 
-            logAutoModAction(`Soft-banned <@${user.id}> for posting a scam message.`);
+            logAutoModAction(`Timed out <@${user.id}> for posting a scam message.`);
             return;
         }
 
@@ -53,5 +51,4 @@ export function initModListeners() {
             return;
         }
     });
-
 }

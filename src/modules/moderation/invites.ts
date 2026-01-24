@@ -40,6 +40,8 @@ async function getInviteImage(code: string) {
 }
 
 export async function moderateInvites(msg: Message) {
+    if (!Config.moderation.invites) return false;
+
     for (const [, code] of msg.content.matchAll(inviteRe)) {
         const inviteData = await Vaius.rest.channels.getInvite(code, {}).catch(() => null);
         if (!inviteData?.guildID || !inviteData.guild) continue;

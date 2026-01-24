@@ -1,10 +1,9 @@
 import { AnyTextableGuildChannel, Message } from "oceanic.js";
 import { Millis } from "~/constants";
-import { deleteElement } from "~/util/arrays";
 import { silently } from "~/util/functions";
 import { logAutoModAction } from "~/util/logAction";
 import { until } from "~/util/time";
-import { ChannelID, MessageID, UserID } from "~/util/types";
+import { ChannelID, MessageID } from "~/util/types";
 import { makeEmbedForMessage } from "./utils";
 
 interface TrackedMessage {
@@ -12,47 +11,38 @@ interface TrackedMessage {
     messageID: MessageID;
 }
 
-const userMessagesMap = new Map<UserID, TrackedMessage[]>();
+const channelsMessagedUserMap = new Map<string, Set<string>>();
 
 export async function moderateMultiChannelSpam(msg: Message<AnyTextableGuildChannel>) {
-    let trackedMessages = userMessagesMap.get(msg.author.id);
-    if (!trackedMessages) {
-        trackedMessages = [];
-        userMessagesMap.set(msg.author.id, trackedMessages);
+    let channelsMessaged = channelsMessagedUserMap.get(msg.author.id);
+    if (!channelsMessaged) {
+        channelsMessaged = new Set();
+        channelsMessagedUserMap.set(msg.author.id, channelsMessaged);
     }
 
-    const currentMessageInfo: TrackedMessage = { channelID: msg.channelID, messageID: msg.id };
-    trackedMessages.push(currentMessageInfo);
-
+    channelsMessaged.add(msg.channelID);
     setTimeout(() => {
-        const trackedMessages = userMessagesMap.get(msg.author.id);
-        if (trackedMessages) {
-            deleteElement(trackedMessages, currentMessageInfo);
-            if (!trackedMessages.length)
-                userMessagesMap.delete(msg.author.id);
+        const channelsMessaged = channelsMessagedUserMap.get(msg.author.id);
+        if (channelsMessaged) {
+            channelsMessaged.delete(msg.channelID);
+            if (!channelsMessaged.size)
+                channelsMessagedUserMap.delete(msg.author.id);
         }
-    }, 15 * Millis.SECOND);
+    }, 5 * Millis.SECOND);
 
-    const uniqueChannels = new Set<string>();
-    for (const { channelID } of trackedMessages) {
-        uniqueChannels.add(channelID);
-    }
-
-    if (uniqueChannels.size < 3) return false;
+    if (channelsMessaged.size < 3) return false;
 
     await msg.member.edit({
         communicationDisabledUntil: until(1 * Millis.HOUR),
-        reason: "Messaged >=3 different channels within 15 seconds"
+        reason: "Messaged >=3 different channels within 5 seconds"
     });
 
     logAutoModAction({
-        content: `Muted <@${msg.author.id}> for messaging >=3 different channels within 15 seconds`,
+        content: `Muted <@${msg.author.id}> for messaging >=3 different channels within 5 seconds`,
         embeds: [makeEmbedForMessage(msg)]
     });
 
-    await Promise.all(trackedMessages.map(m =>
-        silently(msg.client.rest.channels.deleteMessage(m.channelID, m.messageID)))
-    );
+    await silently(msg.delete());
 
     return true;
 }

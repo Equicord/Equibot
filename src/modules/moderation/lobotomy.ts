@@ -1,19 +1,17 @@
-import { AnyTextableGuildChannel, Message } from "oceanic.js";
+import { Message } from "oceanic.js";
+import { Millis } from "~/constants";
+import { handleError } from "~/index";
 import { reply } from "~/util/discord";
 import { silently } from "~/util/functions";
-import { handleError } from "~/index";
-import { Millis } from "~/constants";
 import { until } from "~/util/time";
 
-const TESSIE_ID = "1081940449717133374";
-
-export async function lobotomiseMaybe(msg: Message<AnyTextableGuildChannel>) {
-    if (msg.author.id !== TESSIE_ID || !msg.referencedMessage || msg.content !== "mods crush this person's skull") return false;
+export async function lobotomiseMaybe(msg: Message) {
+    if (!msg.referencedMessage || msg.content !== "mods crush this person's skull") return false;
 
     try {
         await msg.referencedMessage.member!.edit({
             communicationDisabledUntil: until(10 * Millis.MINUTE),
-            reason: "showing screenshot of automodded message"
+            reason: "skull crushed"
         });
 
         silently(msg.referencedMessage.delete());
