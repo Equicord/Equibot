@@ -6,6 +6,7 @@ import { moderateMultiChannelSpam } from "./multiChannelSpam";
 import { moderateSuspiciousFiles } from "./suspiciousFiles";
 
 export async function moderateMessage(msg: Message, isEdit: boolean) {
+    if (msg.author.bot) return;
     if (!msg.inCachedGuildChannel()) return;
     if (!msg.channel.permissionsOf(Vaius.user.id).has("MANAGE_MESSAGES")) return;
 

@@ -15,6 +15,8 @@ import { initModListeners } from "./modules/moderation/listeners";
 import { initRoleListeners } from "./modules/roleTracker";
 import { silently } from "./util/functions";
 import { inspect } from "./util/inspect";
+import { logDevDebug } from "./util/logAction";
+import { toCodeblock } from "./util/text";
 
 initModListeners();
 initRoleListeners();
@@ -29,6 +31,14 @@ export async function handleError(title: string, err: unknown) {
 
     const stack = err instanceof Error && err.stack;
     const text = stack || inspect(err);
+
+    await logDevDebug({
+        embeds: [{
+            title,
+            description: toCodeblock(text, stack ? "js" : ""),
+            color: 0xff0000
+        }]
+    });
 }
 
 process.on("unhandledRejection", err => handleError("Unhandled Rejection", err));

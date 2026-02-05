@@ -1,12 +1,11 @@
 import { AnyTextableGuildChannel, Message } from "oceanic.js";
 import Config from "~/config";
-import { Millis } from "~/constants";
+import { Emoji, Seconds } from "~/constants";
 import { fetchBuffer } from "~/util/fetch";
-import { silently } from "~/util/functions";
+import { checkPromise, silently } from "~/util/functions";
 import { isTruthy } from "~/util/guards";
 import { logAutoModAction } from "~/util/logAction";
 import { readTextFromImage } from "~/util/ocr";
-import { until } from "~/util/time";
 
 const scamTerms = [
     "casino",
@@ -18,7 +17,7 @@ const scamTerms = [
 const re = new RegExp(scamTerms.map(term => `\\b${term}\\b`).join("|"), "i");
 
 export async function ocrModerate(msg: Message<AnyTextableGuildChannel>): Promise<boolean> {
-    if (msg.member.roles.includes(Config.roles.regular)) return false;
+    if (!msg.member || msg.member.roles.includes(Config.roles.regular)) return false;
 
     const attachments = msg.attachments.filter(att => att.contentType?.startsWith("image/"));
     if (attachments.length === 0) return false;
@@ -36,10 +35,19 @@ export async function ocrModerate(msg: Message<AnyTextableGuildChannel>): Promis
     if (!flaggedAttachment) return false;
 
     silently(msg.delete("Scam message"));
-    silently(msg.member.edit({ communicationDisabledUntil: until(1 * Millis.HOUR), reason: "Scam message" }));
+
+    const didKick = await checkPromise(
+        msg.member.ban({ reason: "Posted a scam message (soft-ban)", deleteMessageSeconds: 1 * Seconds.DAY })
+            .then(() => msg.member.unban("Soft-ban removal"))
+    );
+
+    let message = `${msg.member.mention} posted a scam image in ${msg.channel.mention}`;
+    if (didKick) {
+        message = `${Emoji.Boot} ${message} and has been kicked`;
+    }
 
     logAutoModAction({
-        content: `${msg.member.mention} posted a scam image in ${msg.channel.mention}`,
+        content: message,
         files: [{ contents: flaggedAttachment, name: "flagged.png" }],
         embeds: [{
             author: {
