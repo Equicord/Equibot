@@ -15,6 +15,8 @@ const Config = {
 
         "botAuditLog": "1371890339169701908",
 
+        "dev": "1468780271221477440",
+
         // used as default for the not-support command and some other features
         "support": "1297590739911573585",
 
