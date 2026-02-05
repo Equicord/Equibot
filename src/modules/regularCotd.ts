@@ -142,7 +142,7 @@ export async function rerollCotd(inputHex?: string) {
     const icon = await drawRoleIcon(hex);
 
     await getHomeGuild()!.editRole(Config.roles.regular, {
-        name: `regular (${name.toLowerCase()})`,
+        name: `Regular (${name})`,
         colors: {
             primaryColor: color,
         },
