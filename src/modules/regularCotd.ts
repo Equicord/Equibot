@@ -107,12 +107,13 @@ export async function drawRoleIcon(color: string, size = 512) {
         .replaceAll("'", "&#039;");
 
     const base = join(ASSET_DIR, "image-gen/regular-icon");
-    const svgPath = join(base, "icon.svg");
+    const svgPath = join(base, "duck.svg");
 
     const svgData = await readFile(svgPath, "utf-8");
     const tintedSvg = svgData
-        .replaceAll("#5a5a5a", isDark(color) ? shadeFrom(color, -0.1) : color)
-        .replaceAll("#828282", isDark(color) ? color : shadeFrom(color, 0.1));
+        .replaceAll("#B5B5B5", isDark(color) ? shadeFrom(color, -0.12) : color)
+        .replaceAll("#F2D050", isDark(color) ? color : shadeFrom(color, 0.12))
+        .replaceAll("#FFFFFF", shadeFrom(color, 0.3));
 
     const svg = await loadImage(Buffer.from(tintedSvg));
 
