@@ -59,6 +59,7 @@ const Config = {
 
     "roles": {
         // anyone with this role can execute moderation commands
+        "team": "1173520023239786538",
         "mod": "1326406112144265257",
 
         // used for github linking and some other things
