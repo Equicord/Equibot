@@ -84,10 +84,7 @@ export async function drawBlobCatCozy(color: string, size = 512) {
     const svgPath = join(base, "bcc.svg");
 
     const svgData = await readFile(svgPath, "utf-8");
-    const tintedSvg = svgData
-        .replaceAll("#5a5a5a", isDark(color) ? shadeFrom(color, -0.1) : color)
-        .replaceAll("#828282", isDark(color) ? color : shadeFrom(color, 0.1));
-
+    const tintedSvg = svgData.replaceAll("#1a2b3c", color);
     const svg = await loadImage(Buffer.from(tintedSvg));
 
     svg.width = size;
