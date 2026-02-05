@@ -340,8 +340,13 @@ const handler: CommandInteractionHandler = {
         } else {
             const existingBadge = BadgeData[user.id][index];
             if (existingBadge) {
-                logBadgeAction("Edited", user, existingBadge, newBadgeData);
                 const fileName = new URL(existingBadge.badge).pathname.split("/").pop()!;
+                const contents = readFileSync(`${badgesForUser(user.id)}/${fileName}`);
+                const file = {
+                    name: fileName,
+                    contents,
+                };
+                logBadgeAction("Edited", user, existingBadge, newBadgeData, undefined, file);
                 rmSync(`${badgesForUser(user.id)}/${fileName}`, { force: true });
             }
 
