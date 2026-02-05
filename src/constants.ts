@@ -19,6 +19,7 @@ export const SUPPORT_ALLOWED_CHANNELS = [
 
 export const MANAGEABLE_ROLES = [
     Config.roles.donor,
+    Config.roles.regular,
     Config.roles.contributor,
     Config.roles.vencordContrib,
     Config.roles.vip,

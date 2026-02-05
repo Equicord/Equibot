@@ -69,7 +69,7 @@ const Config = {
         // vip
         "vip": "1217667142598529064",
 
-        "regular": "1230693249610547231",
+        "regular": "1468770736134160628",
         "fileWhitelist": "1448056449187188880",
 
         // roles that can be added or removed using the role management commands.
