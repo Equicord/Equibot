@@ -46,7 +46,7 @@ export class StickyState {
             content: `${content}\n-# This is an automated sticky message.`,
             flags: [4096],
             allowedMentions: {
-                parse:, // this disables all pings (everyone, roles, and users)
+                parse: [],
             }
         });
 
