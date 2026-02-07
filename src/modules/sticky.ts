@@ -44,7 +44,7 @@ export class StickyState {
 
         const message = await Vaius.rest.channels.createMessage(this.channelId, {
             content: `${content}\n-# This is an automated sticky message.`,
-            flags: [4096], // MessageFlags.SuppressNotifications https://discord.js.org/docs/packages/core/main/MessageFlags:Enum#SuppressNotifications
+            flags: [4096],
             allowedMentions: {
                 everyone: false,
                 roles: [],
