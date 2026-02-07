@@ -46,8 +46,7 @@ export class StickyState {
             content: `${content}\n-# This is an automated sticky message.`,
             flags: [4096],
             allowedMentions: {
-                everyone: false,
-                roles: [],
+                parse: [],
             }
         });
 
