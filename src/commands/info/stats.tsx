@@ -14,6 +14,12 @@ defineCommand({
         const shardID = client.guildShardMap.get(guildID!);
         const shard = client.shards.get(shardID!);
         const ping = shard?.latency ?? "?";
+        const commandCount = Object.entries(Commands)
+            .filter(([name, cmd]) =>
+                !cmd.ownerOnly &&
+                cmd.name === name &&
+                cmd.category !== "dev"
+            ).length;
 
         const rows = [
             [
@@ -34,7 +40,7 @@ defineCommand({
             ],
             [
                 "Commands Loaded",
-                Object.keys(Commands).length
+                commandCount
             ],
             [
                 "Cached Users",
