@@ -1,4 +1,4 @@
-import { defineCommand } from "~/Commands";
+import { Commands, defineCommand } from "~/Commands";
 import { getGitCommitHash, getGitRemote } from "~/util/git";
 import { makeEmbedSpaces, toInlineCode } from "~/util/text";
 import { ActionRow, Button, ButtonStyles } from "~components";
@@ -8,9 +8,12 @@ defineCommand({
     aliases: ["info", "st"],
     description: "Display information about the bot",
     usage: null,
-    async execute({ reply, msg: { client } }) {
+    async execute({ reply, msg: { client, guildID } }) {
         const gitRemote = await getGitRemote();
         const gitHash = await getGitCommitHash();
+        const shardID = client.guildShardMap.get(guildID!);
+        const shard = client.shards.get(shardID!);
+        const ping = shard?.latency ?? "?";
 
         const rows = [
             [
@@ -24,6 +27,14 @@ defineCommand({
             [
                 "Up Since",
                 `<t:${Math.floor((Date.now() / 1000) - process.uptime())}:R>`
+            ],
+            [
+                "Gateway Ping",
+                `${ping}ms`
+            ],
+            [
+                "Commands Loaded",
+                Object.keys(Commands).length
             ],
             [
                 "Cached Users",
