@@ -69,6 +69,8 @@ const Config = {
         // vencord contrib
         "vencordContrib": "1173343399470964856",
 
+        "bugHunter": "1421844862759866474",
+
         // vip
         "vip": "1217667142598529064",
 

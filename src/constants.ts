@@ -22,6 +22,7 @@ export const MANAGEABLE_ROLES = [
     Config.roles.regular,
     Config.roles.contributor,
     Config.roles.vencordContrib,
+    Config.roles.bugHunter,
     Config.roles.vip,
     Config.roles.fileWhitelist,
     ...Config.roles.manageableRoles
