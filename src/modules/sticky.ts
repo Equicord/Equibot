@@ -1,4 +1,5 @@
 
+import { MessageFlags } from "oceanic.js";
 import { Vaius } from "~/Client";
 import { BotState } from "~/db/botState";
 import { debounce, silently } from "~/util/functions";
@@ -44,7 +45,7 @@ export class StickyState {
 
         const message = await Vaius.rest.channels.createMessage(this.channelId, {
             content: `${content}\n-# This is an automated sticky message.`,
-            flags: 4096,
+            flags: MessageFlags.SUPPRESS_NOTIFICATIONS,
             allowedMentions: {
                 everyone: false,
                 repliedUser: false,
