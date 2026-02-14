@@ -1,10 +1,12 @@
 import { pipeline, type ImageClassificationPipeline } from "@huggingface/transformers";
 
-let classifier: ImageClassificationPipeline | null = null;
+let classifierPromise: Promise<ImageClassificationPipeline> | null = null;
 
-async function initClassifier() {
-    if (classifier) return;
-    classifier = await pipeline("image-classification", "AdamCodd/vit-base-nsfw-detector");
+function getClassifier(): Promise<ImageClassificationPipeline> {
+    if (classifierPromise === null) {
+        classifierPromise = pipeline("image-classification", "AdamCodd/vit-base-nsfw-detector");
+    }
+    return classifierPromise;
 }
 
 export interface NSFWResult {
@@ -13,8 +15,10 @@ export interface NSFWResult {
 }
 
 export async function detectNSFW(image: Buffer): Promise<NSFWResult[]> {
-    if (!classifier) await initClassifier();
+    const classifier = await getClassifier();
+    const results = await classifier(image);
 
-    const results = await classifier!(image);
-    return results.map(r => ({ label: r.label, score: r.score }));
+    const finalResults = Array.isArray(results) ? results : [results];
+
+    return finalResults.map(r => ({ label: r.label, score: r.score }));
 }

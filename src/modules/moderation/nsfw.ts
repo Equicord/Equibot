@@ -3,10 +3,12 @@ import Config from "~/config";
 import { Emoji, Millis } from "~/constants";
 import { fetchBuffer } from "~/util/fetch";
 import { silently } from "~/util/functions";
-import { isTruthy } from "~/util/guards";
 import { logAutoModAction } from "~/util/logAction";
 import { detectNSFW } from "~/util/nsfw";
 import { until } from "~/util/time";
+
+const NSFW_CONFIDENCE_THRESHOLD = 0.85;
+const NSFW_TIMEOUT_DURATION = 1 * Millis.HOUR;
 
 export async function moderateNSFW(msg: Message<AnyTextableGuildChannel>): Promise<boolean> {
     if (!msg.member || msg.member.roles.includes(Config.roles.regular)) return false;
@@ -14,23 +16,27 @@ export async function moderateNSFW(msg: Message<AnyTextableGuildChannel>): Promi
     const attachments = msg.attachments.filter(att => att.contentType?.startsWith("image/"));
     if (attachments.length === 0) return false;
 
-    const flaggedAttachment = (await Promise.all(attachments.map(async att => {
+    let flaggedAttachment: Buffer | null = null;
+    for (const att of attachments) {
         try {
             const buf = await fetchBuffer(att.url);
             const results = await detectNSFW(buf);
             const nsfwResult = results.find(r => r.label === "nsfw");
-            return nsfwResult && nsfwResult.score > 0.85 ? buf : null;
+            if (nsfwResult && nsfwResult.score > NSFW_CONFIDENCE_THRESHOLD) {
+                flaggedAttachment = buf;
+                break;
+            }
         } catch (e) {
-            return null;
+            console.error(`Failed to process attachment for NSFW detection: ${att.url}`, e);
         }
-    }))).find(isTruthy);
+    }
 
     if (!flaggedAttachment) return false;
 
     silently(msg.delete("NSFW image"));
 
     silently(msg.guild.editMember(msg.author.id, {
-        communicationDisabledUntil: until(1 * Millis.HOUR),
+        communicationDisabledUntil: until(NSFW_TIMEOUT_DURATION),
         reason: "Posted NSFW image"
     }));
 
