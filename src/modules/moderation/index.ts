@@ -4,6 +4,7 @@ import { isTruthy } from "~/util/guards";
 import { moderateInvites } from "./invites";
 import { moderateMultiChannelSpam } from "./multiChannelSpam";
 import { ocrModerate } from "./ocr";
+import { moderateSpam } from "./spam";
 import { moderateSuspiciousFiles } from "./suspiciousFiles";
 
 export async function moderateMessage(msg: Message, isEdit: boolean) {
@@ -21,6 +22,7 @@ export async function moderateMessage(msg: Message, isEdit: boolean) {
         !isEdit && moderateMultiChannelSpam,
         moderateInvites,
         moderateSuspiciousFiles,
+        moderateSpam,
         ocrModerate
     ].filter(isTruthy);
 
