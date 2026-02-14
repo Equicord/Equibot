@@ -3,7 +3,7 @@ import Config from "~/config";
 import { Emoji, Millis } from "~/constants";
 import { silently } from "~/util/functions";
 import { isTruthy } from "~/util/guards";
-import { logAutoModAction } from "~/util/logAction";
+import { logAutoModAction, logDevDebug } from "~/util/logAction";
 import { checkDomainBlocked, extractDomains } from "~/util/dns";
 import { until } from "~/util/time";
 
@@ -51,7 +51,8 @@ export async function moderateSuspiciousLinks(msg: Message<AnyTextableGuildChann
             try {
                 const result = await checkDomainBlocked(domain);
                 return result.blocked ? domain : null;
-            } catch {
+            } catch (e) {
+                logDevDebug(`Failed to check domain ${domain}:`, e);
                 return null;
             }
         })
