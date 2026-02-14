@@ -33,7 +33,7 @@ export async function checkDomainBlocked(domain: string): Promise<DNSResult> {
     return { blocked: isBlocked, domain };
 }
 
-const URL_REGEX = /https?:\/\/(?:[a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}(?:\/[^\s]*)?/gi;
+const URL_REGEX = /(?:https?:\/\/)?(?:[a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}(?:\/[^\s]*)?/gi;
 
 export function extractUrls(text: string): string[] {
     return [...text.matchAll(URL_REGEX)].map(m => m[0]);
