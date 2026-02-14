@@ -5,6 +5,7 @@ import { moderateInvites } from "./invites";
 import { moderateMultiChannelSpam } from "./multiChannelSpam";
 import { ocrModerate } from "./ocr";
 import { moderateSuspiciousFiles } from "./suspiciousFiles";
+import { moderateSuspiciousLinks } from "./suspiciousLinks";
 
 export async function moderateMessage(msg: Message, isEdit: boolean) {
     if (msg.author.bot) return;
@@ -21,6 +22,7 @@ export async function moderateMessage(msg: Message, isEdit: boolean) {
         !isEdit && moderateMultiChannelSpam,
         moderateInvites,
         moderateSuspiciousFiles,
+        moderateSuspiciousLinks,
         ocrModerate
     ].filter(isTruthy);
 
