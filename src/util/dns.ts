@@ -43,7 +43,11 @@ export function extractDomains(text: string): string[] {
     const urls = extractUrls(text);
     return [...new Set(urls.map(url => {
         try {
-            return new URL(url).hostname;
+            let urlToParse = url;
+            if (!urlToParse.startsWith("http://") && !urlToParse.startsWith("https://")) {
+                urlToParse = `http://${urlToParse}`;
+            }
+            return new URL(urlToParse).hostname;
         } catch {
             return null;
         }
