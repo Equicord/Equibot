@@ -33,6 +33,7 @@ const Config = {
         // nsfw image detection and punishment
         "nsfwConfidenceThreshold": 0.85,
         "nsfwTimeoutDuration": 1 * Millis.HOUR,
+        "nsfwScanGifs": false,
 
         "invites": false,
         // guilds members may share invites to. always includes homeGuildId
