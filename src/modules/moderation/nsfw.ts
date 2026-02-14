@@ -1,14 +1,11 @@
 import { AnyTextableGuildChannel, Message } from "oceanic.js";
 import Config from "~/config";
-import { Emoji, Millis } from "~/constants";
+import { Emoji } from "~/constants";
 import { fetchBuffer } from "~/util/fetch";
 import { silently } from "~/util/functions";
 import { logAutoModAction } from "~/util/logAction";
 import { detectNSFW } from "~/util/nsfw";
 import { until } from "~/util/time";
-
-const NSFW_CONFIDENCE_THRESHOLD = 0.85;
-const NSFW_TIMEOUT_DURATION = 1 * Millis.HOUR;
 
 export async function moderateNSFW(msg: Message<AnyTextableGuildChannel>): Promise<boolean> {
     if (!msg.member || msg.member.roles.includes(Config.roles.regular)) return false;
@@ -22,7 +19,7 @@ export async function moderateNSFW(msg: Message<AnyTextableGuildChannel>): Promi
             const buf = await fetchBuffer(att.url);
             const results = await detectNSFW(buf);
             const nsfwResult = results.find(r => r.label === "nsfw");
-            if (nsfwResult && nsfwResult.score > NSFW_CONFIDENCE_THRESHOLD) {
+            if (nsfwResult && nsfwResult.score > Config.moderation.nsfwConfidenceThreshold) {
                 flaggedAttachment = buf;
                 break;
             }
@@ -36,7 +33,7 @@ export async function moderateNSFW(msg: Message<AnyTextableGuildChannel>): Promi
     silently(msg.delete("NSFW image"));
 
     silently(msg.guild.editMember(msg.author.id, {
-        communicationDisabledUntil: until(NSFW_TIMEOUT_DURATION),
+        communicationDisabledUntil: until(Config.moderation.nsfwTimeoutDuration),
         reason: "Posted NSFW image"
     }));
 
