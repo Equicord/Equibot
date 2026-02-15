@@ -7,7 +7,7 @@ import { fetchBuffer } from "~/util/fetch";
 import { silently } from "~/util/functions";
 import { logAutoModAction } from "~/util/logAction";
 import { detectNSFW } from "~/util/nsfw";
-import { until } from "~/util/time";
+import { formatDuration, until } from "~/util/time";
 
 function extractFrames(gifBuffer: Buffer): Buffer[] {
     const gif = parseGIF(gifBuffer.buffer);
@@ -100,7 +100,7 @@ export async function moderateNSFW(msg: Message<AnyTextableGuildChannel>): Promi
     }));
 
     logAutoModAction({
-        content: `${Emoji.Boot} ${msg.member.mention} posted an NSFW image in ${msg.channel.mention} and has been timed out for 1 hour`,
+        content: `${Emoji.Boot} ${msg.member.mention} posted an NSFW image in ${msg.channel.mention} and has been timed out for ${formatDuration(Config.moderation.nsfwTimeoutDuration)}`,
         files: [{ contents: flaggedAttachment, name: "flagged.png" }],
         embeds: [{
             author: {
