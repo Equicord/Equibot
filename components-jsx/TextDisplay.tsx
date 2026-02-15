@@ -5,6 +5,7 @@ import { childrenToString } from "./utils";
 export interface TextDisplayProps {
     children: any;
     id?: number;
+    key?: string;
 }
 
 export function TextDisplay({ children, id }: TextDisplayProps): TextDisplayComponent {
