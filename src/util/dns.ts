@@ -41,15 +41,35 @@ export function extractUrls(text: string): string[] {
 
 export function extractDomains(text: string): string[] {
     const urls = extractUrls(text);
-    return [...new Set(urls.map(url => {
+    const domains = new Set<string>();
+
+    for (const url of urls) {
         try {
             let urlToParse = url;
             if (!urlToParse.startsWith("http://") && !urlToParse.startsWith("https://")) {
                 urlToParse = `http://${urlToParse}`;
             }
-            return new URL(urlToParse).hostname;
+            const parsedUrl = new URL(urlToParse);
+            domains.add(parsedUrl.hostname);
+
+            parsedUrl.searchParams.forEach(value => {
+                const nestedUrls = extractUrls(value);
+                for (const nestedUrl of nestedUrls) {
+                    try {
+                        let nestedUrlToParse = nestedUrl;
+                        if (!nestedUrlToParse.startsWith("http://") && !nestedUrlToParse.startsWith("https://")) {
+                            nestedUrlToParse = `http://${nestedUrlToParse}`;
+                        }
+                        domains.add(new URL(nestedUrlToParse).hostname);
+                    } catch {
+                        // Ignore invalid nested URLs
+                    }
+                }
+            });
         } catch {
-            return null;
+            // Ignore invalid URLs
         }
-    }).filter((d): d is string => d !== null))];
+    }
+
+    return [...domains];
 }

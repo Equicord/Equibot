@@ -41,18 +41,28 @@ export async function moderateSuspiciousLinks(msg: Message<AnyTextableGuildChann
     const domains = extractDomains(msg.content);
     if (domains.length === 0) return false;
 
-    // Filter out whitelisted domains
-    const domainsToCheck = domains.filter(d => !WHITELISTED_DOMAINS.has(d));
-    if (domainsToCheck.length === 0) return false;
+    // Filter out whitelisted domains (including parent domains)
+    const allDomainsToCheck = new Set<string>();
+    for (const domain of domains) {
+        const parts = domain.split(".");
+        while (parts.length > 1) {
+            const parentDomain = parts.join(".");
+            if (!WHITELISTED_DOMAINS.has(parentDomain)) {
+                allDomainsToCheck.add(parentDomain);
+            }
+            parts.shift();
+        }
+    }
+    if (allDomainsToCheck.size === 0) return false;
 
     // Check each domain against Cloudflare Family DNS
     const blockedDomains = (await Promise.all(
-        domainsToCheck.map(async domain => {
+        [...allDomainsToCheck].map(async domain => {
             try {
                 const result = await checkDomainBlocked(domain);
                 return result.blocked ? domain : null;
             } catch (e) {
-                logDevDebug(`Failed to check domain ${domain}:`, e);
+                logDevDebug(`Failed to check domain ${domain}: ${e}`);
                 return null;
             }
         })
