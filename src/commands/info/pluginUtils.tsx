@@ -76,7 +76,7 @@ export function buildPluginInfoMessage(plugin: Plugin) {
                 <TextDisplay>{description}</TextDisplay>
 
                 {traits.filter(t => t.shouldShow).map(t => (
-                    <TextDisplay>{t.name}</TextDisplay>
+                    <TextDisplay key={t.name}>{t.name}</TextDisplay>
                 ))}
 
                 <TextDisplay>-# Made by {plugin.authors.map(a => a.name).join(", ")}</TextDisplay>
