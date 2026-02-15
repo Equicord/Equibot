@@ -36,7 +36,7 @@ const WHITELISTED_DOMAINS = new Set([
 ]);
 
 export async function moderateSuspiciousLinks(msg: Message<AnyTextableGuildChannel>): Promise<boolean> {
-    if (!msg.member || msg.member.roles.includes(Config.roles.regular)) return false;
+    if (!msg.member || "MANAGE_MESSAGES" in msg.member.permissions) return false;
 
     const domains = extractDomains(msg.content);
     if (domains.length === 0) return false;
