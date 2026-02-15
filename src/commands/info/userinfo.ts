@@ -29,6 +29,8 @@ defineCommand({
 
         const member = await msg.guild.getMember(user.id).catch(() => null);
 
+        let roleColor = 0x5865F2;
+
         const avatarUrl = member?.avatarURL("png", 256) ?? user.avatarURL("png", 256);
         const createdTimestamp = Math.floor(user.createdAt.getTime() / 1000);
 
@@ -77,12 +79,16 @@ defineCommand({
 
             const roles = member.roles
                 .map(id => msg.guild.roles.get(id))
-                .filter(r => r && r.name !== "@everyone");
+                .filter(r => r && r.name !== "@everyone")
+                .sort((a, b) => b!.position - a!.position);
+
+            roleColor = roles.find(r => r!.color)?.color ?? 0x5865F2;
 
             if (roles.length > 0) {
-                const roleList = roles.length > 20
-                    ? roles.slice(0, 20).map(r => `<@&${r!.id}>`).join(", ") + ` +${roles.length - 20} more`
-                    : roles.map(r => `<@&${r!.id}>`).join(", ");
+                const mentions = roles.map(r => `<@&${r!.id}>`);
+                const roleList = mentions.length > 20
+                    ? mentions.slice(0, 20).join(", ") + ` +${mentions.length - 20} more`
+                    : mentions.join(", ");
 
                 fields.push({
                     name: `Roles (${roles.length})`,
@@ -111,10 +117,7 @@ defineCommand({
 
         return reply({
             embeds: [{
-                color: member?.roles
-                    .map(id => msg.guild.roles.get(id)?.color)
-                    .filter(Boolean)
-                    .sort((a, b) => b! - a!)[0] ?? 0x5865F2,
+                color: member ? roleColor : 0x5865F2,
                 thumbnail: { url: avatarUrl },
                 fields,
             }],
