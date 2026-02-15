@@ -65,7 +65,7 @@ registerChatInputCommand(
         async handle(interaction) {
             const pluginName = interaction.data.options.getString("name", true);
             const plugins = await fetchPlugins();
-            const plugin = plugins.find(p => p.name.toLowerCase() === pluginName.toLowerCase());
+            const plugin = plugins.find(p => p.name.toLowerCase() === pluginName.toLowerCase()) || plugins.find(p => p.name.toLowerCase().includes(pluginName.toLowerCase()));
 
             if (!plugin) {
                 const similarPlugins = findSimilarPlugins(plugins, pluginName).slice(0, 5);
