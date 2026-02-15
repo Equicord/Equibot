@@ -88,7 +88,7 @@ registerChatInputCommand(
         },
 
         async autoComplete(interaction) {
-            const focusedValue = (interaction.data.options.getFocused(true).value as string).toLowerCase();
+            const focusedValue = String(interaction.data.options.getFocused(true).value).toLowerCase();
 
             const plugins = await fetchPlugins();
 

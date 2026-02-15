@@ -48,6 +48,7 @@ export function buildPluginInfoMessage(plugin: Plugin) {
         hasCommands,
         target,
         filePath,
+        authors,
     } = plugin;
 
     const traits: Trait[] = [
@@ -91,7 +92,7 @@ export function buildPluginInfoMessage(plugin: Plugin) {
                     <TextDisplay key={t.name}>{t.name}</TextDisplay>
                 ))}
 
-                <TextDisplay>-# Made by {plugin.authors.map(a => a.name).join(", ")}</TextDisplay>
+                <TextDisplay>-# Made by {authors.map(a => a.name).join(", ")}</TextDisplay>
                 <ActionRow>
                     <Button style={ButtonStyles.LINK} url={`https://equicord.org/plugins/${encodeURIComponent(name)}`}>
                         View Website
