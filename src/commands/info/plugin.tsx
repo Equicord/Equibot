@@ -1,11 +1,10 @@
-import leven from "leven";
 import { MessageFlags } from "oceanic.js";
 
 import { CommandContext, defineCommand } from "~/Commands";
 import { registerChatInputCommand } from "~/SlashCommands";
 import { CommandStringOption } from "~components";
 import { run } from "~/util/functions";
-import { Plugin, fetchPlugins, buildPluginInfoMessage } from "./pluginUtils";
+import { Plugin, fetchPlugins, findSimilarPlugins, buildPluginInfoMessage } from "./pluginUtils";
 
 async function sendPluginInfo({ reply }: CommandContext, plugin: Plugin) {
     return reply(buildPluginInfoMessage(plugin));
@@ -35,13 +34,7 @@ defineCommand({
         if (match)
             return sendPluginInfo(ctx, match);
 
-        const similarPlugins = plugins
-            .map(p => ({
-                name: p.name,
-                distance: leven(p.name.toLowerCase(), query.toLowerCase()),
-            }))
-            .filter(p => p.distance <= 3)
-            .sort((a, b) => a.distance - b.distance);
+        const similarPlugins = findSimilarPlugins(plugins, query);
 
         if (similarPlugins.length === 1)
             return sendPluginInfo(ctx, plugins.find(p => p.name === similarPlugins[0].name)!);
@@ -72,18 +65,10 @@ registerChatInputCommand(
         async handle(interaction) {
             const pluginName = interaction.data.options.getString("name", true);
             const plugins = await fetchPlugins();
-            const pluginNameLower = pluginName.toLowerCase();
-            const plugin = plugins.find(p => p.name.toLowerCase() === pluginNameLower);
+            const plugin = plugins.find(p => p.name.toLowerCase() === pluginName.toLowerCase());
 
             if (!plugin) {
-                const similarPlugins = plugins
-                    .map(p => ({
-                        name: p.name,
-                        distance: leven(p.name.toLowerCase(), pluginNameLower),
-                    }))
-                    .filter(p => p.distance <= 3)
-                    .sort((a, b) => a.distance - b.distance)
-                    .slice(0, 5);
+                const similarPlugins = findSimilarPlugins(plugins, pluginName).slice(0, 5);
 
                 if (similarPlugins.length > 0) {
                     const suggestions = similarPlugins.map(p => `- ${p.name}`).join("\n");

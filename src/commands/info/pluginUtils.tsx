@@ -1,3 +1,5 @@
+import leven from "leven";
+
 import { ActionRow, Button, ButtonStyles, ComponentMessage, Container, TextDisplay } from "~components";
 import { makeCachedJsonFetch } from "~/util/fetch";
 
@@ -18,16 +20,26 @@ export interface Plugin {
     filePath: string;
 }
 
-interface Trait {
-    name: string;
-    shouldShow: boolean;
-}
-
 export const fetchPlugins = makeCachedJsonFetch<Plugin[]>(
     "https://raw.githubusercontent.com/Equicord/Equibored/main/plugins.json"
 );
 
+export function findSimilarPlugins(plugins: Plugin[], query: string) {
+    const queryLower = query.toLowerCase();
+    return plugins
+        .map(p => ({
+            name: p.name,
+            distance: leven(p.name.toLowerCase(), queryLower),
+        }))
+        .filter(p => p.distance <= 3)
+        .sort((a, b) => a.distance - b.distance);
+}
+
 export function buildPluginInfoMessage(plugin: Plugin) {
+    interface Trait {
+        name: string;
+        shouldShow: boolean;
+    }
     const {
         name,
         description,
