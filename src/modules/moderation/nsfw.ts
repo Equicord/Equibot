@@ -10,7 +10,7 @@ import { detectNSFW } from "~/util/nsfw";
 import { until } from "~/util/time";
 
 function extractFrames(gifBuffer: Buffer): Buffer[] {
-    const gif = parseGIF(gifBuffer as unknown as ArrayBuffer);
+    const gif = parseGIF(gifBuffer.buffer);
     const frames = decompressFrames(gif, true);
 
     if (frames.length === 0) return [];
