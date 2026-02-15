@@ -8,7 +8,7 @@ export interface TextDisplayProps {
     key?: string;
 }
 
-export function TextDisplay({ children, id }: TextDisplayProps): TextDisplayComponent {
+export function TextDisplay({ children, id, key: _key }: TextDisplayProps): TextDisplayComponent {
     children = childrenToString("TextDisplay", children)!;
     if (!children) {
         throw new Error("TextDisplay requires at least one child");

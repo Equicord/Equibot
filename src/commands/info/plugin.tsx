@@ -92,8 +92,11 @@ registerChatInputCommand(
 
             const plugins = await fetchPlugins();
 
-            const matchingPlugins = plugins
-                .filter(p => p.name.toLowerCase().includes(focusedValue))
+            const includesMatches = plugins.filter(p => p.name.toLowerCase().includes(focusedValue));
+            const similarMatches = findSimilarPlugins(plugins, focusedValue)
+                .map(p => plugins.find(pl => pl.name === p.name)!);
+
+            const matchingPlugins = [...new Set([...includesMatches, ...similarMatches])]
                 .slice(0, 25)
                 .map(p => ({
                     name: p.name,
