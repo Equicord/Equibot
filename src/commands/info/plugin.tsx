@@ -76,6 +76,23 @@ registerChatInputCommand(
             const plugin = plugins.find(p => p.name.toLowerCase() === pluginNameLower);
 
             if (!plugin) {
+                const similarPlugins = plugins
+                    .map(p => ({
+                        name: p.name,
+                        distance: leven(p.name.toLowerCase(), pluginNameLower),
+                    }))
+                    .filter(p => p.distance <= 3)
+                    .sort((a, b) => a.distance - b.distance)
+                    .slice(0, 5);
+
+                if (similarPlugins.length > 0) {
+                    const suggestions = similarPlugins.map(p => `- ${p.name}`).join("\n");
+                    return interaction.reply({
+                        flags: MessageFlags.EPHEMERAL,
+                        content: `Couldn't find plugin "${pluginName}". Did you mean one of these?\n${suggestions}`
+                    });
+                }
+
                 return interaction.reply({
                     flags: MessageFlags.EPHEMERAL,
                     content: `Plugin "${pluginName}" not found.`
@@ -91,12 +108,11 @@ registerChatInputCommand(
             const plugins = await fetchPlugins();
 
             const matchingPlugins = plugins
-                .map(p => ({ original: p, lowerName: p.name.toLowerCase() }))
-                .filter(({ lowerName }) => lowerName.includes(focusedValue))
+                .filter(p => p.name.toLowerCase().includes(focusedValue))
                 .slice(0, 25)
-                .map(({ original }) => ({
-                    name: original.name,
-                    value: original.name
+                .map(p => ({
+                    name: p.name,
+                    value: p.name
                 }));
 
             interaction.result(matchingPlugins);
