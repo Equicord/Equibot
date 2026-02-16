@@ -11,7 +11,7 @@ RUN corepack enable
 RUN apk update
 RUN apk add --no-cache curl bash
 RUN curl -Lo /etc/apk/keys/sgerrand.rsa.pub https://alpine-pkgs.sgerrand.com/sgerrand.rsa.pub
-RUN curl -Lo glibc.apk https://github.com/sgerrand/alpine-pkg-glibc/releases/download/2.35-r0/glibc-2.35-r0.apk
+RUN curl -Lo glibc.apk https://github.com/sgerrand/alpine-pkg-glibc/releases/download/2.35-r1/glibc-2.35-r1.apk
 RUN apk add glibc.apk
 RUN rm glibc.apk
 
@@ -34,7 +34,7 @@ RUN corepack enable
 RUN apk update
 RUN apk add --no-cache curl bash
 RUN curl -Lo /etc/apk/keys/sgerrand.rsa.pub https://alpine-pkgs.sgerrand.com/sgerrand.rsa.pub
-RUN curl -Lo glibc.apk https://github.com/sgerrand/alpine-pkg-glibc/releases/download/2.35-r0/glibc-2.35-r0.apk
+RUN curl -Lo glibc.apk https://github.com/sgerrand/alpine-pkg-glibc/releases/download/2.35-r1/glibc-2.35-r1.apk
 RUN apk add glibc.apk
 RUN rm glibc.apk
 
