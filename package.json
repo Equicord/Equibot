@@ -54,9 +54,8 @@
         "onlyBuiltDependencies": [
             "better-sqlite3",
             "canvas",
+            "core-js",
             "esbuild",
-            "onnxruntime-node",
-            "protobufjs",
             "sharp",
             "tesseract.js"
         ]
