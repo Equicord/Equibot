@@ -21,12 +21,17 @@ export async function moderateMessage(msg: Message, isEdit: boolean) {
     const moderationFunctions = [
         !isEdit && moderateMultiChannelSpam,
         moderateInvites,
-        moderateSuspiciousFiles,
-        ocrModerate,
-        moderateNSFW
+        moderateSuspiciousFiles
     ].filter(isTruthy);
 
     for (const moderate of moderationFunctions) {
         if (await moderate(msg)) return;
     }
+
+    const [ocrResult, nsfwResult] = await Promise.all([
+        ocrModerate(msg),
+        moderateNSFW(msg)
+    ]);
+
+    if (ocrResult || nsfwResult) return;
 }
