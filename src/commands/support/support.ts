@@ -11,6 +11,7 @@ import { mustParse } from "~/util/validation";
 export const SupportInstructions = Object.create(null) as Record<string, {
     content: string;
     emoji: string;
+    title?: string;
 }>;
 export const SupportTagList = [] as string[][];
 
@@ -47,7 +48,8 @@ defineCommand({
 
 const FrontMatterSchema = object({
     aliases: optional(string()),
-    emoji: string()
+    emoji: string(),
+    title: optional(string())
 });
 
 run(async () => {
@@ -69,11 +71,12 @@ run(async () => {
                 .map(x => x.split(": ") as [string, string])
         );
 
-        const { emoji, aliases } = mustParse(`Invalid frontmatter in ${file}`, FrontMatterSchema, attrs);
+        const { emoji, aliases, title } = mustParse(`Invalid frontmatter in ${file}`, FrontMatterSchema, attrs);
 
         const data = {
             content,
-            emoji
+            emoji,
+            title
         };
 
         SupportInstructions[name] = data;

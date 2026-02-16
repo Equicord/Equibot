@@ -15,6 +15,7 @@
     "keywords": [],
     "author": "Vendicated <vendicated+npm@riseup.net>",
     "dependencies": {
+        "@huggingface/transformers": "^3.8.1",
         "@napi-rs/canvas": "^0.1.88",
         "@tensorflow/tfjs": "^4.22.0",
         "fastify": "^5.6.2",
