@@ -266,7 +266,107 @@ const handler: CommandInteractionHandler = {
             });
         }
 
-        let tooltip = data.options.getString("tooltip");
+        if (data.name === NameEdit) {
+            let tooltip = data.options.getString("tooltip");
+            const image = data.options.getAttachment("image");
+            const imageUrl = data.options.getString("image-url");
+            const optimize = data.options.getBoolean("optimize") ?? false;
+
+            let url = image?.url ?? imageUrl;
+            url &&= normaliseCdnUrl(url);
+
+            if (!url) url = BadgeData[user.id][existingBadgeIndex!].badge;
+            if (!tooltip) tooltip = BadgeData[user.id][existingBadgeIndex!].tooltip;
+
+            i.defer(MessageFlags.EPHEMERAL);
+
+            let imgData: Buffer;
+            let ext: string;
+            let footer = "";
+
+            {
+                const res = await doFetch(url);
+                imgData = Buffer.from(await res.arrayBuffer());
+
+                const { pathname } = new URL(url);
+                const lastSegment = pathname.split("/").pop() ?? "";
+                const dotIndex = lastSegment.lastIndexOf(".");
+
+                if (dotIndex !== -1 && dotIndex < lastSegment.length - 1) {
+                    ext = lastSegment.slice(dotIndex + 1);
+                } else {
+                    const contentType = res.headers.get("content-type") ?? "";
+                    const mimeToExt: Record<string, string> = {
+                        "image/png": "png",
+                        "image/jpeg": "jpg",
+                        "image/gif": "gif",
+                        "image/webp": "webp",
+                        "image/svg+xml": "svg",
+                        "image/apng": "apng"
+                    };
+                    ext = mimeToExt[contentType.split(";")[0]] ?? "png";
+                }
+            }
+
+            if (optimize) {
+                let sizes: [number, number];
+                ([imgData, ext, ...sizes] = await optimizeImage(imgData, ext));
+
+                footer = `${(sizes[0] / 1024).toFixed(2)}k -> ${(sizes[1] / 1024).toFixed(2)}k\n`;
+            }
+
+            const hash = createHash("sha1").update(imgData).digest("hex");
+
+            BadgeData[user.id] ??= [];
+            const index = existingBadgeIndex ?? BadgeData[user.id].length;
+            const fileName = `${hash}.${ext}`;
+
+            const newBadgeData = {
+                tooltip: tooltip,
+                badge: `https://badge.equicord.org/badges/${user.id}/${fileName}`,
+            };
+
+            const before = data.options.getInteger("before");
+            const after = data.options.getInteger("after");
+
+            BadgeData[user.id] ??= [];
+            const badges = BadgeData[user.id];
+
+            let insertIndex = badges.length;
+
+            if (before != null) {
+                insertIndex = before;
+            } else if (after != null) {
+                insertIndex = after + 1;
+            } else {
+                insertIndex = index;
+            }
+
+            insertIndex = Math.max(0, Math.min(insertIndex, badges.length));
+            if (index < badges.length && badges[index]) {
+                const existingBadge = badges[index];
+                const fileName = new URL(existingBadge.badge).pathname.split("/").pop()!;
+                const contents = readFileSync(`${badgesForUser(user.id)}/${fileName}`);
+                const file = { name: fileName, contents };
+                logBadgeAction("Edited", user, existingBadge, newBadgeData, undefined, file);
+
+                badges.splice(index, 1);
+            }
+
+            badges.splice(insertIndex, 0, newBadgeData);
+
+            mkdirSync(badgesForUser(user.id), { recursive: true });
+            writeFileSync(`${badgesForUser(user.id)}/${fileName}`, imgData);
+
+            saveBadges();
+
+            i.createFollowup({
+                content: `Done!${footer && "\n\n-# " + footer}`,
+                flags: MessageFlags.EPHEMERAL
+            });
+        }
+
+        const tooltip = data.options.getString("tooltip");
         const image = data.options.getAttachment("image");
         const imageUrl = data.options.getString("image-url");
         const optimize = data.options.getBoolean("optimize") ?? false;
@@ -274,17 +374,11 @@ const handler: CommandInteractionHandler = {
         let url = image?.url ?? imageUrl;
         url &&= normaliseCdnUrl(url);
 
-        if (!url || !tooltip) {
-            const existing = existingBadgeIndex != null && BadgeData[user.id]?.[existingBadgeIndex];
-            if (!existing || (!url && !tooltip))
-                return i.createMessage({
-                    content: "bruh",
-                    flags: MessageFlags.EPHEMERAL
-                });
-
-            url ??= existing.badge;
-            tooltip ??= existing.tooltip;
-        }
+        if (!url || !tooltip)
+            return i.createMessage({
+                content: "Missing badge data or badge does not exist",
+                flags: MessageFlags.EPHEMERAL
+            });
 
         i.defer(MessageFlags.EPHEMERAL);
 
@@ -293,10 +387,10 @@ const handler: CommandInteractionHandler = {
         let footer = "";
 
         {
-            const res = await doFetch(url);
+            const res = await doFetch(url!);
             imgData = Buffer.from(await res.arrayBuffer());
 
-            const { pathname } = new URL(url);
+            const { pathname } = new URL(url!);
             const lastSegment = pathname.split("/").pop() ?? "";
             const dotIndex = lastSegment.lastIndexOf(".");
 
@@ -326,11 +420,11 @@ const handler: CommandInteractionHandler = {
         const hash = createHash("sha1").update(imgData).digest("hex");
 
         BadgeData[user.id] ??= [];
-        const index = existingBadgeIndex ?? BadgeData[user.id].length;
+        const index = BadgeData[user.id].length;
         const fileName = `${hash}.${ext}`;
 
         const newBadgeData = {
-            tooltip: tooltip,
+            tooltip: tooltip!,
             badge: `https://badge.equicord.org/badges/${user.id}/${fileName}`,
         };
 
@@ -338,22 +432,10 @@ const handler: CommandInteractionHandler = {
         if (before != null) {
             BadgeData[user.id].splice(before, 0, newBadgeData);
         } else {
-            const existingBadge = BadgeData[user.id][index];
-            if (existingBadge) {
-                const fileName = new URL(existingBadge.badge).pathname.split("/").pop()!;
-                const contents = readFileSync(`${badgesForUser(user.id)}/${fileName}`);
-                const file = {
-                    name: fileName,
-                    contents,
-                };
-                logBadgeAction("Edited", user, existingBadge, newBadgeData, undefined, file);
-                rmSync(`${badgesForUser(user.id)}/${fileName}`, { force: true });
-            }
-
             BadgeData[user.id][index] = newBadgeData;
         }
 
-        if (data.name === NameAdd) logBadgeAction("Added", user, newBadgeData);
+        logBadgeAction("Added", user, newBadgeData);
 
         mkdirSync(badgesForUser(user.id), { recursive: true });
         writeFileSync(`${badgesForUser(user.id)}/${fileName}`, imgData);
@@ -426,6 +508,8 @@ registerCommand({
         makeTooltip(false),
         ImageUrl,
         Image,
+        makeExistingBadge("before", false),
+        makeExistingBadge("after", false),
         Optimize
     ]
 });
