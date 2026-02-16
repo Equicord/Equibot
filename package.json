@@ -49,7 +49,16 @@
     "pnpm": {
         "overrides": {
             "onnxruntime-web": "1.24.1"
-        }
+        },
+        "onlyBuiltDependencies": [
+            "better-sqlite3",
+            "canvas",
+            "esbuild",
+            "onnxruntime-node",
+            "protobufjs",
+            "sharp",
+            "tesseract.js"
+        ]
     },
     "engines": {
         "node": ">=20"
