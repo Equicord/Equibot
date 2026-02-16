@@ -36,6 +36,7 @@ function extractFrames(gifBuffer: Buffer): Buffer[] {
             ctx.clearRect(0, 0, width, height);
         }
 
+        tempCtx.clearRect(0, 0, width, height);
         const imageData = tempCtx.createImageData(frame.dims.width, frame.dims.height);
         imageData.data.set(frame.patch);
         tempCtx.putImageData(imageData, 0, 0);
