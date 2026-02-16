@@ -6,11 +6,11 @@ import { Emoji } from "~/constants";
 import { fetchBuffer } from "~/util/fetch";
 import { silently } from "~/util/functions";
 import { logAutoModAction } from "~/util/logAction";
-import { detectNSFW } from "~/util/nsfw";
+import { detectNSFW, isNSFWLabel } from "~/util/nsfw";
 import { formatDuration, until } from "~/util/time";
 
 function extractFrames(gifBuffer: Buffer): Buffer[] {
-    const gif = parseGIF(gifBuffer.buffer);
+    const gif = parseGIF(gifBuffer.buffer as ArrayBuffer);
     const frames = decompressFrames(gif, true);
 
     if (frames.length === 0) return [];
@@ -70,16 +70,16 @@ export async function moderateNSFW(msg: Message<AnyTextableGuildChannel>): Promi
                 const frames = extractFrames(buf);
                 for (const frameBuf of frames) {
                     const results = await detectNSFW(frameBuf);
-                    const nsfwResult = results.find(r => r.label === "nsfw");
-                    if (nsfwResult && nsfwResult.score > Config.moderation.nsfwConfidenceThreshold) {
+                    const nsfwResult = results.find(r => isNSFWLabel(r.label) && r.score > Config.moderation.nsfwConfidenceThreshold);
+                    if (nsfwResult) {
                         flaggedAttachment = frameBuf;
                         break;
                     }
                 }
             } else {
                 const results = await detectNSFW(buf);
-                const nsfwResult = results.find(r => r.label === "nsfw");
-                if (nsfwResult && nsfwResult.score > Config.moderation.nsfwConfidenceThreshold) {
+                const nsfwResult = results.find(r => isNSFWLabel(r.label) && r.score > Config.moderation.nsfwConfidenceThreshold);
+                if (nsfwResult) {
                     flaggedAttachment = buf;
                 }
             }
