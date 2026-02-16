@@ -1,3 +1,5 @@
+import { Millis } from "~/constants";
+
 const Config = {
     "token": process.env.BOT_TOKEN,
     "prefixes": ["e!", "e?", "e.", "eq"],
@@ -28,6 +30,11 @@ const Config = {
     },
 
     "moderation": {
+        // nsfw image detection and punishment
+        "nsfwConfidenceThreshold": 0.85,
+        "nsfwTimeoutDuration": 1 * Millis.HOUR,
+        "nsfwScanGifs": false,
+
         "invites": false,
         // guilds members may share invites to. always includes homeGuildId
         "inviteAllowedGuilds": [
