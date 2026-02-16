@@ -29,9 +29,9 @@ const Config = {
 
     "moderation": {
         // nsfw image detection and punishment
-        "nsfwConfidenceThreshold": 0.85,
+        "nsfwConfidenceThreshold": 0.90,
         "nsfwTimeoutDuration": 1,
-        "nsfwScanGifs": false,
+        "nsfwScanGifs": true,
 
         "invites": false,
         // guilds members may share invites to. always includes homeGuildId
