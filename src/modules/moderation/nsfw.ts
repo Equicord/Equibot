@@ -32,7 +32,7 @@ function extractFrames(gifBuffer: Buffer): Buffer[] {
     for (let i = 0; i <= lastIdx; i++) {
         const frame = frames[i];
 
-        if (frame.disposalType === 2) {
+        if (i > 0 && frames[i - 1].disposalType === 2) {
             ctx.clearRect(0, 0, width, height);
         }
 
