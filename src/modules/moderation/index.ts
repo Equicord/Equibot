@@ -3,6 +3,7 @@ import { Vaius } from "~/Client";
 import { isTruthy } from "~/util/guards";
 import { moderateInvites } from "./invites";
 import { moderateMultiChannelSpam } from "./multiChannelSpam";
+import { moderateNSFW } from "./nsfw";
 import { ocrModerate } from "./ocr";
 import { moderateSuspiciousFiles } from "./suspiciousFiles";
 import { moderateSuspiciousLinks } from "./suspiciousLinks";
@@ -23,7 +24,8 @@ export async function moderateMessage(msg: Message, isEdit: boolean) {
         moderateInvites,
         moderateSuspiciousFiles,
         moderateSuspiciousLinks,
-        ocrModerate
+        ocrModerate,
+        moderateNSFW
     ].filter(isTruthy);
 
     for (const moderate of moderationFunctions) {

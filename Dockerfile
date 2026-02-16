@@ -1,4 +1,4 @@
-FROM node:lts-alpine AS build
+FROM node:lts-slim AS build
 WORKDIR /app
 
 ARG GIT_COMMIT
@@ -14,7 +14,7 @@ RUN pnpm install --frozen-lockfile --ignore-scripts
 COPY . .
 RUN pnpm build
 
-FROM node:lts-alpine
+FROM node:lts-slim
 WORKDIR /app
 
 ARG GIT_COMMIT
@@ -24,7 +24,7 @@ ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
 RUN corepack enable
 
-RUN apk update && apk add --no-cache curl
+RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
 
 COPY package*.json pnpm-*.yaml ./
 COPY assets ./assets

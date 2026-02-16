@@ -1,0 +1,107 @@
+import leven from "leven";
+
+import { ActionRow, Button, ButtonStyles, ComponentMessage, Container, TextDisplay } from "~components";
+import { makeCachedJsonFetch } from "~/util/fetch";
+
+export interface Plugin {
+    name: string;
+    description: string;
+    tags: string[];
+    authors: { name: string; id: string; }[];
+
+    target?: "desktop" | "discordDesktop" | "web" | "dev";
+
+    required: boolean;
+    enabledByDefault: boolean;
+
+    hasPatches: boolean;
+    hasCommands: boolean;
+
+    filePath: string;
+}
+
+export const fetchPlugins = makeCachedJsonFetch<Plugin[]>(
+    "https://raw.githubusercontent.com/Equicord/Equibored/main/plugins.json"
+);
+
+export function findSimilarPlugins(plugins: Plugin[], query: string) {
+    const queryLower = query.toLowerCase();
+    return plugins
+        .map(p => ({
+            name: p.name,
+            distance: leven(p.name.toLowerCase(), queryLower),
+        }))
+        .filter(p => p.distance <= 3)
+        .sort((a, b) => a.distance - b.distance);
+}
+
+export function buildPluginInfoMessage(plugin: Plugin) {
+    interface Trait {
+        name: string;
+        shouldShow: boolean;
+    }
+    const {
+        name,
+        description,
+        required,
+        enabledByDefault,
+        hasCommands,
+        target,
+        filePath,
+        authors,
+    } = plugin;
+
+    const traits: Trait[] = [
+        {
+            name: "This plugin is required",
+            shouldShow: required,
+        },
+        {
+            name: "This plugin is enabled by default",
+            shouldShow: enabledByDefault,
+        },
+        {
+            name: "This plugin has chat commands",
+            shouldShow: hasCommands,
+        },
+        {
+            name: "This plugin is desktop only",
+            shouldShow: target === "desktop",
+        },
+        {
+            name: "This plugin is discord desktop only",
+            shouldShow: target === "discordDesktop",
+        },
+        {
+            name: "This plugin is web only",
+            shouldShow: target === "web",
+        },
+        {
+            name: "This plugin is development build only",
+            shouldShow: target === "dev",
+        },
+    ];
+
+    return (
+        <ComponentMessage>
+            <Container accentColor={0x828282}>
+                <TextDisplay>## {name}</TextDisplay>
+                <TextDisplay>{description}</TextDisplay>
+
+                {traits.filter(t => t.shouldShow).map(t => (
+                    <TextDisplay key={t.name}>{t.name}</TextDisplay>
+                ))}
+
+                <TextDisplay>-# Made by {authors.map(a => a.name).join(", ")}</TextDisplay>
+                <ActionRow>
+                    <Button style={ButtonStyles.LINK} url={`https://equicord.org/plugins/${encodeURIComponent(name)}`}>
+                        View Website
+                    </Button>
+                    <Button style={ButtonStyles.LINK} url={`https://github.com/Equicord/Equicord/blob/main/${filePath}`}>
+                        View Source
+                    </Button>
+                </ActionRow>
+            </Container>
+        </ComponentMessage>
+    );
+}

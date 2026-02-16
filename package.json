@@ -16,12 +16,14 @@
     "author": "Vendicated <vendicated+npm@riseup.net>",
     "dependencies": {
         "@napi-rs/canvas": "^0.1.88",
+        "@tensorflow/tfjs": "^4.22.0",
         "fastify": "^5.6.2",
         "gifenc": "^1.0.3",
         "gifuct-js": "^2.1.2",
         "kysely": "^0.28.9",
         "leven": "^4.1.0",
         "markdown-table": "^3.0.4",
+        "nsfwjs": "^4.2.1",
         "oceanic.js": "1.13.0",
         "pako": "^2.1.0",
         "parse-duration": "^2.1.5",
@@ -44,6 +46,19 @@
         "type-fest": "^5.3.1",
         "typescript": "^5.9.3",
         "typescript-eslint": "^8.51.0"
+    },
+    "pnpm": {
+        "overrides": {
+            "onnxruntime-web": "1.24.1"
+        },
+        "onlyBuiltDependencies": [
+            "better-sqlite3",
+            "canvas",
+            "core-js",
+            "esbuild",
+            "sharp",
+            "tesseract.js"
+        ]
     },
     "engines": {
         "node": ">=20"
