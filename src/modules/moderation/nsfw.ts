@@ -19,6 +19,8 @@ function extractFrames(gifBuffer: Buffer): Buffer[] {
 
     const canvas = createCanvas(width, height);
     const ctx = canvas.getContext("2d");
+    let tempCanvas = createCanvas(width, height);
+    let tempCtx = tempCanvas.getContext("2d");
 
     const firstIdx = 0;
     const midIdx = Math.floor(frames.length / 2);
@@ -34,8 +36,11 @@ function extractFrames(gifBuffer: Buffer): Buffer[] {
             ctx.clearRect(0, 0, width, height);
         }
 
-        const tempCanvas = createCanvas(frame.dims.width, frame.dims.height);
-        const tempCtx = tempCanvas.getContext("2d");
+        if (tempCanvas.width !== frame.dims.width || tempCanvas.height !== frame.dims.height) {
+            tempCanvas = createCanvas(frame.dims.width, frame.dims.height);
+            tempCtx = tempCanvas.getContext("2d");
+        }
+
         const imageData = tempCtx.createImageData(frame.dims.width, frame.dims.height);
         imageData.data.set(frame.patch);
         tempCtx.putImageData(imageData, 0, 0);
