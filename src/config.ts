@@ -81,6 +81,7 @@ const Config = {
 
         "regular": "1468770736134160628",
         "fileWhitelist": "1448056449187188880",
+        "noSupport": "1290007556869062762",
 
         // roles that can be added or removed using the role management commands.
         // always includes roles.donor, and roles.contributor

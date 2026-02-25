@@ -1,13 +1,13 @@
-import { pipeline, dot, FeatureExtractionPipeline } from "@huggingface/transformers";
+import { dot, FeatureExtractionPipeline, pipeline } from "@huggingface/transformers";
 import { Message } from "oceanic.js";
 
 import { Vaius } from "~/Client";
 import { buildFaqEmbed, fetchFaq } from "~/commands/support/faq";
 import Config from "~/config";
 import { SUPPORT_ALLOWED_CHANNELS } from "~/constants";
+import { reply } from "~/util/discord";
 import { silently } from "~/util/functions";
 import { TTLMap } from "~/util/TTLMap";
-import { reply } from "~/util/discord";
 
 interface FaqEntry {
     question: string;
@@ -79,16 +79,12 @@ export async function initFaqAutoResponse() {
 
 async function handleFaqMessage(msg: Message) {
     if (!Config.faqAutoResponse.enabled || !extractor) return;
-
     if (msg.author.bot) return;
-
     if (!SUPPORT_ALLOWED_CHANNELS.includes(msg.channelID)) return;
-
     if (msg.content.length < Config.faqAutoResponse.minMessageLength) return;
-
     if (cooldownMap.has(msg.author.id)) return;
-
-    if (msg.member?.roles.includes("1290007556869062762")) return;
+    if (msg.member?.roles.includes(Config.roles.noSupport)) return;
+    if (msg.member?.roles?.includes(Config.roles.mod)) return;
 
     try {
         const queryText = QUERY_PREFIX + msg.content;
