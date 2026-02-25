@@ -78,6 +78,7 @@ const Config = {
         "artists": "1384565229794365522",
         "bugHunter": "1421844862759866474",
         "devTalk": "1383924171637129339",
+        "noSupport": "1290007556869062762",
 
         // roles that can be added or removed using the role management commands.
         // always includes roles.donor, and roles.contributor
@@ -127,6 +128,13 @@ const Config = {
         "stableMessageId": "1421025558682271844",
         // message id of the canary status message (must be in statusChannelId)
         "canaryMessageId": "1421025557281243228",
+    },
+
+    "faqAutoResponse": {
+        "enabled": true,
+        "similarityThreshold": 0.80,
+        "cooldownSeconds": 30,
+        "minMessageLength": 10,
     }
 };
 

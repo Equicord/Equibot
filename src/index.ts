@@ -11,6 +11,7 @@ import {
 import { Vaius } from "./Client";
 import { PROD } from "./constants";
 
+import { initFaqAutoResponse } from "./modules/faqAutoResponse";
 import { initModListeners } from "./modules/moderation/listeners";
 import { initRoleListeners } from "./modules/roleTracker";
 import { silently } from "./util/functions";
@@ -20,6 +21,7 @@ import { toCodeblock } from "./util/text";
 
 initModListeners();
 initRoleListeners();
+initFaqAutoResponse();
 
 export async function handleError(title: string, err: unknown) {
     if (err instanceof DiscordHTTPError && err.status >= 500)
