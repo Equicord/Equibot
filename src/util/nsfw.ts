@@ -7,7 +7,7 @@ let modelPromise: Promise<nsfwjs.NSFWJS | null> | null = null;
 async function getModel(): Promise<nsfwjs.NSFWJS | null> {
     if (modelPromise === null) {
         modelPromise = tf.ready()
-            .then(() => nsfwjs.load())
+            .then(() => nsfwjs.load("MobileNetV2"))
             .catch(err => {
                 modelPromise = null;
                 throw err;

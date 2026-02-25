@@ -18,6 +18,7 @@
         "@huggingface/transformers": "^3.8.1",
         "@napi-rs/canvas": "^0.1.88",
         "@tensorflow/tfjs": "^4.22.0",
+        "@tensorflow/tfjs-node": "^4.22.0",
         "fastify": "^5.6.2",
         "gifenc": "^1.0.3",
         "gifuct-js": "^2.1.2",
