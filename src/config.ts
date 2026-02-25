@@ -67,20 +67,17 @@ const Config = {
         "team": "1173520023239786538",
         "mod": "1326406112144265257",
 
-        // used for github linking and some other things
         "donor": "1173316879083896912",
-        // used for github linking and some other things
-        "contributor": "1222677964760682556",
-        // vencord contrib
-        "vencordContrib": "1173343399470964856",
-
-        "bugHunter": "1421844862759866474",
-
-        // vip
-        "vip": "1217667142598529064",
-
         "regular": "1468770736134160628",
+        "vip": "1217667142598529064",
         "fileWhitelist": "1448056449187188880",
+        "contributor": "1222677964760682556",
+        "vencordContrib": "1173343399470964856",
+        "pkgMaintainers": "1305732092629356554",
+        "distributors": "1331437433228623994",
+        "artists": "1384565229794365522",
+        "bugHunter": "1421844862759866474",
+        "devTalk": "1383924171637129339",
 
         // roles that can be added or removed using the role management commands.
         // always includes roles.donor, and roles.contributor
@@ -89,8 +86,8 @@ const Config = {
             "1302480459195879514", // no modmail
             "1290007556869062762", // no support
             "1319402584133468171", // no yappin
-            "1407110358509818008", // no media
-            "1161815552919076867", // no modmail
+            "1421951277226791013", // no bug reporting
+            "1407110358509818008", // no media & reactions
         ]
     },
 

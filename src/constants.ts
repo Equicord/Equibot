@@ -20,11 +20,15 @@ export const SUPPORT_ALLOWED_CHANNELS = [
 export const MANAGEABLE_ROLES = [
     Config.roles.donor,
     Config.roles.regular,
-    Config.roles.contributor,
-    Config.roles.vencordContrib,
-    Config.roles.bugHunter,
     Config.roles.vip,
     Config.roles.fileWhitelist,
+    Config.roles.contributor,
+    Config.roles.vencordContrib,
+    Config.roles.pkgMaintainers,
+    Config.roles.distributors,
+    Config.roles.artists,
+    Config.roles.bugHunter,
+    Config.roles.devTalk,
     ...Config.roles.manageableRoles
 ];
 

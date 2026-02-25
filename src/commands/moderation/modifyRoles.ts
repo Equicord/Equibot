@@ -18,6 +18,9 @@ const Aliases = makeConstants({
 
     regular: Config.roles.regular,
     r: Config.roles.regular,
+
+    talk: Config.roles.devTalk,
+    dev: Config.roles.devTalk,
 });
 
 function parseArgs(msg: Message<AnyTextableGuildChannel>, args: string[]) {
