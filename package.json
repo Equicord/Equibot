@@ -59,6 +59,8 @@
             "canvas",
             "core-js",
             "esbuild",
+            "onnxruntime-node",
+            "protobufjs",
             "sharp",
             "tesseract.js"
         ]
