@@ -54,12 +54,11 @@
             "onnxruntime-web": "1.24.1"
         },
         "onlyBuiltDependencies": [
+            "@tensorflow/tfjs-node",
             "better-sqlite3",
             "canvas",
             "core-js",
             "esbuild",
-            "onnxruntime-node",
-            "protobufjs",
             "sharp",
             "tesseract.js"
         ]
