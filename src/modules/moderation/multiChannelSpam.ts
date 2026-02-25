@@ -1,6 +1,6 @@
 import { AnyTextableGuildChannel, Message } from "oceanic.js";
 import { Millis } from "~/constants";
-import { silently } from "~/util/functions";
+import { ignoreExpectedErrors, silently } from "~/util/functions";
 import { logAutoModAction } from "~/util/logAction";
 import { until } from "~/util/time";
 import { ChannelID, MessageID } from "~/util/types";
@@ -32,15 +32,18 @@ export async function moderateMultiChannelSpam(msg: Message<AnyTextableGuildChan
 
     if (channelsMessaged.size < 3) return false;
 
-    await msg.guild.editMember(msg.author.id, {
+    const res = await ignoreExpectedErrors(msg.guild.editMember(msg.author.id, {
         communicationDisabledUntil: until(1 * Millis.HOUR),
-        reason: "Messaged >=3 different channels within 5 seconds"
-    });
+        reason: "Messaged >=3 different channels within 15 seconds"
+    }));
 
-    logAutoModAction({
-        content: `Muted <@${msg.author.id}> for messaging >=3 different channels within 5 seconds`,
-        embeds: [makeEmbedForMessage(msg)]
-    });
+    // If this is a scam bot (likely), the ocr mod may already have kicked the member, so editMember will
+    // fail with Unknown Member. Safe to ignore
+    if (res)
+        logAutoModAction({
+            content: `Muted <@${msg.author.id}> for messaging >=3 different channels within 15 seconds`,
+            embeds: [makeEmbedForMessage(msg)]
+        });
 
     await silently(msg.delete());
 
