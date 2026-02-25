@@ -17,10 +17,10 @@ function extractFrames(gifBuffer: Buffer): Buffer[] {
 
     const { dims: { width, height } } = frames[0];
 
-    const tempCanvas = createCanvas(width, height);
     const canvas = createCanvas(width, height);
-    const tempCtx = tempCanvas.getContext("2d");
     const ctx = canvas.getContext("2d");
+    let tempCanvas = createCanvas(width, height);
+    let tempCtx = tempCanvas.getContext("2d");
 
     const firstIdx = 0;
     const midIdx = Math.floor(frames.length / 2);
@@ -28,24 +28,23 @@ function extractFrames(gifBuffer: Buffer): Buffer[] {
     const targetIndices = new Set([firstIdx, midIdx, lastIdx]);
 
     const extracted: Buffer[] = [];
-    let imageData: import("@napi-rs/canvas").ImageData | null = null;
 
     for (let i = 0; i <= lastIdx; i++) {
         const frame = frames[i];
 
-        if (!imageData || imageData.width !== frame.dims.width || imageData.height !== frame.dims.height) {
-            canvas.width = frame.dims.width;
-            canvas.height = frame.dims.height;
-            imageData = tempCtx.createImageData(frame.dims.width, frame.dims.height);
+        if (i > 0 && frames[i - 1].disposalType === 2) {
+            ctx.clearRect(0, 0, width, height);
         }
 
-        imageData!.data.set(frame.patch);
-        tempCtx.putImageData(imageData!, 0, 0);
-        ctx.drawImage(tempCanvas, 0, 0);
-
-        if (frame.disposalType === 2) {
-            ctx.clearRect(0, 0, frame.dims.width, frame.dims.height);
+        if (tempCanvas.width !== frame.dims.width || tempCanvas.height !== frame.dims.height) {
+            tempCanvas = createCanvas(frame.dims.width, frame.dims.height);
+            tempCtx = tempCanvas.getContext("2d");
         }
+
+        const imageData = tempCtx.createImageData(frame.dims.width, frame.dims.height);
+        imageData.data.set(frame.patch);
+        tempCtx.putImageData(imageData, 0, 0);
+        ctx.drawImage(tempCanvas, frame.dims.left, frame.dims.top);
 
         if (targetIndices.has(i)) {
             extracted.push(Buffer.from(canvas.toBuffer("image/png")));
@@ -66,7 +65,7 @@ export async function moderateNSFW(msg: Message<AnyTextableGuildChannel>): Promi
         try {
             const buf = await fetchBuffer(att.url);
 
-            if (att.contentType === "image/gif" && Config.moderation.nsfwScanGifs) {
+            if (att.contentType?.toLowerCase().startsWith("image/gif") && Config.moderation.nsfwScanGifs) {
                 const frames = extractFrames(buf);
                 for (const frameBuf of frames) {
                     const results = await detectNSFW(frameBuf);
