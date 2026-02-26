@@ -42,7 +42,7 @@ export async function initFaqAutoResponse() {
             }
         };
 
-        extractor = await pipeline("feature-extraction", "Xenova/all-MiniLM-L6-v2", pipelineOptions) as any as FeatureExtractionPipeline;
+        extractor = await pipeline("feature-extraction", "Xenova/multi-qa-MiniLM-L6-cos-v1", pipelineOptions) as any as FeatureExtractionPipeline;
 
         console.log("[FAQ Auto-Response] Model loaded, fetching FAQ entries...");
 
