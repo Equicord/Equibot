@@ -34,14 +34,15 @@ export async function initFaqAutoResponse() {
 
     try {
 
-        // @ts-expect-error TypeScript union type too complex
-        extractor = await pipeline("feature-extraction", "Xenova/all-MiniLM-L6-v2", {
+        const pipelineOptions: any = {
             progress_callback: (progress: any) => {
-                if (progress.status === "progress") {
-                    console.log(`[FAQ Auto-Response] Download progress: ${Math.round(progress.progress)}%`);
+                if ((progress as any).status === "progress") {
+                    console.log(`[FAQ Auto-Response] Download progress: ${Math.round((progress as any).progress)}%`);
                 }
             }
-        });
+        };
+
+        extractor = await pipeline("feature-extraction", "Xenova/all-MiniLM-L6-v2", pipelineOptions) as any as FeatureExtractionPipeline;
 
         console.log("[FAQ Auto-Response] Model loaded, fetching FAQ entries...");
 
