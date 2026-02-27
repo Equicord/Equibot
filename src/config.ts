@@ -131,7 +131,7 @@ const Config = {
     },
 
     "faqAutoResponse": {
-        "enabled": true,
+        "enabled": false,
         "similarityThreshold": 0.80,
         "cooldownSeconds": 5,
         "minMessageLength": 10,
