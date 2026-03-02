@@ -39,9 +39,12 @@ const NameRemoveAll = Name + "-remove-all";
 const NameMove = Name + "-move";
 const NameCopy = Name + "-copy";
 const NameDefault = Name + "-default";
+const NameTranslator = Name + "-translator";
 
 const DefaultBadgeUrl = "https://badge.equicord.org/donor.webp";
 const DefaultBadgeTooltip = "Equicord Donor";
+const TranslatorBadgeUrl = "https://badge.equicord.org/translator.png";
+const TranslatorBadgeTooltip = "Equicord Translator";
 
 async function optimizeImage(imgData: Buffer, ext: string) {
     const { child } = ext === "gif"
@@ -140,6 +143,38 @@ const handler: CommandInteractionHandler = {
                 if (member && !member.roles.includes(Config.roles.donor))
                     await member.addRole(Config.roles.donor, "Donor badge has been added");
             }
+
+            return i.createFollowup({
+                content: "Done!",
+                flags: MessageFlags.EPHEMERAL
+            });
+        }
+
+        if (data.name === NameTranslator) {
+            const user = data.options.getUser("user", true);
+
+            i.defer(MessageFlags.EPHEMERAL);
+
+            const res = await doFetch(TranslatorBadgeUrl);
+            const imgData = Buffer.from(await res.arrayBuffer());
+
+            const hash = createHash("sha1").update(imgData).digest("hex");
+            const fileName = `${hash}.webp`;
+
+            BadgeData[user.id] ??= [];
+
+            const newBadgeData = {
+                tooltip: TranslatorBadgeTooltip,
+                badge: `https://badge.equicord.org/badges/${user.id}/${fileName}`
+            };
+
+            BadgeData[user.id].push(newBadgeData);
+            logBadgeAction("Added", user, newBadgeData);
+
+            mkdirSync(badgesForUser(user.id), { recursive: true });
+            writeFileSync(`${badgesForUser(user.id)}/${fileName}`, imgData);
+
+            saveBadges();
 
             return i.createFollowup({
                 content: "Done!",
@@ -452,5 +487,10 @@ registerCommand({
 
 registerCommand({
     name: NameDefault,
+    options: [RequiredUser]
+});
+
+registerCommand({
+    name: NameTranslator,
     options: [RequiredUser]
 });
