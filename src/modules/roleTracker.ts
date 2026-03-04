@@ -27,7 +27,12 @@ async function getDevAndBadgeIDs() {
 
     cachedEquicordDevs = new Set(Object.values(devs.equicord).map((dev: any) => dev.id));
     cachedVencordDevs = new Set(Object.values(devs.vencord).map((dev: any) => dev.id));
-    cachedDonors = new Set(Object.keys(donors)!);
+
+    cachedDonors = new Set(
+        Object.entries(donors)
+            .filter(([id, badge]: [string, any]) => badge.tooltip !== "Equicord Translator")
+            .map(([id]) => id)
+    );
 
     lastFetched = now;
 
