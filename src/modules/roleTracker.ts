@@ -30,7 +30,7 @@ async function getDevAndBadgeIDs() {
 
     cachedDonors = new Set(
         Object.entries(donors)
-            .filter(([id, badge]: [string, any]) => badge.tooltip !== "Equicord Translator")
+            .filter(([id, badges]: [string, any]) => badges.some(b => b.tooltip !== "Equicord Translator"))
             .map(([id]) => id)
     );
 

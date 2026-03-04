@@ -23,7 +23,7 @@ async function getDevAndBadgeIDs() {
 
     const donorsSet = new Set(
         Object.entries(donors)
-            .filter(([id, badge]: [string, any]) => badge.tooltip !== "Equicord Translator")
+            .filter(([id, badges]: [string, any]) => badges.some(b => b.tooltip !== "Equicord Translator"))
             .map(([id]) => String(id))
             .filter(id => id !== "0" && id !== "0n")
     );
