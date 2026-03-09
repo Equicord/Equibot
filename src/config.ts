@@ -89,6 +89,7 @@ const Config = {
             "1319402584133468171", // no yappin
             "1421951277226791013", // no bug reporting
             "1407110358509818008", // no media & reactions
+            "1479689099538469066", // no voice calls
         ]
     },
 
