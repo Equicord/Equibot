@@ -100,13 +100,8 @@ export async function checkAndroid(bypass = false, extraChannelId?: string): Pro
             iconURL: "https://icons.duckduckgo.com/ip3/discord.com.ico",
         },
         title: `New ${toTitle(releaseType)} Release: **${versionName} (${versionCode})**`,
-        description: whatsNew,
+        description: `Released ${releaseDate}\n${whatsNew}`,
         fields: [
-            {
-                name: "Released",
-                value: releaseDate,
-                inline: true
-            },
             {
                 name: "Google Play Store",
                 value: GOOGLE_PLAY_URL,
