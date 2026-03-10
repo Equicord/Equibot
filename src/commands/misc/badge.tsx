@@ -22,9 +22,10 @@ const BadgeJson = `${BasePath}/badges.json`;
 const badgesForUser = (userId: string) => `${BasePath}/badges/${userId}`;
 
 interface BadgeInfo {
-    tooltip?: string;
+    tooltip: string;
     badge: string;
 }
+
 const BadgeData: Record<string, Array<BadgeInfo>> = run(() => {
     try {
         return JSON.parse(readFileSync(BadgeJson, "utf-8"));
@@ -372,7 +373,6 @@ const handler: CommandInteractionHandler = {
             tooltip: tooltip,
             badge: `https://badge.equicord.org/badges/${user.id}/${fileName}`,
         };
-        if (!tooltip || tooltip === ZWSP) delete newBadgeData.tooltip;
 
         const before = data.options.getInteger("before");
         if (before != null) {
