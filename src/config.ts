@@ -101,14 +101,14 @@ const Config = {
     // http server used for some features.
     // github linking and reporter both depend on this server
     "httpServer": {
-        "enabled": true,
+        "enabled": process.env.HTTP_SERVER_ENABLED,
         "port": 8152,
         "domain": "https://equibot.equicord.org"
     },
 
     // link-github command which gives out contributor & donor roles
     "githubLinking": {
-        "enabled": true,
+        "enabled": process.env.GITHUB_LINKING_ENABLED,
         "clientId": process.env.CLIENT_ID,
         "clientSecret": process.env.CLIENT_SECRET,
         // Github Personal Access Token. Used to check if user is sponsoring you https://github.com/settings/tokens/new
@@ -116,7 +116,7 @@ const Config = {
     },
 
     "reporter": {
-        "enabled": true,
+        "enabled": process.env.REPORTER_ENABLED,
         // Github PAT with workflow dispatch scope. Used to trigger reporter workflow
         "pat": process.env.REPORTER_PAT,
         // generate with `openssl rand -hex 128`
@@ -131,11 +131,11 @@ const Config = {
         "canaryMessageId": "1421025557281243228",
     },
 
-    "faqAutoResponse": {
-        "enabled": false,
-        "similarityThreshold": 0.80,
-        "cooldownSeconds": 5,
-        "minMessageLength": 10,
+    "updateTracker": {
+        "enabled": process.env.UPDATE_TRACKER_ENABLED,
+        "android": process.env.UPDATE_TRACKER_ANDROID,
+        "ios": process.env.UPDATE_TRACKER_IOS,
+        "logChannelId": "1268568848076898355"
     }
 };
 
