@@ -2,6 +2,7 @@ import { join } from "path";
 import { Vaius } from "~/Client";
 import Config from "~/config";
 import { DATA_DIR } from "~/constants";
+import { toTitle } from "~/util/text";
 import { readVersion, writeVersion } from "./utils";
 
 const APKMIRROR_USER_AGENT = "APKUpdater-v2.0.5";
@@ -12,6 +13,15 @@ const TRACKER_BASE = "https://tracker.vendetta.rocks/tracker/download";
 
 type ReleaseType = "stable" | "beta" | "alpha";
 
+interface VersionInfo {
+    versionCode: number;
+    versionName: string;
+    link: string;
+    releaseType: ReleaseType;
+    whatsNew: string;
+    publishDate: string;
+}
+
 function parseApkLink(link: string): { versionName: string; releaseType: ReleaseType; } | null {
     const match = link.match(/-([\d]+-[\d]+)-(stable|beta|alpha)-release/);
     if (!match) return null;
@@ -21,7 +31,7 @@ function parseApkLink(link: string): { versionName: string; releaseType: Release
     };
 }
 
-async function fetchLatestVersion(): Promise<{ versionCode: number; versionName: string; link: string; releaseType: ReleaseType; } | null> {
+async function fetchLatestVersion(): Promise<VersionInfo | null> {
     const resp = await fetch("https://www.apkmirror.com/wp-json/apkm/v1/app_exists/", {
         method: "POST",
         headers: {
@@ -35,7 +45,8 @@ async function fetchLatestVersion(): Promise<{ versionCode: number; versionName:
     if (!resp.ok) throw new Error(`APKMirror version check failed: ${resp.statusText}`);
 
     const json = await resp.json();
-    const apk = json.data[0].apks[0];
+    const data = json.data[0];
+    const apk = data.apks[0];
     const parsed = parseApkLink(apk.link);
     if (!parsed) return null;
 
@@ -44,6 +55,8 @@ async function fetchLatestVersion(): Promise<{ versionCode: number; versionName:
         versionName: parsed.versionName,
         link: apk.link,
         releaseType: parsed.releaseType,
+        whatsNew: data.release.whats_new?.replace(/<[^>]+>/g, "").trim() ?? "",
+        publishDate: data.release.publish_date,
     };
 }
 
@@ -51,71 +64,83 @@ function trackerUrl(buildID: number, split: string): string {
     return `${TRACKER_BASE}/${buildID}/${split}`;
 }
 
-export async function checkAndroid(bypass = false): Promise<void> {
+export async function checkAndroid(bypass = false, extraChannelId?: string): Promise<void> {
     let version: Awaited<ReturnType<typeof fetchLatestVersion>>;
 
     try {
         version = await fetchLatestVersion();
     } catch (err) {
-        console.error("[updateTracker] Failed to fetch version:", err);
+        console.error("[UpdateTracker] Failed to fetch version:", err);
         return;
     }
 
     if (!version) return;
 
-    const { versionCode, versionName, link, releaseType } = version;
+    const { versionCode, versionName, link, releaseType, whatsNew, publishDate } = version;
     const versionFile = join(DATA_DIR, `./discord_version.android.${releaseType}.txt`);
     const knownVersion = readVersion(versionFile);
 
     if (!bypass && knownVersion >= versionCode) return;
 
-    try {
-        await Vaius.rest.channels.createMessage(Config.updateTracker.logChannelId, {
-            embeds: [{
-                author: {
-                    name: "Discord - Talk, Play, Hang Out",
-                    url: GOOGLE_PLAY_URL,
-                    iconURL: "https://icons.duckduckgo.com/ip3/discord.com.ico"
-                },
-                title: `New ${releaseType} Version: **${versionName} (${versionCode})**`,
-                description: `[View on APKMirror](https://www.apkmirror.com${link})`,
-                fields: [
-                    {
-                        name: "Base",
-                        value: `[base](${trackerUrl(versionCode, "base")})`,
-                        inline: true
-                    },
-                    {
-                        name: "Architecture",
-                        value: [
-                            `[arm64-v8a](${trackerUrl(versionCode, "config.arm64_v8a")})`,
-                            `[armeabi-v7a](${trackerUrl(versionCode, "config.armeabi_v7a")})`,
-                            `[x86_64](${trackerUrl(versionCode, "config.x86_64")})`,
-                            `[x86](${trackerUrl(versionCode, "config.x86")})`,
-                        ].join("\n"),
-                        inline: true
-                    },
-                    {
-                        name: "DPI",
-                        value: [
-                            `[hdpi](${trackerUrl(versionCode, "config.hdpi")})`,
-                            `[xxhdpi](${trackerUrl(versionCode, "config.xxhdpi")})`,
-                        ].join("\n"),
-                        inline: true
-                    },
-                    {
-                        name: "Language",
-                        value: [
-                            `[de](${trackerUrl(versionCode, "config.de")})`,
-                            `[en](${trackerUrl(versionCode, "config.en")})`,
-                        ].join("\n"),
-                        inline: true
-                    },
-                ],
-            }],
-        });
-    } catch (err) {
-        console.error(`[updateTracker] Failed to post ${releaseType}:`, err);
+    const releaseDate = new Date(publishDate).toLocaleString("en-US", {
+        timeZone: "America/New_York",
+        dateStyle: "long",
+        timeStyle: "short",
+    });
+
+    const channelIds = [Config.updateTracker.logChannelId];
+    if (extraChannelId && extraChannelId !== Config.updateTracker.logChannelId) {
+        channelIds.push(extraChannelId);
+    }
+
+    const embed = {
+        author: {
+            name: "Discord - Talk, Play, Hang Out",
+            url: GOOGLE_PLAY_URL,
+            iconURL: "https://icons.duckduckgo.com/ip3/discord.com.ico",
+        },
+        title: `New ${toTitle(releaseType)} Release: **${versionName} (${versionCode})**`,
+        description: whatsNew,
+        fields: [
+            {
+                name: "Released",
+                value: releaseDate,
+                inline: true
+            },
+            {
+                name: "Google Play Store",
+                value: GOOGLE_PLAY_URL,
+                inline: true,
+            },
+            {
+                name: "APKMirror",
+                value: `https://www.apkmirror.com${link}`,
+                inline: true,
+            },
+            {
+                name: "Vendetta Tracker",
+                value: [
+                    `[base.apk](${trackerUrl(versionCode, "base")})`,
+                    `[config.arm64_v8a.apk](${trackerUrl(versionCode, "config.arm64_v8a")})`,
+                    `[config.armeabi_v7a.apk](${trackerUrl(versionCode, "config.armeabi_v7a")})`,
+                    `[config.x86_64.apk](${trackerUrl(versionCode, "config.x86_64")})`,
+                    `[config.x86.apk](${trackerUrl(versionCode, "config.x86")})`,
+                    `[config.hdpi.apk](${trackerUrl(versionCode, "config.hdpi")})`,
+                    `[config.xxhdpi.apk](${trackerUrl(versionCode, "config.xxhdpi")})`,
+                    `[config.de.apk](${trackerUrl(versionCode, "config.de")})`,
+                    `[config.en.apk](${trackerUrl(versionCode, "config.en")})`,
+                ].join("\n"),
+                inline: true,
+            },
+        ],
+    };
+
+    for (const channelId of channelIds) {
+        try {
+            await Vaius.rest.channels.createMessage(channelId, { embeds: [embed] });
+        } catch (err) {
+            console.error(`[UpdateTracker] Failed to post ${releaseType} to ${channelId}:`, err);
+        }
     }
 
     writeVersion(versionFile, versionCode);

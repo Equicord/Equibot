@@ -14,8 +14,8 @@ defineCommand({
     modOnly: true,
 
     async execute({ msg }) {
-        if (Config.updateTracker.android) await checkAndroid(true);
-        if (Config.updateTracker.ios) await checkIos(true);
+        if (Config.updateTracker.android) await checkAndroid(true, msg.channelID);
+        if (Config.updateTracker.ios) await checkIos(true, msg.channelID);
 
         reply(msg, "Now checking for new mobile releases!");
     },
