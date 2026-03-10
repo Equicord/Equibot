@@ -1,5 +1,7 @@
+import { join } from "path";
 import { Vaius } from "~/Client";
 import Config from "~/config";
+import { DATA_DIR } from "~/constants";
 import { readVersion, writeVersion } from "./utils";
 
 const APKMIRROR_USER_AGENT = "APKUpdater-v2.0.5";
@@ -37,7 +39,7 @@ async function fetchLatestVersion(): Promise<{ versionCode: number; versionName:
 }
 
 export async function checkAndroid(): Promise<void> {
-    const versionFile = "./discord_version.android.txt";
+    const versionFile = join(DATA_DIR, "./discord_version.android.txt");
     const knownVersion = readVersion(versionFile);
 
     let versionCode: number;

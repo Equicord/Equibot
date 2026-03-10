@@ -1,5 +1,7 @@
+import { join } from "path";
 import { Vaius } from "~/Client";
 import Config from "~/config";
+import { DATA_DIR } from "~/constants";
 import { readVersion, writeVersion } from "./utils";
 
 const ITUNES_API = "https://itunes.apple.com/lookup?bundleId=com.hammerandchisel.discord&country=us";
@@ -23,7 +25,7 @@ async function fetchLatestIosVersion(): Promise<iTunesResult> {
 }
 
 export async function checkIos(): Promise<void> {
-    const versionFile = "./discord_version.ios.txt";
+    const versionFile = join(DATA_DIR, "./discord_version.ios.txt");
     const knownVersion = readVersion(versionFile);
 
     let result: iTunesResult;

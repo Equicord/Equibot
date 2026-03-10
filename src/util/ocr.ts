@@ -1,4 +1,6 @@
+import { join } from "path";
 import Tesseract, { createScheduler, createWorker, Scheduler } from "tesseract.js";
+import { DATA_DIR } from "~/constants";
 
 let scheduler: Scheduler | null = null;
 
@@ -7,7 +9,7 @@ async function initScheduler() {
     const newScheduler = createScheduler();
 
     await Promise.all(Array.from({ length: 3 }, async () => {
-        const worker = await createWorker("eng", Tesseract.OEM.LSTM_ONLY, { cachePath: "./data/tesscache" });
+        const worker = await createWorker("eng", Tesseract.OEM.LSTM_ONLY, { cachePath: join(DATA_DIR, "tesscache") });
         await worker.setParameters({
             tessedit_char_whitelist: "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ$.:/ ",
         });
