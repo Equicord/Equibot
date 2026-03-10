@@ -96,6 +96,7 @@ export async function checkIos(bypass = false, extraChannelId?: string): Promise
             { name: "App Store", value: APP_STORE_URL, inline: true },
             { name: "TestFlight", value: TESTFLIGHT_STATUS_LABELS[testFlightStatus], inline: true },
         ],
+        color: 0x675AF5
     };
 
     for (const channelId of channelIds) {

@@ -128,6 +128,7 @@ export async function checkAndroid(bypass = false, extraChannelId?: string): Pro
                 inline: true,
             },
         ],
+        color: releaseType === "alpha" ? 0xFEF40C : releaseType === "beta" ? 0xEE850B : 0x675AF5
     };
 
     for (const channelId of channelIds) {
