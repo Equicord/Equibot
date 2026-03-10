@@ -10,7 +10,18 @@ const DISCORD_PKG = "com.discord";
 const GOOGLE_PLAY_URL = `https://play.google.com/store/apps/details?id=${DISCORD_PKG}`;
 const TRACKER_BASE = "https://tracker.vendetta.rocks/tracker/download";
 
-async function fetchLatestVersion(): Promise<{ versionCode: number; versionName: string; link: string; }> {
+type ReleaseType = "stable" | "beta" | "alpha";
+
+function parseApkLink(link: string): { versionName: string; releaseType: ReleaseType; } | null {
+    const match = link.match(/-([\d]+-[\d]+)-(stable|beta|alpha)-release/);
+    if (!match) return null;
+    return {
+        versionName: match[1].replace("-", "."),
+        releaseType: match[2] as ReleaseType,
+    };
+}
+
+async function fetchLatestVersion(): Promise<{ versionCode: number; versionName: string; link: string; releaseType: ReleaseType; } | null> {
     const resp = await fetch("https://www.apkmirror.com/wp-json/apkm/v1/app_exists/", {
         method: "POST",
         headers: {
@@ -24,12 +35,15 @@ async function fetchLatestVersion(): Promise<{ versionCode: number; versionName:
     if (!resp.ok) throw new Error(`APKMirror version check failed: ${resp.statusText}`);
 
     const json = await resp.json();
-    const entry = json.data[0];
+    const apk = json.data[0].apks[0];
+    const parsed = parseApkLink(apk.link);
+    if (!parsed) return null;
 
     return {
-        versionCode: Number(entry.apks[0].version_code),
-        versionName: entry.release.version,
-        link: entry.apks[0].link,
+        versionCode: Number(apk.version_code),
+        versionName: parsed.versionName,
+        link: apk.link,
+        releaseType: parsed.releaseType,
     };
 }
 
@@ -38,19 +52,20 @@ function trackerUrl(buildID: number, split: string): string {
 }
 
 export async function checkAndroid(bypass = false): Promise<void> {
-    const versionFile = join(DATA_DIR, "./discord_version.android.txt");
-    const knownVersion = readVersion(versionFile);
-
-    let versionCode: number;
-    let versionName: string;
-    let link: string;
+    let version: Awaited<ReturnType<typeof fetchLatestVersion>>;
 
     try {
-        ({ versionCode, versionName, link } = await fetchLatestVersion());
+        version = await fetchLatestVersion();
     } catch (err) {
         console.error("[updateTracker] Failed to fetch version:", err);
         return;
     }
+
+    if (!version) return;
+
+    const { versionCode, versionName, link, releaseType } = version;
+    const versionFile = join(DATA_DIR, `./discord_version.android.${releaseType}.txt`);
+    const knownVersion = readVersion(versionFile);
 
     if (!bypass && knownVersion >= versionCode) return;
 
@@ -62,7 +77,7 @@ export async function checkAndroid(bypass = false): Promise<void> {
                     url: GOOGLE_PLAY_URL,
                     iconURL: "https://icons.duckduckgo.com/ip3/discord.com.ico"
                 },
-                title: `New version: **${versionName} (${versionCode})**`,
+                title: `New ${releaseType} Version: **${versionName} (${versionCode})**`,
                 description: `[View on APKMirror](https://www.apkmirror.com${link})`,
                 fields: [
                     {
@@ -100,7 +115,7 @@ export async function checkAndroid(bypass = false): Promise<void> {
             }],
         });
     } catch (err) {
-        console.error("[updateTracker]", err);
+        console.error(`[updateTracker] Failed to post ${releaseType}:`, err);
     }
 
     writeVersion(versionFile, versionCode);
