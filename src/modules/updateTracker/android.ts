@@ -8,13 +8,9 @@ const APKMIRROR_USER_AGENT = "APKUpdater-v2.0.5";
 const APKMIRROR_AUTH = "Basic YXBpLWFwa3VwZGF0ZXI6cm01cmNmcnVVakt5MDRzTXB5TVBKWFc4";
 const DISCORD_PKG = "com.discord";
 const GOOGLE_PLAY_URL = `https://play.google.com/store/apps/details?id=${DISCORD_PKG}`;
+const TRACKER_BASE = "https://tracker.vendetta.rocks/tracker/download";
 
-function extractReleaseType(link: string): string {
-    const match = link.match(/-(stable|beta|alpha)-release/);
-    return match ? match[1].charAt(0).toUpperCase() + match[1].slice(1) : "Unknown";
-}
-
-async function fetchLatestVersion(): Promise<{ versionCode: number; versionName: string; link: string; releaseType: string; }> {
+async function fetchLatestVersion(): Promise<{ versionCode: number; versionName: string; link: string; }> {
     const resp = await fetch("https://www.apkmirror.com/wp-json/apkm/v1/app_exists/", {
         method: "POST",
         headers: {
@@ -28,53 +24,84 @@ async function fetchLatestVersion(): Promise<{ versionCode: number; versionName:
     if (!resp.ok) throw new Error(`APKMirror version check failed: ${resp.statusText}`);
 
     const json = await resp.json();
-    const apk = json.data[0].apks[0];
+    const entry = json.data[0];
 
     return {
-        versionCode: parseInt(apk.version_code, 10),
-        versionName: apk.version,
-        link: apk.link,
-        releaseType: extractReleaseType(apk.link),
+        versionCode: Number(entry.apks[0].version_code),
+        versionName: entry.release.version,
+        link: entry.apks[0].link,
     };
 }
 
-export async function checkAndroid(): Promise<void> {
+function trackerUrl(buildID: number, split: string): string {
+    return `${TRACKER_BASE}/${buildID}/${split}`;
+}
+
+export async function checkAndroid(bypass = false): Promise<void> {
     const versionFile = join(DATA_DIR, "./discord_version.android.txt");
     const knownVersion = readVersion(versionFile);
 
     let versionCode: number;
     let versionName: string;
     let link: string;
-    let releaseType: string;
 
     try {
-        ({ versionCode, versionName, link, releaseType } = await fetchLatestVersion());
+        ({ versionCode, versionName, link } = await fetchLatestVersion());
     } catch (err) {
         console.error("[updateTracker] Failed to fetch version:", err);
         return;
     }
 
-    if (knownVersion === 0) {
-        writeVersion(versionFile, versionCode);
-        return;
-    }
+    if (!bypass && knownVersion >= versionCode) return;
 
-    if (knownVersion < versionCode) {
-        try {
-            await Vaius.rest.channels.createMessage(Config.updateTracker.logChannelId, {
-                embeds: [{
-                    author: {
-                        name: "Discord",
-                        url: GOOGLE_PLAY_URL,
+    try {
+        await Vaius.rest.channels.createMessage(Config.updateTracker.logChannelId, {
+            embeds: [{
+                author: {
+                    name: "Discord - Talk, Play, Hang Out",
+                    url: GOOGLE_PLAY_URL,
+                    iconURL: "https://icons.duckduckgo.com/ip3/discord.com.ico"
+                },
+                title: `New version: **${versionName} (${versionCode})**`,
+                description: `[View on APKMirror](https://www.apkmirror.com${link})`,
+                fields: [
+                    {
+                        name: "Base",
+                        value: `[base](${trackerUrl(versionCode, "base")})`,
+                        inline: true
                     },
-                    title: `New ${releaseType}: **${versionName} (${versionCode})**`,
-                    description: `[View on APKMirror](https://www.apkmirror.com${link})`,
-                }],
-            });
-        } catch (err) {
-            console.error("[updateTracker]", err);
-        }
-
-        writeVersion(versionFile, versionCode);
+                    {
+                        name: "Architecture",
+                        value: [
+                            `[arm64-v8a](${trackerUrl(versionCode, "config.arm64_v8a")})`,
+                            `[armeabi-v7a](${trackerUrl(versionCode, "config.armeabi_v7a")})`,
+                            `[x86_64](${trackerUrl(versionCode, "config.x86_64")})`,
+                            `[x86](${trackerUrl(versionCode, "config.x86")})`,
+                        ].join("\n"),
+                        inline: true
+                    },
+                    {
+                        name: "DPI",
+                        value: [
+                            `[hdpi](${trackerUrl(versionCode, "config.hdpi")})`,
+                            `[xxhdpi](${trackerUrl(versionCode, "config.xxhdpi")})`,
+                        ].join("\n"),
+                        inline: true
+                    },
+                    {
+                        name: "Language",
+                        value: [
+                            `[de](${trackerUrl(versionCode, "config.de")})`,
+                            `[en](${trackerUrl(versionCode, "config.en")})`,
+                        ].join("\n"),
+                        inline: true
+                    },
+                ],
+            }],
+        });
+    } catch (err) {
+        console.error("[updateTracker]", err);
     }
+
+    writeVersion(versionFile, versionCode);
 }

@@ -10,13 +10,13 @@ defineCommand({
     name: "mobile",
     description: "Check if anything new mobile builds released",
     usage: "",
-    aliases: ["update-check", "m"],
+    aliases: ["m"],
     modOnly: true,
 
     async execute({ msg }) {
-        if (Config.updateTracker.android) await checkAndroid();
-        if (Config.updateTracker.ios) await checkIos();
+        if (Config.updateTracker.android) await checkAndroid(true);
+        if (Config.updateTracker.ios) await checkIos(true);
 
-        reply(msg, "Now testing!");
+        reply(msg, "Now checking for new mobile releases!");
     },
 });

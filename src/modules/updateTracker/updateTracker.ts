@@ -6,13 +6,12 @@ import { checkIos } from "./ios";
 
 
 export function initUpdateTracker(): void {
-    const c = Config.updateTracker;
-    if (!c.enabled) return;
+    if (!Config.updateTracker.enabled) return;
 
     (async () => {
         while (true) {
-            if (c.android) await checkAndroid();
-            if (c.ios) await checkIos();
+            if (Config.updateTracker.android) await checkAndroid();
+            if (Config.updateTracker.ios) await checkIos();
             await sleep(30 * Millis.MINUTE);
         }
     })();
