@@ -99,7 +99,7 @@ export async function checkAndroid(bypass = false, extraChannelId?: string): Pro
             url: GOOGLE_PLAY_URL,
             iconURL: "https://icons.duckduckgo.com/ip3/discord.com.ico",
         },
-        title: `New ${toTitle(releaseType)} Release: **${versionName} (${versionCode})**`,
+        title: `New Android ${toTitle(releaseType)} Release: **${versionName} (${versionCode})**`,
         description: `Released ${releaseDate}\n${whatsNew}`,
         fields: [
             {
