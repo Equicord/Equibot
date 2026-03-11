@@ -19,11 +19,11 @@ type TestFlightStatus = "open" | "full" | "closed" | "unknown" | "notfound" | "r
 
 const TESTFLIGHT_STATUS_LABELS: Record<TestFlightStatus, string> = {
     open: `[Join Beta](${TESTFLIGHT_URL})`,
-    full: "The beta is currently full",
-    closed: "The beta is currently closed",
+    full: "Full",
+    closed: "Closed",
     unknown: "Unknown",
-    notfound: "This beta is missing",
-    ratelimited: "Currently rate limited by Apple. Please try again later"
+    notfound: "Missing",
+    ratelimited: "Rate Limited"
 };
 
 async function getTestFlightStatus(): Promise<TestFlightStatus> {
@@ -100,11 +100,11 @@ export async function checkTestFlight(bypass = false, extraChannelId?: string) {
 
     const embed = {
         author: {
-            name: "Discord – Talk, Play, Hang Out",
+            name: "Discord - Talk, Play, Hang Out",
             url: TESTFLIGHT_URL,
             iconURL: "https://icons.duckduckgo.com/ip3/discord.com.ico"
         },
-        title: `New build released - ${build.cfBundleShortVersion} (${build.cfBundleVersion})`,
+        title: `New TestFlight Release: ${build.cfBundleShortVersion} (${build.cfBundleVersion})`,
         description: build.whatsNew,
         fields: [
             {
@@ -123,7 +123,7 @@ export async function checkTestFlight(bypass = false, extraChannelId?: string) {
                 inline: true
             },
             {
-                name: "TestFlight",
+                name: "Beta Status",
                 value: TESTFLIGHT_STATUS_LABELS[testFlightStatus],
                 inline: true
             }
