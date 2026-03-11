@@ -132,7 +132,7 @@ export async function checkTestFlight(bypass = false, extraChannelId?: string) {
                 inline: true
             }
         ],
-        color: 0x675AF5
+        color: 0xEE850B
     };
 
     for (const channelId of channelIds) {
