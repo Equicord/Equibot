@@ -134,7 +134,9 @@ const Config = {
     "updateTracker": {
         "enabled": true,
         "android": process.env.UPDATE_TRACKER_ANDROID,
-        "ios": process.env.UPDATE_TRACKER_IOS,
+        "appstore": process.env.UPDATE_TRACKER_APP_STORE,
+        "testflight": process.env.UPDATE_TRACKER_TEST_FLIGHT,
+        "tfApi": process.env.TF_API,
         "logChannelId": "1268568848076898355"
     }
 };

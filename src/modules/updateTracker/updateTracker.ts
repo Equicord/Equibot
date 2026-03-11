@@ -2,7 +2,8 @@ import Config from "~/config";
 import { Millis } from "~/constants";
 import { sleep } from "~/util/time";
 import { checkAndroid } from "./android";
-import { checkIos } from "./ios";
+import { checkAppStore } from "./appstore";
+import { checkTestFlight } from "./testflight";
 
 
 export function initUpdateTracker(): void {
@@ -11,7 +12,8 @@ export function initUpdateTracker(): void {
     (async () => {
         while (true) {
             if (Config.updateTracker.android) await checkAndroid();
-            if (Config.updateTracker.ios) await checkIos();
+            if (Config.updateTracker.appstore) await checkAppStore();
+            if (Config.updateTracker.testflight) await checkTestFlight();
             await sleep(30 * Millis.MINUTE);
         }
     })();

@@ -1,7 +1,8 @@
 import { defineCommand } from "~/Commands";
 import Config from "~/config";
 import { checkAndroid } from "~/modules/updateTracker/android";
-import { checkIos } from "~/modules/updateTracker/ios";
+import { checkAppStore } from "~/modules/updateTracker/appstore";
+import { checkTestFlight } from "~/modules/updateTracker/testflight";
 
 defineCommand({
     enabled: Config.updateTracker.enabled,
@@ -14,6 +15,7 @@ defineCommand({
 
     async execute({ msg }) {
         if (Config.updateTracker.android) await checkAndroid(true, msg.channelID);
-        if (Config.updateTracker.ios) await checkIos(true, msg.channelID);
+        if (Config.updateTracker.appstore) await checkAppStore(true, msg.channelID);
+        if (Config.updateTracker.testflight) await checkTestFlight(true, msg.channelID);
     },
 });

@@ -70,7 +70,7 @@ export async function checkAndroid(bypass = false, extraChannelId?: string): Pro
     try {
         version = await fetchLatestVersion();
     } catch (err) {
-        console.error("[UpdateTracker] Failed to fetch version:", err);
+        console.error("[UpdateTracker Android] Failed to fetch version:", err);
         return;
     }
 
@@ -135,7 +135,7 @@ export async function checkAndroid(bypass = false, extraChannelId?: string): Pro
         try {
             await Vaius.rest.channels.createMessage(channelId, { embeds: [embed] });
         } catch (err) {
-            console.error(`[UpdateTracker] Failed to post ${releaseType} to ${channelId}:`, err);
+            console.error(`[UpdateTracker Android] Failed to post ${releaseType} to ${channelId}:`, err);
         }
     }
 
