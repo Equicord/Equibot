@@ -46,7 +46,11 @@ async function getTestFlightStatus(): Promise<TestFlightStatus> {
 async function fetchTestFlightBuild(): Promise<TFBuild | null> {
     const { tfApi } = Config.updateTracker;
     try {
-        const resp = await fetch(tfApi!);
+        const resp = await fetch(tfApi!, {
+            headers: {
+                "Authorization": `Bearer ${Config.updateTracker.testflightSecret}`
+            }
+        });
         if (!resp.ok) throw new Error(`TF API failed: ${resp.statusText}`);
 
         const json = await resp.json();
