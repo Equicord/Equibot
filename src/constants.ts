@@ -28,7 +28,6 @@ export const MANAGEABLE_ROLES = [
     Config.roles.distributors,
     Config.roles.artists,
     Config.roles.bugHunter,
-    Config.roles.devTalk,
     ...Config.roles.manageableRoles
 ];
 

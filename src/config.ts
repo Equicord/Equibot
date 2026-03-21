@@ -91,6 +91,8 @@ const Config = {
             "1421951277226791013", // no bug reporting
             "1407110358509818008", // no media & reactions
             "1479689099538469066", // no voice calls
+            "1485025948515700837", // snippet dev
+            "1383924171637129339", // dev talk
         ]
     },
 
