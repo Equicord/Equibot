@@ -78,7 +78,6 @@ const Config = {
         "distributors": "1331437433228623994",
         "artists": "1384565229794365522",
         "bugHunter": "1421844862759866474",
-        "devTalk": "1383924171637129339",
         "noSupport": "1290007556869062762",
 
         // roles that can be added or removed using the role management commands.
