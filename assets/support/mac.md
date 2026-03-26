@@ -3,7 +3,7 @@ aliases: darwin, m
 emoji: 🍎
 ---
 
-Download <<https://github.com/Equicord/Equilotl/releases/latest/download/Equilotl.MacOS.zip>
+Download <https://github.com/Equicord/Equilotl/releases/latest/download/Equilotl.MacOS.zip>
 
 Unzip it, and run `Equilotl.app`
 

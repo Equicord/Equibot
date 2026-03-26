@@ -1,9 +1,8 @@
 ---
-aliases: third, 3rd, dev
+aliases: dev, 3rd, third, o, official
 emoji: 🧩
 ---
 
-If you are trying to install plugins from the third party plugins channel, see the pinned message there.
-**Do not** ask for further help or you will lose access to support. If you cannot figure it out with the pinned message, it's not for you.
+We only provide support for official Equicord builds downloaded from <https://equicord.org/download>. Do not ask for help with building Equicord from source, unofficial versions (e.g. Lightcord), or user plugins. We already have <https://docs.equicord.org>.
 
-Absolutely no support is provided with such installs. If you want to ask for help with bugs / issues, install the regular way.
+**Do not** ask for further help or you will lose access to support. If you cannot figure it out with the pinned message, it's not for you.
