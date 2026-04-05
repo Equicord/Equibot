@@ -1,5 +1,5 @@
 ---
-aliases: search, lookup, s
+aliases: lookup, s
 emoji: 🔍
 ---
 
