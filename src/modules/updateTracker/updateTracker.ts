@@ -14,7 +14,7 @@ export function initUpdateTracker(): void {
             if (Config.updateTracker.android) await checkAndroid();
             if (Config.updateTracker.appstore) await checkAppStore();
             if (Config.updateTracker.testflight) await checkTestFlight();
-            await sleep(30 * Millis.MINUTE);
+            await sleep(5 * Millis.MINUTE);
         }
     })();
 }
