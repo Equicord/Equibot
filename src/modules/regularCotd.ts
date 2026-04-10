@@ -141,14 +141,36 @@ export async function rerollCotd(inputHex?: string) {
     const color = parseInt(hex.slice(1), 16);
     const icon = await drawRoleIcon(hex);
 
-    await getHomeGuild()!.editRole(Config.roles.regular, {
-        name: `Regular (${name})`,
-        colors: {
-            primaryColor: color,
+    const homeGuild = await getHomeGuild();
+
+    const updates = [
+        {
+            role: Config.roles.regular,
+            data: {
+                name: `Regular (${name})`,
+                colors: {
+                    primaryColor: color
+                },
+                icon,
+                reason: "Rerolled cozy of the day"
+            }
         },
-        icon,
-        reason: "Rerolled cozy of the day"
-    });
+        {
+            role: Config.roles.mod,
+            data: {
+                colors: {
+                    primaryColor: color
+                },
+                reason: "Rerolled cozy of the day"
+            }
+        }
+    ];
+
+    await Promise.all(
+        updates.map(({ role, data }) =>
+            homeGuild!.editRole(role, data)
+        )
+    );
 
     return hexColor;
 }
