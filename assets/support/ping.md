@@ -1,5 +1,5 @@
 ---
-aliases: ping, pings, p
+aliases: pings, p
 emoji: 🏓
 ---
 
