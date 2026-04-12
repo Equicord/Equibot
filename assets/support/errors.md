@@ -10,4 +10,4 @@ To collect them, please:
 * Open DevTools with `Ctrl + Shift + I` (Windows/Linux) or `Cmd + Option + I` (macOS).
 * In the top right, click where it says "Default levels" and uncheck everything except "Errors".
 * Screenshot all visible errors and post them here.
-[Screenshot](https://cdn.discordapp.com/attachments/1033680203433660458/1236696362897375303/image.png)
+[Screenshot](https://equicord.org/assets/support/errors.png)
