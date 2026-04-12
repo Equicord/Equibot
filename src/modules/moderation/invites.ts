@@ -49,7 +49,7 @@ export async function moderateInvites(msg: Message<AnyTextableGuildChannel>) {
             silently(msg.delete());
 
             let didKick = false;
-            if (msg.channelID === "1033680203433660458") {
+            if (msg.channelID === "1039585467584229479") {
                 didKick = await checkPromise(softBan(msg.member!, 1 * Millis.DAY, "Posted an invite in moderator-only (likely scam)"));
             } else {
                 await silently(msg.guild.editMember(msg.author.id, { communicationDisabledUntil: until(5 * Millis.MINUTE), reason: "invite" }));
