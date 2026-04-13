@@ -3,8 +3,7 @@ import { AnyTextableGuildChannel, Message } from "oceanic.js";
 import { Vaius } from "~/Client";
 import Config from "~/config";
 import { Millis } from "~/constants";
-import { softBan } from "~/util/discord";
-import { checkPromise, silently } from "~/util/functions";
+import { silently } from "~/util/functions";
 import { logAutoModAction } from "~/util/logAction";
 import { until } from "~/util/time";
 import { makeEmbedForMessage } from "./utils";
@@ -49,17 +48,11 @@ export async function moderateInvites(msg: Message<AnyTextableGuildChannel>) {
 
         if (!allowedGuilds.has(inviteData.guildID)) {
             silently(msg.delete());
-
-            let didKick = false;
-            if (msg.channelID === "1039585467584229479") {
-                didKick = await checkPromise(softBan(msg.member!, 1 * Millis.DAY, "Posted an invite in moderator-only (likely scam)"));
-            } else {
-                await silently(msg.guild.editMember(msg.author.id, { communicationDisabledUntil: until(5 * Millis.MINUTE), reason: "invite" }));
-            }
+            silently(msg.guild.editMember(msg.author.id, { communicationDisabledUntil: until(5 * Millis.MINUTE), reason: "invite" }));
 
             const inviteImage = await getInviteImage(code);
             logAutoModAction({
-                content: `${msg.author.mention} posted an invite to ${inviteData.guild.name} in ${msg.channel!.mention}${didKick ? " and has been kicked" : ""}`,
+                content: `${msg.author.mention} posted an invite to ${inviteData.guild.name} in ${msg.channel!.mention}`,
                 embeds: [{
                     ...makeEmbedForMessage(msg),
                     image: inviteImage ? { url: "attachment://invite.png" } : void 0
