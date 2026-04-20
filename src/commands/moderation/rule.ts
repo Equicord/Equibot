@@ -15,20 +15,29 @@ const fetchRules = ttlLazy(async () => {
     const fullContent = messages.reverse().map(m => m.content).join("\n\n");
 
     return fullContent
-        .matchAll(/\*\*((\d+)\\\. .+?)\*\*(.+?)(?=\*\*|$|\n# )/gs)
-        .map(([_, title, number, description]) => ({
-            number: Number(number),
-            title,
-            description: description.trim()
-        }))
-        .toArray();
+        .split(/(?=\*\*\d+\\\.)/)
+        .map(block => {
+            const firstLine = block.split("\n")[0];
+            if (!firstLine.match(/^\*\*\d+\\\./)) return null;
+
+            const title = firstLine.replace(/\*\*/g, "").trim();
+            const number = Number(title.match(/^(\d+)/)?.[1]);
+            if (!number) return null;
+
+            const description = block.split("\n").slice(1).join("\n")
+                .replace(/\n?#{1,6}\s+.+/g, "")
+                .trim();
+
+            return { number, title, description };
+        })
+        .filter(isNonNullish);
 }, 5 * Millis.MINUTE);
 
 defineCommand({
     enabled,
 
     name: "rule",
-    aliases: ["ru"],
+    aliases: ["ru", "rules"],
     description: "Query one or more rules and send them in chat",
     usage: "[... rule number(s) | search term]",
     guildOnly: true,
