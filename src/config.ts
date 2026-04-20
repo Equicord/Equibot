@@ -1,6 +1,6 @@
 const Config = {
     "token": process.env.BOT_TOKEN,
-    "prefixes": ["e!", "e?", "e.", "eq"],
+    "prefixes": ["e!", "e?", "e.", "eq", "e"],
     // id of the home guild of the bot. used for registering commands, etc
     "homeGuildId": "1173279886065029291",
     // "development" | "production"
@@ -94,6 +94,11 @@ const Config = {
             "1486090591161946325", // no snippets
             "1383924171637129339", // dev talk
         ]
+    },
+
+    "rules": {
+        "enabled": "true",
+        "rulesChannelId": "1493395344015495289"
     },
 
     "badges": [
