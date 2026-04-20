@@ -1,6 +1,6 @@
 const Config = {
     "token": process.env.BOT_TOKEN,
-    "prefixes": ["e!", "e?", "e.", "eq", "e"],
+    "prefixes": ["e!", "e?", "e.", "eq"],
     // id of the home guild of the bot. used for registering commands, etc
     "homeGuildId": "1173279886065029291",
     // "development" | "production"
