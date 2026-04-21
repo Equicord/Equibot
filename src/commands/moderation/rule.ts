@@ -1,4 +1,3 @@
-
 import { Vaius } from "~/Client";
 import { defineCommand } from "~/Commands";
 import Config from "~/config";
