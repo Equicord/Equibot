@@ -23,10 +23,8 @@ const fetchRules = ttlLazy(async () => {
 }, 5 * Millis.MINUTE);
 
 defineCommand({
-    enabled,
-
     name: "rule",
-    aliases: ["r", "ru", "rules],
+    aliases: ["r", "ru", "rules"],
     description: "Query one or more rules and send them in chat",
     usage: "[... rule number(s) | search term]",
     guildOnly: true,
