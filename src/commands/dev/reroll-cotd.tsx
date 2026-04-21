@@ -72,3 +72,35 @@ handleComponentInteraction({
         await interaction.editParent(result);
     },
 });
+
+defineCommand({
+    name: "reroll-helper",
+    description: "Rerolls the helper's current color of the day",
+    usage: "[hex]",
+    guildOnly: true,
+    modOnly: true,
+    async execute({ reply }, hex?: string) {
+        if (hex) {
+            const parsed = Number(hex.replace(/^#/, "0x"));
+
+            if (isNaN(parsed)) {
+                return reply("wtf is that hex");
+            }
+
+            hex = toHexColorString(parsed);
+        }
+
+        const result = await reroll(hex);
+        return reply(result);
+    }
+});
+
+handleComponentInteraction({
+    customID: "reroll-helper",
+    guildOnly: true,
+    modOnly: true,
+    async handle(interaction) {
+        const result = await reroll(undefined, interaction.user);
+        await interaction.editParent(result);
+    },
+});

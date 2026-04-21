@@ -7,24 +7,33 @@ import { run, silently } from "~/util/functions";
 import { isNonNullish } from "~/util/guards";
 import { ttlLazy } from "~/util/lazy";
 
-const { enabled, rulesChannelId } = Config.rules;
-
 const fetchRules = ttlLazy(async () => {
-    const [rulesMessage] = await Vaius.rest.channels.getMessages(rulesChannelId, { limit: 1 });
+    const messages = await Vaius.rest.channels.getMessages(Config.rulesChannelId, { limit: 2 });
 
-    return rulesMessage.content
-        .matchAll(/\*\*((\d+)\\\. .+?)\*\*(.+?)(?=\*\*|$|\n# )/gs)
-        .map(([_, title, number, description]) => ({
-            number: Number(number),
-            title,
-            description: description.trim()
-        }))
-        .toArray();
+    const fullContent = messages.reverse().map(m => m.content).join("\n\n");
+
+    return fullContent
+        .split(/(?=\*\*\d+\\\.)/)
+        .map(block => {
+            const firstLine = block.split("\n")[0];
+            if (!firstLine.match(/^\*\*\d+\\\./)) return null;
+
+            const title = firstLine.replace(/\*\*/g, "").trim();
+            const number = Number(title.match(/^(\d+)/)?.[1]);
+            if (!number) return null;
+
+            const description = block.split("\n").slice(1).join("\n")
+                .replace(/\n?#{1,6}\s+.+/g, "")
+                .trim();
+
+            return { number, title, description };
+        })
+        .filter(isNonNullish);
 }, 5 * Millis.MINUTE);
 
 defineCommand({
     name: "rule",
-    aliases: ["r", "ru", "rules"],
+    aliases: ["ru", "rules"],
     description: "Query one or more rules and send them in chat",
     usage: "[... rule number(s) | search term]",
     guildOnly: true,
@@ -56,7 +65,7 @@ defineCommand({
             if (results.length > 3) {
                 return {
                     embeds: [{
-                        description: `Please read the rules -> <#${rulesChannelId}>`,
+                        description: `Please read the rules -> <#${Config.rulesChannelId}>`,
                         color: 0x5865F2,
                         footer
                     }]
