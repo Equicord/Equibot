@@ -2,13 +2,13 @@ import { ButtonStyles, CreateMessageOptions, EditMessageOptions, User } from "oc
 
 import { defineCommand } from "~/Commands";
 import { Emoji } from "~/constants";
-import { drawRoleIcon, rerollCotd } from "~/modules/regularCotd";
+import { drawRoleIcon, rerollCotd, rerollDonor, rerollMod } from "~/modules/regularCotd";
 import { handleComponentInteraction } from "~/SlashCommands";
 import { toHexColorString } from "~/util/text";
 import { ActionRow, Button, ComponentMessage, Container, MediaGallery, MediaGalleryItem, TextDisplay } from "~components";
 
-async function reroll(hex?: string, interactionUser?: User): Promise<CreateMessageOptions & EditMessageOptions> {
-    const color = await rerollCotd(hex);
+async function reroll(role: string, hex?: string, interactionUser?: User): Promise<CreateMessageOptions & EditMessageOptions> {
+    const color = role === "regular" ? await rerollCotd(hex) : role === "mod" ? await rerollMod(hex) : await rerollDonor(hex);
     const image = await drawRoleIcon(color);
 
     return (
@@ -58,7 +58,7 @@ defineCommand({
             hex = toHexColorString(parsed);
         }
 
-        const result = await reroll(hex);
+        const result = await reroll("regular", hex);
         return reply(result);
     }
 });
@@ -68,14 +68,14 @@ handleComponentInteraction({
     guildOnly: true,
     modOnly: true,
     async handle(interaction) {
-        const result = await reroll(undefined, interaction.user);
+        const result = await reroll("regular", undefined, interaction.user);
         await interaction.editParent(result);
     },
 });
 
 defineCommand({
-    name: "reroll-helper",
-    description: "Rerolls the helper's current color of the day",
+    name: "reroll-mod",
+    description: "Rerolls the mod's current color of the day",
     usage: "[hex]",
     guildOnly: true,
     modOnly: true,
@@ -90,17 +90,49 @@ defineCommand({
             hex = toHexColorString(parsed);
         }
 
-        const result = await reroll(hex);
+        const result = await reroll("mod", hex);
         return reply(result);
     }
 });
 
 handleComponentInteraction({
-    customID: "reroll-helper",
+    customID: "reroll-mod",
     guildOnly: true,
     modOnly: true,
     async handle(interaction) {
-        const result = await reroll(undefined, interaction.user);
+        const result = await reroll("mod", undefined, interaction.user);
+        await interaction.editParent(result);
+    },
+});
+
+defineCommand({
+    name: "reroll-donor",
+    description: "Rerolls the donor's current color of the day",
+    usage: "[hex]",
+    guildOnly: true,
+    modOnly: true,
+    async execute({ reply }, hex?: string) {
+        if (hex) {
+            const parsed = Number(hex.replace(/^#/, "0x"));
+
+            if (isNaN(parsed)) {
+                return reply("wtf is that hex");
+            }
+
+            hex = toHexColorString(parsed);
+        }
+
+        const result = await reroll("donor", hex);
+        return reply(result);
+    }
+});
+
+handleComponentInteraction({
+    customID: "reroll-donor",
+    guildOnly: true,
+    modOnly: true,
+    async handle(interaction) {
+        const result = await reroll("donor", undefined, interaction.user);
         await interaction.editParent(result);
     },
 });

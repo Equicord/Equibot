@@ -153,7 +153,7 @@ export async function rerollCotd(inputHex?: string) {
     return hexColor;
 }
 
-export async function rerollHelper(inputHex?: string) {
+export async function rerollMod(inputHex?: string) {
     const hexColor = inputHex ?? randomHexColor();
     const {
         name: {
@@ -173,5 +173,27 @@ export async function rerollHelper(inputHex?: string) {
     return hexColor;
 }
 
+export async function rerollDonor(inputHex?: string) {
+    const hexColor = inputHex ?? randomHexColor();
+    const {
+        name: {
+            closest_named_hex: hex
+        }
+    } = await fetchJson<ColorResponse>("https://www.thecolorapi.com/id?hex=" + hexColor.slice(1));
+
+    const color = parseInt(hex.slice(1), 16);
+
+    await getHomeGuild()!.editRole(Config.roles.donor, {
+        colors: {
+            primaryColor: color,
+        },
+        reason: "Rerolled color of the day"
+    });
+
+    return hexColor;
+}
+
+
 daily(rerollCotd);
-daily(rerollHelper);
+daily(rerollMod);
+daily(rerollDonor);
