@@ -85,6 +85,7 @@ export async function moderateNSFW(msg: Message<AnyTextableGuildChannel>): Promi
 
             if (flaggedAttachment) break;
         } catch (e) {
+            if (e?.message?.includes("404")) continue;
             console.error(`Failed to process attachment for NSFW detection: ${att.url}`, e);
         }
     }

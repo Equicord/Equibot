@@ -141,38 +141,37 @@ export async function rerollCotd(inputHex?: string) {
     const color = parseInt(hex.slice(1), 16);
     const icon = await drawRoleIcon(hex);
 
-    const homeGuild = await getHomeGuild();
-
-    const updates = [
-        {
-            role: Config.roles.regular,
-            data: {
-                name: `Regular (${name})`,
-                colors: {
-                    primaryColor: color
-                },
-                icon,
-                reason: "Rerolled cozy of the day"
-            }
+    await getHomeGuild()!.editRole(Config.roles.regular, {
+        name: `regular (${name.toLowerCase()})`,
+        colors: {
+            primaryColor: color,
         },
-        {
-            role: Config.roles.mod,
-            data: {
-                colors: {
-                    primaryColor: color
-                },
-                reason: "Rerolled cozy of the day"
-            }
-        }
-    ];
+        icon,
+        reason: "Rerolled color of the day"
+    });
 
-    await Promise.all(
-        updates.map(({ role, data }) =>
-            homeGuild!.editRole(role, data)
-        )
-    );
+    return hexColor;
+}
+
+export async function rerollHelper(inputHex?: string) {
+    const hexColor = inputHex ?? randomHexColor();
+    const {
+        name: {
+            closest_named_hex: hex
+        }
+    } = await fetchJson<ColorResponse>("https://www.thecolorapi.com/id?hex=" + hexColor.slice(1));
+
+    const color = parseInt(hex.slice(1), 16);
+
+    await getHomeGuild()!.editRole(Config.roles.mod, {
+        colors: {
+            primaryColor: color,
+        },
+        reason: "Rerolled color of the day"
+    });
 
     return hexColor;
 }
 
 daily(rerollCotd);
+daily(rerollHelper);
