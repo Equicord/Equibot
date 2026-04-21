@@ -32,7 +32,7 @@ if (enabled) {
 
     });
 
-    fastify.get("/healthz", () => ({ ok: true }));
+    fastify.get("/health", () => ({ ok: true }));
 
     // defer listen to allow for fastify plugins to be registered before starting the server
     setImmediate(() => {
