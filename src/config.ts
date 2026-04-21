@@ -96,6 +96,11 @@ const Config = {
         ]
     },
 
+    "rules": {
+        "enabled": "true",
+        "rulesChannelId": "1493395344015495289"
+    },
+
     "badges": [
         "848339671629299742",
         "929208515883569182",
