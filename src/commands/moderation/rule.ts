@@ -1,3 +1,4 @@
+
 import { Vaius } from "~/Client";
 import { defineCommand } from "~/Commands";
 import Config from "~/config";
@@ -10,34 +11,23 @@ import { ttlLazy } from "~/util/lazy";
 const { enabled, rulesChannelId } = Config.rules;
 
 const fetchRules = ttlLazy(async () => {
-    const messages = await Vaius.rest.channels.getMessages(rulesChannelId, { limit: 2 });
+    const [rulesMessage] = await Vaius.rest.channels.getMessages(rulesChannelId, { limit: 1 });
 
-    const fullContent = messages.reverse().map(m => m.content).join("\n\n");
-
-    return fullContent
-        .split(/(?=\*\*\d+\\\.)/)
-        .map(block => {
-            const firstLine = block.split("\n")[0];
-            if (!firstLine.match(/^\*\*\d+\\\./)) return null;
-
-            const title = firstLine.replace(/\*\*/g, "").trim();
-            const number = Number(title.match(/^(\d+)/)?.[1]);
-            if (!number) return null;
-
-            const description = block.split("\n").slice(1).join("\n")
-                .replace(/\n?#{1,6}\s+.+/g, "")
-                .trim();
-
-            return { number, title, description };
-        })
-        .filter(isNonNullish);
+    return rulesMessage.content
+        .matchAll(/\*\*((\d+)\\\. .+?)\*\*(.+?)(?=\*\*|$|\n# )/gs)
+        .map(([_, title, number, description]) => ({
+            number: Number(number),
+            title,
+            description: description.trim()
+        }))
+        .toArray();
 }, 5 * Millis.MINUTE);
 
 defineCommand({
     enabled,
 
     name: "rule",
-    aliases: ["ru", "rules"],
+    aliases: ["r"],
     description: "Query one or more rules and send them in chat",
     usage: "[... rule number(s) | search term]",
     guildOnly: true,
@@ -70,7 +60,7 @@ defineCommand({
                 return {
                     embeds: [{
                         description: `Please read the rules -> <#${rulesChannelId}>`,
-                        color: 0x5865F2,
+                        color: 0xdd7878,
                         footer
                     }]
                 };
@@ -80,7 +70,7 @@ defineCommand({
                 embeds: results.map((r, i) => ({
                     title: `Rule ${r.title}`,
                     description: r.description,
-                    color: 0x5865F2,
+                    color: 0xdd7878,
                     footer: i === results.length - 1 ? footer : undefined
                 }))
             };
