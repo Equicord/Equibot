@@ -26,7 +26,7 @@ defineCommand({
     enabled,
 
     name: "rule",
-    aliases: ["r"],
+    aliases: ["r", "ru", "rules],
     description: "Query one or more rules and send them in chat",
     usage: "[... rule number(s) | search term]",
     guildOnly: true,
@@ -59,7 +59,7 @@ defineCommand({
                 return {
                     embeds: [{
                         description: `Please read the rules -> <#${rulesChannelId}>`,
-                        color: 0xdd7878,
+                        color: 0x5865F2,
                         footer
                     }]
                 };
@@ -69,7 +69,7 @@ defineCommand({
                 embeds: results.map((r, i) => ({
                     title: `Rule ${r.title}`,
                     description: r.description,
-                    color: 0xdd7878,
+                    color: 0x5865F2,
                     footer: i === results.length - 1 ? footer : undefined
                 }))
             };
