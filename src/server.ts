@@ -32,6 +32,8 @@ if (enabled) {
 
     });
 
+    fastify.get("/healthz", () => ({ ok: true }));
+
     // defer listen to allow for fastify plugins to be registered before starting the server
     setImmediate(() => {
         fastify.listen({ port: port, host: "0.0.0.0" }, err => {
