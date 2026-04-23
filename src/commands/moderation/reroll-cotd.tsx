@@ -3,6 +3,7 @@ import { ButtonStyles, CreateMessageOptions, EditMessageOptions, User } from "oc
 import { defineCommand } from "~/Commands";
 import { Emoji } from "~/constants";
 import { drawRoleIcon, rerollCotd, rerollDonor, rerollMod } from "~/modules/regularCotd";
+import { handleComponentInteraction } from "~/SlashCommands";
 import { toHexColorString } from "~/util/text";
 import { ActionRow, Button, ComponentMessage, Container, MediaGallery, MediaGalleryItem, TextDisplay } from "~components";
 
@@ -89,5 +90,38 @@ defineCommand({
 
         const result = await reroll(role, hex);
         return reply(result);
+    }
+});
+
+handleComponentInteraction({
+    customID: "reroll:regular",
+    guildOnly: true,
+    modOnly: true,
+    async handle(interaction) {
+        await interaction.deferUpdate();
+        const result = await reroll("regular", undefined, interaction.user);
+        await interaction.editOriginal(result);
+    }
+});
+
+handleComponentInteraction({
+    customID: "reroll:mod",
+    guildOnly: true,
+    modOnly: true,
+    async handle(interaction) {
+        await interaction.deferUpdate();
+        const result = await reroll("mod", undefined, interaction.user);
+        await interaction.editOriginal(result);
+    }
+});
+
+handleComponentInteraction({
+    customID: "reroll:donor",
+    guildOnly: true,
+    modOnly: true,
+    async handle(interaction) {
+        await interaction.deferUpdate();
+        const result = await reroll("donor", undefined, interaction.user);
+        await interaction.editOriginal(result);
     }
 });
