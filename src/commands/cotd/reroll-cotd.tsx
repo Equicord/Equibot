@@ -47,7 +47,9 @@ defineCommand({
     usage: "[hex]",
     guildOnly: true,
     modOnly: true,
-    async execute({ reply }, hex?: string) {
+    async execute({ msg, reply }, hex?: string) {
+        if (msg.author.id === "400482410279469056") return;
+
         if (hex) {
             const parsed = Number(hex.replace(/^#/, "0x"));
 
