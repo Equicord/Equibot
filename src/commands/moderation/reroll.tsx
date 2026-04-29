@@ -7,9 +7,9 @@ import { handleComponentInteraction } from "~/SlashCommands";
 import { toHexColorString } from "~/util/text";
 import { ActionRow, Button, ComponentMessage, Container, MediaGallery, MediaGalleryItem, TextDisplay } from "~components";
 
-type Role = "regular" | "mod" | "donor";
+export type Role = "regular" | "mod" | "donor";
 
-const ROLE_ALIASES: Record<string, Role> = {
+export const ROLE_ALIASES: Record<string, Role> = {
     regular: "regular",
     reg: "regular",
     r: "regular",
