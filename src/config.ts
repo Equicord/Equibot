@@ -98,7 +98,7 @@ const Config = {
     },
 
     "gemini": {
-        "enabled": true,
+        "enabled": false,
         "apiKey": process.env.GEMINI_API_KEY,
         "allowedRoles": [
             "1173520023239786538", // team
