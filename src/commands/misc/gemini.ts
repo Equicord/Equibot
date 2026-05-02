@@ -265,6 +265,7 @@ const shouldIgnore = (msg: Message) => msg.content.startsWith("#") || msg.conten
 
 const KEVIN_ID = "974297735559806986";
 const DUMB_AI_CHANNEL_ID = "1465126576550314258";
+const CLYDE_NAME = "Clyɗe";
 
 async function respondWithClyde(msg: Message<AnyTextableGuildChannel>) {
     const contents: ContentListUnion = [
@@ -290,7 +291,7 @@ async function respondWithClyde(msg: Message<AnyTextableGuildChannel>) {
     const webhook = webhooks.find(w => w.applicationID === msg.client.application.id) ?? await msg.client.rest.webhooks.create(msg.channelID, { name: "Bonnie and" });
 
     await webhook.execute({
-        username: "Clyɗe",
+        username: CLYDE_NAME,
         avatarURL: "https://cdn.discordapp.com/avatars/1081004946872352958/a_6170487d32fdfe9f988720ad80e6ab8c.gif?size=256&animated=true",
         content: `${msg.author.mention} ${text}`,
         allowedMentions: {
@@ -307,7 +308,8 @@ Vaius.on("messageCreate", async msg => {
     try {
         if (!msg.inCachedGuildChannel()) return;
 
-        if ((msg.referencedMessage?.author.id === "1081004946872352958" || msg.content.includes("<@1081004946872352958>")) && msg.channelID !== DUMB_AI_CHANNEL_ID)
+        const isClydeMention = msg.content.includes("<@1081004946872352958>") || (msg.referencedMessage?.webhookID && msg.referencedMessage.author.username === CLYDE_NAME);
+        if (isClydeMention && msg.channelID !== DUMB_AI_CHANNEL_ID)
             return await respondWithClyde(msg);
 
         if (msg.channelID !== DUMB_AI_CHANNEL_ID) return;
