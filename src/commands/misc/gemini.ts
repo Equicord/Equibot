@@ -16,9 +16,7 @@ import { fetchFaq } from "../support/faq";
 
 const { apiKey, enabled, allowedRoles, bannedRoles } = Config.gemini;
 
-const geminiModels = ["gemini-2.5-flash", "gemini-2.5-flash-lite", "gemini-3.1-flash-lite"];
-const gemmaModels = ["gemma-3-27b-it", "gemma-3-12b-it", "gemma-3-4b-it", "gemma-3-2b-it", "gemma-3-1b-it"];
-const models = [...geminiModels, ...gemmaModels];
+const models = ["gemini-2.5-flash", "gemini-2.5-flash-lite"];
 const youtubeVideoRegex = /((?:https?:)\/\/)((?:www|m)\.)?((?:youtube(?:-nocookie)?\.com|youtu.be))(\/(?:[\w\-]+\?v=|embed\/|live\/|v\/)?)([\w\-]+)(\S+)?/g;
 
 const supportedMimeTypes = new Set([
@@ -58,14 +56,9 @@ async function generateContent(params: Omit<GenerateContentParameters, "model">,
             ...params,
             config: {
                 ...params.config,
-                // Gemma no no support thinking
-                ...(gemmaModels.includes(model) && {
-                    systemInstruction: undefined,
-                    thinkingConfig: undefined,
-                }),
                 // Gemma no no support google search
                 tools: params.config!.tools ??
-                    (geminiModels.includes(model)
+                    (models.includes(model)
                         ? [{ googleSearch: {} }]
                         : []
                     ),
