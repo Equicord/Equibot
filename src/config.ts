@@ -7,10 +7,10 @@ const Config = {
     "mode": "production",
 
     "channels": {
-        // channel where venbot will post automatic moderation logs, leave empty to disable
+        // channel where equibot will post automatic moderation logs, leave empty to disable
         "autoModLog": "1371890339169701908",
 
-        // channel where venbot will post moderation logs
+        // channel where equibot will post moderation logs
         "modLog": "1371890339169701908",
 
         "botAuditLog": "1371890339169701908",
