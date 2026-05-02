@@ -307,7 +307,7 @@ Vaius.on("messageCreate", async msg => {
     try {
         if (!msg.inCachedGuildChannel()) return;
 
-        if ((msg.mentions.users.some(u => u.id === "1081004946872352958") || msg.content.includes("<@1081004946872352958>")) && msg.channelID !== DUMB_AI_CHANNEL_ID)
+        if ((msg.referencedMessage?.author.id === "1081004946872352958" || msg.content.includes("<@1081004946872352958>")) && msg.channelID !== DUMB_AI_CHANNEL_ID)
             return await respondWithClyde(msg);
 
         if (msg.channelID !== DUMB_AI_CHANNEL_ID) return;
