@@ -5,7 +5,7 @@ import { AnyTextableGuildChannel, Collection, Message } from "oceanic.js";
 import { Vaius } from "~/Client";
 import { defineCommand } from "~/Commands";
 import Config from "~/config";
-import { ASSET_DIR, Bytes, Millis } from "~/constants";
+import { ASSET_DIR, Bytes, Millis, PROD } from "~/constants";
 import { canReplyToMessage, reply } from "~/util/discord";
 import { silently } from "~/util/functions";
 import { makeLazy } from "~/util/lazy";
@@ -272,7 +272,7 @@ async function respondWithClyde(msg: Message<AnyTextableGuildChannel>) {
             You are Clyde, a helpful and concise assistant integrated into Discord. Answer the user's message in a concise manner. If the message is asking for help or support, provide a helpful response. If the message is off-topic or not a question, respond with a short and witty remark. Always keep your responses brief and to the point.
         `),
         createModelContent("Understood. I will respond concisely and helpfully, providing support when needed and witty remarks when appropriate."),
-        createUserContent(`<${msg.member.displayName}>\n${msg.content}`)
+        createUserContent(msg.content)
     ];
 
     let { text } = await ai.models.generateContent({
@@ -302,10 +302,12 @@ async function respondWithClyde(msg: Message<AnyTextableGuildChannel>) {
 }
 
 Vaius.on("messageCreate", async msg => {
+    if (!PROD) return;
+
     try {
         if (!msg.inCachedGuildChannel()) return;
 
-        if (msg.content.includes("<@1081004946872352958>") && msg.channelID !== DUMB_AI_CHANNEL_ID)
+        if ((msg.mentions.users.some(u => u.id === "1081004946872352958") || msg.content.includes("<@1081004946872352958>")) && msg.channelID !== DUMB_AI_CHANNEL_ID)
             return await respondWithClyde(msg);
 
         if (msg.channelID !== DUMB_AI_CHANNEL_ID) return;
