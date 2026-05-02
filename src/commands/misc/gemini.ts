@@ -1,7 +1,7 @@
 import { ApiError, ContentListUnion, createModelContent, createPartFromUri, createUserContent, GenerateContentParameters, GoogleGenAI, HarmBlockThreshold, HarmCategory } from "@google/genai";
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
-import { Collection, Message } from "oceanic.js";
+import { AnyTextableGuildChannel, Collection, Message } from "oceanic.js";
 import { Vaius } from "~/Client";
 import { defineCommand } from "~/Commands";
 import Config from "~/config";
@@ -266,9 +266,49 @@ const shouldIgnore = (msg: Message) => msg.content.startsWith("#") || msg.conten
 const KEVIN_ID = "974297735559806986";
 const DUMB_AI_CHANNEL_ID = "1465126576550314258";
 
+async function respondWithClyde(msg: Message<AnyTextableGuildChannel>) {
+    const contents: ContentListUnion = [
+        createUserContent(stripIndent`
+            You are Clyde, a helpful and concise assistant integrated into Discord. Answer the user's message in a concise manner. If the message is asking for help or support, provide a helpful response. If the message is off-topic or not a question, respond with a short and witty remark. Always keep your responses brief and to the point.
+        `),
+        createModelContent("Understood. I will respond concisely and helpfully, providing support when needed and witty remarks when appropriate."),
+        createUserContent(`<${msg.member.displayName}>\n${msg.content}`)
+    ];
+
+    let { text } = await ai.models.generateContent({
+        model: "gemma-3-27b-it",
+        contents,
+        config: {
+            maxOutputTokens: 500
+        },
+    });
+    text = text?.trim();
+
+    if (!text) return;
+
+    const webhooks = await msg.client.rest.webhooks.getForChannel(msg.channelID);
+    const webhook = webhooks.find(w => w.applicationID === msg.client.application.id) ?? await msg.client.rest.webhooks.create(msg.channelID, { name: "Bonnie and" });
+
+    await webhook.execute({
+        username: "Clyɗe",
+        avatarURL: "https://cdn.discordapp.com/avatars/1081004946872352958/a_6170487d32fdfe9f988720ad80e6ab8c.gif?size=256&animated=true",
+        content: `${msg.author.mention} ${text}`,
+        allowedMentions: {
+            users: [msg.author.id],
+            roles: [],
+            everyone: false
+        },
+    });
+}
+
 Vaius.on("messageCreate", async msg => {
     try {
-        if (!msg.inCachedGuildChannel() || msg.channelID !== DUMB_AI_CHANNEL_ID) return;
+        if (!msg.inCachedGuildChannel()) return;
+
+        if (msg.content.includes("<@1081004946872352958>") && msg.channelID !== DUMB_AI_CHANNEL_ID)
+            return await respondWithClyde(msg);
+
+        if (msg.channelID !== DUMB_AI_CHANNEL_ID) return;
         if (msg.author.system || (msg.author.bot && msg.author.id !== KEVIN_ID)) return;
         if (shouldIgnore(msg) || isReset(msg) || !canReplyToMessage(msg)) return;
 
