@@ -174,7 +174,7 @@ defineCommand({
         const useGemma = ["gemma", "dumbai", "artificialstupidity", "as"].includes(commandName);
         const modelOverride = useGemma
             ? commandName === "gemma"
-                ? "gemma-4-31b-it"
+                ? "gemma-3-27b-it"
                 : "gemma-3-1b-it"
             : undefined;
         const supportsFiles = modelOverride !== "gemma-3-1b-it";
@@ -277,7 +277,7 @@ async function respondWithClyde(msg: Message<AnyTextableGuildChannel>) {
     ];
 
     let { text } = await ai.models.generateContent({
-        model: "gemma-4-31b-it",
+        model: "gemma-3-27b-it",
         contents,
         config: {
             maxOutputTokens: 500
@@ -354,7 +354,7 @@ Vaius.on("messageCreate", async msg => {
         );
 
         let { text } = await ai.models.generateContent({
-            model: "gemma-4-31b-it",
+            model: "gemma-3-27b-it",
             contents,
             config: {
                 maxOutputTokens: 500
