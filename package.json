@@ -15,6 +15,7 @@
     "keywords": [],
     "author": "Vendicated <vendicated+npm@riseup.net>",
     "dependencies": {
+        "@google/genai": "^1.34.0",
         "@napi-rs/canvas": "^0.1.88",
         "@tensorflow/tfjs": "^4.22.0",
         "@tensorflow/tfjs-node": "^4.22.0",
@@ -53,6 +54,7 @@
             "onnxruntime-web": "1.24.1"
         },
         "onlyBuiltDependencies": [
+            "@google/genai",
             "@tensorflow/tfjs-node",
             "better-sqlite3",
             "canvas",

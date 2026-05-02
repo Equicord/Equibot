@@ -92,10 +92,24 @@ const Config = {
             "1479689099538469066", // no voice calls
             "1485025948515700837", // snippet dev
             "1486090591161946325", // no snippets
+            "1500246752140333126", // no ai
             "1383924171637129339", // dev talk
         ]
     },
 
+    "gemini": {
+        "enabled": true,
+        "apiKey": process.env.GEMINI_API_KEY,
+        "allowedRoles": [
+            "1173520023239786538", // team
+            "1326406112144265257", // mod
+            "1173316879083896912", // donor
+            "1468770736134160628", // regular
+        ],
+        "bannedRoles": [
+            "1500246752140333126", // no ai
+        ],
+    },
 
     "rulesChannelId": "1493395344015495289",
 
