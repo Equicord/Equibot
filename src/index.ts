@@ -13,7 +13,7 @@ import { PROD } from "./constants";
 
 import { initModListeners } from "./modules/moderation/listeners";
 import { initRoleListeners } from "./modules/roleTracker";
-import { initUpdateTracker } from "./modules/updateTracker/updateTracker";
+import { initUpdateTracker } from "./modules/updateTracker";
 import { silently } from "./util/functions";
 import { inspect } from "./util/inspect";
 import { logDevDebug } from "./util/logAction";

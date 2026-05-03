@@ -31,9 +31,9 @@ const Config = {
         // nsfw image detection and punishment
         "nsfwConfidenceThreshold": 0.90,
         "nsfwTimeoutDuration": 1,
-        "nsfwScanGifs": true,
+        "nsfwGifs": process.env.MODERATE_NSFW_GIFS === "true",
 
-        "invites": false,
+        "invites": process.env.MODERATE_INVITES_ENABLED === "true",
         // guilds members may share invites to. always includes homeGuildId
         "inviteAllowedGuilds": [
             "1173279886065029291", // equicord
@@ -98,7 +98,7 @@ const Config = {
     },
 
     "gemini": {
-        "enabled": false,
+        "enabled": process.env.GEMINI_ENABLED === "true",
         "apiKey": process.env.GEMINI_API_KEY,
         "allowedRoles": [
             "1173520023239786538", // team
@@ -113,34 +113,29 @@ const Config = {
 
     "rulesChannelId": "1493395344015495289",
 
-    "badges": [
-        "848339671629299742",
-        "929208515883569182",
-    ],
-
     // http server used for some features.
     // github linking and reporter both depend on this server
     "httpServer": {
-        "enabled": true,
+        "enabled": process.env.HTTP_SERVER_ENABLED === "true",
         "port": 8152,
         "domain": "https://equibot.equicord.org"
     },
 
     // link-github command which gives out contributor & donor roles
     "githubLinking": {
-        "enabled": true,
-        "clientId": process.env.CLIENT_ID,
-        "clientSecret": process.env.CLIENT_SECRET,
+        "enabled": process.env.GITHUB_LINKING_ENABLED === "true",
+        "clientId": process.env.GITHUB_LINKING_CLIENT_ID,
+        "clientSecret": process.env.GITHUB_LINKING_CLIENT_SECRET,
         // Github Personal Access Token. Used to check if user is sponsoring you https://github.com/settings/tokens/new
-        "pat": process.env.LINK_PAT
+        "pat": process.env.GITHUB_LINKING_PAT
     },
 
     "reporter": {
-        "enabled": true,
+        "enabled": process.env.REPORTER_ENABLED === "true",
         // Github PAT with workflow dispatch scope. Used to trigger reporter workflow
         "pat": process.env.REPORTER_PAT,
         // generate with `openssl rand -hex 128`
-        "webhookSecret": process.env.WEBHOOK_SECRET,
+        "webhookSecret": process.env.REPORTER_WEBHOOK_SECRET,
         // channel where each individual report will be posted
         "logChannelId": "1371881823369564201",
         // channel where the bot will post the latest status of stable and canary
@@ -152,12 +147,13 @@ const Config = {
     },
 
     "updateTracker": {
-        "enabled": true,
-        "android": process.env.UPDATE_TRACKER_ANDROID,
-        "appstore": process.env.UPDATE_TRACKER_APP_STORE,
-        "testflight": process.env.UPDATE_TRACKER_TEST_FLIGHT,
+        "enabled": process.env.UPDATE_TRACKER_ENABLED === "true",
+        "android": process.env.UPDATE_TRACKER_ANDROID === "true",
+        "androidWebhookSecret": process.env.UPDATE_TRACKER_ANDROID_WEBHOOK_SECRET,
+        "appstore": process.env.UPDATE_TRACKER_APP_STORE === "true",
+        "testflight": process.env.UPDATE_TRACKER_TEST_FLIGHT === "true",
         "testflightSecret": process.env.UPDATE_TRACKER_TEST_FLIGHT_SECRET,
-        "tfApi": process.env.TF_API,
+        "testflightApi": process.env.UPDATE_TRACKER_TEST_FLIGHT_API,
         "logChannelId": "1268568848076898355"
     }
 };

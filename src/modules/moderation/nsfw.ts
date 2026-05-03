@@ -65,7 +65,7 @@ export async function moderateNSFW(msg: Message<AnyTextableGuildChannel>): Promi
         try {
             const buf = await fetchBuffer(att.url);
 
-            if (att.contentType?.toLowerCase().startsWith("image/gif") && Config.moderation.nsfwScanGifs) {
+            if (att.contentType?.toLowerCase().startsWith("image/gif") && Config.moderation.nsfwGifs) {
                 const frames = extractFrames(buf);
                 for (const frameBuf of frames) {
                     const results = await detectNSFW(frameBuf);
