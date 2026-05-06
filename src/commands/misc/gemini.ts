@@ -53,6 +53,7 @@ Vaius.on("messageCreate", async msg => {
 
     try {
         if (!msg.inCachedGuildChannel()) return;
+        if (msg.author.system || msg.author.bot) return;
 
         const hasAllowedRole = msg.member.roles.some(r => allowedRoles.includes(r));
         const hasBannedRole = msg.member.roles.some(r => bannedRoles.includes(r));
