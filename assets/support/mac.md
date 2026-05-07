@@ -3,7 +3,11 @@ aliases: darwin, m
 emoji: 🍎
 ---
 
-Download <https://github.com/Equicord/Equilotl/releases/latest/download/Equilotl.MacOS.zip>
+Download Intel (x64) Installer <https://github.com/Equicord/Equilotl/releases/latest/download/Equilotl-darwin-x64.zip>
+
+For Apple Silicon Macs (M1 or newer), download:
+
+Download Apple Silicon (ARM64) Installer <https://github.com/Equicord/Equilotl/releases/latest/download/Equilotl-darwin-arm64.zip>
 
 Unzip it, and run `Equilotl.app`
 
