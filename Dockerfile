@@ -7,6 +7,8 @@ ENV GIT_COMMIT=$GIT_COMMIT
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
 RUN corepack enable
+RUN corepack prepare pnpm@10.33.0 --activate
+
 
 COPY package*.json pnpm-*.yaml ./
 RUN pnpm install --frozen-lockfile --ignore-scripts
