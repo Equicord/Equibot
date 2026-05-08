@@ -11,7 +11,7 @@ emoji: 🇶
 > 2. Run `/equicord-debug`.
 >  
 > If it says `Discord Desktop` in the `Client` section, you can auto complete all of:
->
+>  
 > - Video Quests
 > - Play Game/Activity Quests
 > - Task in Activity Quests
