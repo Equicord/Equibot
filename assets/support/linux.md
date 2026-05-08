@@ -1,5 +1,5 @@
 ---
-aliases: l, ubuntu, fedora, alpine, arch
+aliases: l, ubuntu, fedora, arch
 emoji: 🐧
 ---
 
