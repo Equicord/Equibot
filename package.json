@@ -49,23 +49,6 @@
         "typescript": "^5.9.3",
         "typescript-eslint": "^8.51.0"
     },
-    "pnpm": {
-        "overrides": {
-            "onnxruntime-web": "1.24.1"
-        },
-        "onlyBuiltDependencies": [
-            "@google/genai",
-            "@tensorflow/tfjs-node",
-            "better-sqlite3",
-            "canvas",
-            "core-js",
-            "esbuild",
-            "onnxruntime-node",
-            "protobufjs",
-            "sharp",
-            "tesseract.js"
-        ]
-    },
     "engines": {
         "node": ">=20"
     },
