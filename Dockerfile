@@ -7,7 +7,6 @@ ENV GIT_COMMIT=$GIT_COMMIT
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
 RUN corepack enable
-RUN corepack prepare pnpm@10.33.0 --activate
 
 
 COPY package*.json pnpm-*.yaml ./
@@ -25,7 +24,6 @@ ENV GIT_COMMIT=$GIT_COMMIT
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
 RUN corepack enable
-RUN corepack prepare pnpm@10.33.0 --activate
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends ca-certificates curl gnupg nano && \
