@@ -1,13 +1,13 @@
 packages:
     - .
 
-onlyBuiltDependencies:
-    - better-sqlite3
-    - canvas
-    - esbuild
-    - sharp
-    - tesseract.js
-    - core-js
-    - onnxruntime-node
-    - protobufjs
-    - "@tensorflow/tfjs-node"
+allowBuilds:
+    better-sqlite3: true
+    canvas: true
+    esbuild: true
+    sharp: true
+    tesseract.js: true
+    core-js: true
+    onnxruntime-node: true
+    protobufjs: true
+    "@tensorflow/tfjs-node": true
