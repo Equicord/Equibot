@@ -55,7 +55,7 @@ Vaius.on("messageUpdate", (msg, oldMsg) => {
 
 async function handleMessage(msg: Message, isEdit: boolean) {
     if (msg.author.bot) return;
-    moderateMessage(msg, isEdit);
+    await moderateMessage(msg, isEdit);
 
     const lowerContent = msg.content.toLowerCase();
 
