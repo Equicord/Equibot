@@ -30,11 +30,16 @@ const re = new RegExp(scamTerms.map(term => `\\b${term}\\b`).join("|"), "i");
 export async function ocrModerate(msg: Message<AnyTextableGuildChannel>): Promise<boolean> {
     if (!msg.member || msg.member.roles.includes(Config.roles.regular)) return false;
 
-    const ownAttachments = [...msg.attachments.values()];
-    const forwardedAttachments = msg.messageSnapshots?.flatMap(snapshot => [...snapshot.message.attachments.values()]) ?? [];
-    const allAttachments = [...ownAttachments, ...forwardedAttachments].filter(att => att.contentType?.startsWith("image/"));
+    const ownAttachments = msg.attachments
+        .filter(att => att.contentType?.startsWith("image/"));
 
-    if (allAttachments.length === 0) return false;
+    const forwardedAttachments = (msg.messageSnapshots
+        ?.flatMap(snapshot => [...snapshot.message.attachments.values()]) ?? [])
+        .filter(att => att.contentType?.startsWith("image/"));
+
+    if (ownAttachments.length === 0 && forwardedAttachments.length === 0) return false;
+
+    const allAttachments = [...ownAttachments, ...forwardedAttachments];
 
     const flaggedAttachment = (await Promise.all(allAttachments.map(async att => {
         try {
