@@ -6,7 +6,6 @@ import Config from "./config";
 import { Emoji, Millis } from "./constants";
 import { BotState } from "./db/botState";
 import { moderateMessage } from "./modules/moderation";
-import { lobotomiseMaybe } from "./modules/moderation/lobotomy";
 import { reply } from "./util/discord";
 import { silently } from "./util/functions";
 
@@ -41,7 +40,6 @@ Vaius.once("ready", async () => {
 });
 
 const whitespaceRe = /\s+/;
-const GEN_AI_ID = "974297735559806986";
 
 Vaius.on("messageCreate", msg => handleMessage(msg, false));
 Vaius.on("messageUpdate", (msg, oldMsg) => {
@@ -56,8 +54,7 @@ Vaius.on("messageUpdate", (msg, oldMsg) => {
 });
 
 async function handleMessage(msg: Message, isEdit: boolean) {
-    if (await lobotomiseMaybe(msg)) return;
-    if (msg.author.bot && msg.author.id !== GEN_AI_ID) return;
+    if (msg.author.bot) return;
     moderateMessage(msg, isEdit);
 
     const lowerContent = msg.content.toLowerCase();

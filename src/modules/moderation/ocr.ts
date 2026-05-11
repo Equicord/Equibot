@@ -30,8 +30,8 @@ const re = new RegExp(scamTerms.map(term => `\\b${term}\\b`).join("|"), "i");
 export async function ocrModerate(msg: Message<AnyTextableGuildChannel>): Promise<boolean> {
     if (!msg.member || msg.member.roles.includes(Config.roles.regular)) return false;
 
-    const ownAttachments = msg.attachments.toArray();
-    const forwardedAttachments = msg.messageSnapshots?.flatMap(snapshot => snapshot.message.attachments) ?? [];
+    const ownAttachments = [...msg.attachments.values()];
+    const forwardedAttachments = msg.messageSnapshots?.flatMap(snapshot => [...snapshot.message.attachments.values()]) ?? [];
     const allAttachments = [...ownAttachments, ...forwardedAttachments].filter(att => att.contentType?.startsWith("image/"));
 
     if (allAttachments.length === 0) return false;

@@ -1,5 +1,4 @@
-import { Message } from "oceanic.js";
-import { Vaius } from "~/Client";
+import { AnyTextableGuildChannel, Message } from "oceanic.js";
 import { isTruthy } from "~/util/guards";
 import { moderateInvites } from "./invites";
 import { moderateMultiChannelSpam } from "./multiChannelSpam";
@@ -9,8 +8,7 @@ import { moderateSuspiciousFiles } from "./suspiciousFiles";
 
 export async function moderateMessage(msg: Message, isEdit: boolean) {
     if (msg.author.bot) return;
-    if (!msg.inCachedGuildChannel()) return;
-    if (!msg.channel.permissionsOf(Vaius.user.id).has("MANAGE_MESSAGES")) return;
+    if (!msg.guildID) return;
 
     // FIXME: make this less bad
     if (msg.messageSnapshots?.length)
@@ -21,17 +19,12 @@ export async function moderateMessage(msg: Message, isEdit: boolean) {
     const moderationFunctions = [
         !isEdit && moderateMultiChannelSpam,
         moderateInvites,
-        moderateSuspiciousFiles
+        moderateSuspiciousFiles,
+        ocrModerate,
+        moderateNSFW,
     ].filter(isTruthy);
 
     for (const moderate of moderationFunctions) {
-        if (await moderate(msg)) return;
+        if (await moderate(msg as Message<AnyTextableGuildChannel>)) return;
     }
-
-    const [ocrResult, nsfwResult] = await Promise.all([
-        ocrModerate(msg),
-        moderateNSFW(msg)
-    ]);
-
-    if (ocrResult || nsfwResult) return;
 }
