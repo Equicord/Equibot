@@ -16,7 +16,7 @@ defineCommand({
         }
 
         const role: Role = roleArg ? ROLE_ALIASES[roleArg.toLowerCase()] : "regular";
-        const roleId = role === "regular" ? Config.roles.regular : role === "mod" ? Config.roles.mod : Config.roles.donor;
+        const roleId = role === "regular" ? Config.roles.regular : role === "helper" ? Config.roles.helper : Config.roles.donor;
         const guildRole = msg.guild!.roles.get(roleId)!;
         const color = toHexColorString(guildRole.colors.primaryColor);
         const image = await drawRoleIcon(color);

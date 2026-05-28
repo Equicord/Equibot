@@ -1,13 +1,14 @@
 import { ButtonStyles, CreateMessageOptions, EditMessageOptions, User } from "oceanic.js";
 
 import { defineCommand } from "~/Commands";
+import Config from "~/config";
 import { Emoji } from "~/constants";
 import { drawRoleIcon, rerollCotd, rerollDonor, rerollMod } from "~/modules/regularCotd";
 import { handleComponentInteraction } from "~/SlashCommands";
 import { toHexColorString } from "~/util/text";
 import { ActionRow, Button, ComponentMessage, Container, MediaGallery, MediaGalleryItem, TextDisplay } from "~components";
 
-export type Role = "regular" | "mod" | "donor";
+export type Role = "regular" | "helper" | "donor";
 
 export const ROLE_ALIASES: Record<string, Role> = {
     regular: "regular",
@@ -16,10 +17,14 @@ export const ROLE_ALIASES: Record<string, Role> = {
     color: "regular",
     colour: "regular",
     cotd: "regular",
-    mod: "mod",
-    moderator: "mod",
-    helper: "mod",
-    staff: "mod",
+    h: "helper",
+    help: "helper",
+    helper: "helper",
+    m: "helper",
+    mod: "helper",
+    moderator: "helper",
+    staff: "helper",
+    d: "donor",
     donor: "donor",
     donator: "donor",
     supporter: "donor",
@@ -27,7 +32,7 @@ export const ROLE_ALIASES: Record<string, Role> = {
 };
 
 async function reroll(role: Role, hex?: string, interactionUser?: User): Promise<CreateMessageOptions & EditMessageOptions> {
-    const color = role === "regular" ? await rerollCotd(hex) : role === "mod" ? await rerollMod(hex) : await rerollDonor(hex);
+    const color = role === "regular" ? await rerollCotd(hex) : role === "helper" ? await rerollMod(hex) : await rerollDonor(hex);
     const image = await drawRoleIcon(color);
 
     return (
@@ -70,7 +75,7 @@ defineCommand({
     description: "Rerolls the color of the day for a role",
     usage: "<role> [hex]",
     guildOnly: true,
-    modOnly: true,
+    allowedRoles: [Config.roles.mod, Config.roles.helper],
     async execute({ reply }, roleArg?: string, hex?: string) {
         if (!roleArg) {
             return reply(`Please specify a role. Valid roles: ${Object.keys(ROLE_ALIASES).join(", ")}`);
@@ -96,7 +101,7 @@ defineCommand({
 handleComponentInteraction({
     customID: "reroll:regular",
     guildOnly: true,
-    modOnly: true,
+    allowedRoles: [Config.roles.mod, Config.roles.helper],
     async handle(interaction) {
         await interaction.deferUpdate();
         const result = await reroll("regular", undefined, interaction.user);
@@ -107,10 +112,10 @@ handleComponentInteraction({
 handleComponentInteraction({
     customID: "reroll:mod",
     guildOnly: true,
-    modOnly: true,
+    allowedRoles: [Config.roles.mod, Config.roles.helper],
     async handle(interaction) {
         await interaction.deferUpdate();
-        const result = await reroll("mod", undefined, interaction.user);
+        const result = await reroll("helper", undefined, interaction.user);
         await interaction.editOriginal(result);
     }
 });
@@ -118,7 +123,7 @@ handleComponentInteraction({
 handleComponentInteraction({
     customID: "reroll:donor",
     guildOnly: true,
-    modOnly: true,
+    allowedRoles: [Config.roles.mod, Config.roles.helper],
     async handle(interaction) {
         await interaction.deferUpdate();
         const result = await reroll("donor", undefined, interaction.user);

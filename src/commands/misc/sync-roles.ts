@@ -59,7 +59,7 @@ defineCommand({
     description: "Applies Equicord/Vencord contributor and donor roles to all listed users in this guild.",
     usage: null,
     guildOnly: true,
-    modOnly: true,
+    allowedRoles: [Config.roles.mod, Config.roles.helper],
 
     async execute({ msg, reply }) {
         const { guild } = msg;

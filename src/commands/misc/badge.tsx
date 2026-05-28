@@ -80,7 +80,7 @@ function normaliseCdnUrl(rawUrl: string) {
 const handler: CommandInteractionHandler = {
     async handle(i) {
         if (i.user.id !== OwnerId) {
-            if (!i.member?.roles.includes(Config.roles.team))
+            if (!i.member?.roles.includes(Config.roles.mod))
                 return;
         }
 

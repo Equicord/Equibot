@@ -10,7 +10,7 @@ defineCommand({
     description: "Check if anything new mobile builds released",
     usage: "",
     aliases: ["m"],
-    ownerOnly: true,
+    allowedRoles: [Config.roles.mod],
     async execute({ msg }) {
         if (android) await checkAndroid(true, msg.channelID);
         if (appstore) await checkAppStore(true, msg.channelID);

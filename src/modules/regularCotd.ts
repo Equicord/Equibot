@@ -163,7 +163,7 @@ export async function rerollMod(inputHex?: string) {
 
     const color = parseInt(hex.slice(1), 16);
 
-    await getHomeGuild()!.editRole(Config.roles.mod, {
+    await getHomeGuild()!.editRole(Config.roles.helper, {
         colors: {
             primaryColor: color,
         },

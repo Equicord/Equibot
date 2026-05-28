@@ -58,7 +58,7 @@ defineCommand({
     description: "Add a role to one or more users",
     usage: "<role> <user> [user...]",
     guildOnly: true,
-    allowedRoles: [Config.roles.mod],
+    allowedRoles: [Config.roles.mod, Config.roles.helper],
     async execute({ msg, react, reply }, ...args) {
         const { role, users } = parseArgs(msg, args);
         if (!role) return react(Emoji.QuestionMark);
@@ -82,7 +82,7 @@ defineCommand({
     description: "Remove a role from one or more users",
     usage: "<role> <user> [user...]",
     guildOnly: true,
-    allowedRoles: [Config.roles.mod],
+    allowedRoles: [Config.roles.mod, Config.roles.helper],
     async execute({ msg, reply, react }, ...args) {
         const { role, users } = parseArgs(msg, args);
         if (!role) return react(Emoji.QuestionMark);

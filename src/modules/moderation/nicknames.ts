@@ -1,12 +1,12 @@
 import { Member } from "oceanic.js";
 import { Vaius } from "~/Client";
-import { silently } from "~/util/functions";
 import Config from "~/config";
+import { silently } from "~/util/functions";
 
 export async function moderateNick(member: Member) {
     if (member.bot || !member.guild.permissionsOf(Vaius.user.id).has("MANAGE_NICKNAMES")) return;
 
-    const ignoredRoles = [Config.roles.team, Config.roles.mod];
+    const ignoredRoles = [Config.roles.mod, Config.roles.helper];
     if (member.roles.some(role => ignoredRoles.includes(role))) return;
 
     const name = member.displayName;

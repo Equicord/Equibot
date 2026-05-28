@@ -65,8 +65,9 @@ const Config = {
 
     "roles": {
         // anyone with this role can execute moderation commands
-        "team": "1173520023239786538",
-        "mod": "1326406112144265257",
+        "mod": "1173520023239786538",
+        "helper": "1326406112144265257",
+        "vcMod": "1482848361437724826",
 
         "donor": "1173316879083896912",
         "regular": "1468770736134160628",
@@ -102,9 +103,9 @@ const Config = {
         "apiKey": process.env.GEMINI_API_KEY,
         "allowedRoles": [
             "1173520023239786538", // team
-            "1326406112144265257", // mod
-            "1173316879083896912", // donor
-            "1468770736134160628", // regular
+            "1326406112144265257", // helper
+            "1482848361437724826", // voice chat mod
+            "1230693249610547231", // friends
         ],
         "bannedRoles": [
             "1500246752140333126", // no ai
