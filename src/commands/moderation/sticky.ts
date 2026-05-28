@@ -1,7 +1,9 @@
 import { defineCommand } from "~/Commands";
+import Config from "~/config";
 import { Emoji } from "~/constants";
 import { BotState } from "~/db/botState";
 import { StickyState } from "~/modules/sticky";
+import { isSupportHelperOutsideSupport } from "~/util/discord";
 import { toCodeblock } from "~/util/text";
 
 const OPERATION_ALIASES: Record<string, string> = {
@@ -35,11 +37,15 @@ defineCommand({
     name: "sticky",
     description: "Set the sticky message",
     aliases: ["stick", "note", "n"],
-    modOnly: true,
+    allowedRoles: [Config.roles.mod, Config.roles.helper],
     guildOnly: true,
     usage: "<create/update/set | delete/remove | on | off | delay | list> [value]",
     rawContent: true,
     execute({ reply, react, msg, prefix, commandName }, content) {
+        if (isSupportHelperOutsideSupport(msg.member, msg.channelID)) {
+            return reply("For support helpers, this command can only be used in support channels");
+        }
+
         let response: string | undefined;
 
         const [operation, value, ...extra] = content.split(" ");

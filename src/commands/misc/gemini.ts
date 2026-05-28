@@ -23,7 +23,7 @@ async function respondWithClyde(msg: Message<AnyTextableGuildChannel>) {
     ];
 
     let { text } = await ai.models.generateContent({
-        model: "gemma-3-27b-it",
+        model: "gemma-4-31b-it",
         contents,
         config: {
             maxOutputTokens: 500
