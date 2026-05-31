@@ -3,7 +3,7 @@ import { ButtonStyles, CreateMessageOptions, EditMessageOptions, User } from "oc
 import { defineCommand } from "~/Commands";
 import Config from "~/config";
 import { Emoji } from "~/constants";
-import { drawRoleIcon, rerollCotd, rerollDonor, rerollMod } from "~/modules/regularCotd";
+import { drawRoleIcon, rerollCotd, rerollDonor, rerollHelper } from "~/modules/regularCotd";
 import { handleComponentInteraction } from "~/SlashCommands";
 import { toHexColorString } from "~/util/text";
 import { ActionRow, Button, ComponentMessage, Container, MediaGallery, MediaGalleryItem, TextDisplay } from "~components";
@@ -32,7 +32,7 @@ export const ROLE_ALIASES: Record<string, Role> = {
 };
 
 async function reroll(role: Role, hex?: string, interactionUser?: User): Promise<CreateMessageOptions & EditMessageOptions> {
-    const color = role === "regular" ? await rerollCotd(hex) : role === "helper" ? await rerollMod(hex) : await rerollDonor(hex);
+    const color = role === "regular" ? await rerollCotd(hex) : role === "helper" ? await rerollHelper(hex) : await rerollDonor(hex);
     const image = await drawRoleIcon(color);
 
     return (
@@ -110,7 +110,7 @@ handleComponentInteraction({
 });
 
 handleComponentInteraction({
-    customID: "reroll:mod",
+    customID: "reroll:helper",
     guildOnly: true,
     allowedRoles: [Config.roles.mod, Config.roles.helper],
     async handle(interaction) {

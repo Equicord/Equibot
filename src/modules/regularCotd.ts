@@ -153,7 +153,7 @@ export async function rerollCotd(inputHex?: string) {
     return hexColor;
 }
 
-export async function rerollMod(inputHex?: string) {
+export async function rerollHelper(inputHex?: string) {
     const hexColor = inputHex ?? randomHexColor();
     const {
         name: {
@@ -195,5 +195,5 @@ export async function rerollDonor(inputHex?: string) {
 
 
 daily(rerollCotd);
-daily(rerollMod);
+daily(rerollHelper);
 daily(rerollDonor);
