@@ -85,7 +85,8 @@ function resolveChannelIds(extraChannelId?: string): string[] {
 async function postEmbed(channelIds: string[], embed: object, tag: string): Promise<void> {
     for (const channelId of channelIds) {
         try {
-            await Vaius.rest.channels.createMessage(channelId, { embeds: [embed] });
+            const message = await Vaius.rest.channels.createMessage(channelId, { embeds: [embed] });
+            await Vaius.rest.channels.crosspostMessage(channelId, message.id);
         } catch (err) {
             console.error(`[UpdateTracker ${tag}] Failed to post to ${channelId}:`, err);
         }
