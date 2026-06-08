@@ -101,9 +101,11 @@ function vendettaLinks(versionCode: number): string {
     return ANDROID_SPLITS.map(s => `[${s}.apk](${trackerUrl(versionCode, s)})`).join("\n");
 }
 
-function versionCodeToName(versionCode: number): string {
+function formatReleaseName(versionCode: number, releaseType: ReleaseType): string {
     const str = versionCode.toString();
-    return `${str.slice(0, 3)}.${parseInt(str.slice(4))}`;
+    const versionStr = `${str.slice(0, 3)}.${parseInt(str.slice(4))}`;
+    const releaseStr = toTitle(releaseType);
+    return `${versionStr} ${releaseStr} (${versionCode})`;
 }
 
 async function fetchLatestVersions(): Promise<TrackerIndex["latest"]> {
@@ -133,11 +135,14 @@ export async function checkAndroid(bypass = false, extraChannelId?: string): Pro
 
         const embed = {
             author: { name: DISCORD_AUTHOR_NAME, url: GOOGLE_PLAY_URL, iconURL: DISCORD_ICON },
-            title: `New Android ${toTitle(releaseType)} Release: ${versionCodeToName(versionCode)} (${versionCode})`,
+            title: `New Android Release: ${formatReleaseName(versionCode, releaseType)}`,
             description: `Build \`${versionCode}\` is now available.\nDetected at ${formatDate(new Date())}`,
             fields: [
                 { name: "Google Play Store", value: GOOGLE_PLAY_URL, inline: true },
                 { name: "Vendetta Tracker", value: vendettaLinks(versionCode), inline: true },
+                ...(["alpha", "beta"].includes(releaseType) ? [
+                    { name: "How to Join", value: "https://support.discord.com/hc/en-us/articles/360035675191-Discord-Testing-Clients#h_01HT0CCGC6NZYJ4C7D6G0BAPAD", inline: true }
+                ] : []),
             ],
             color: ANDROID_COLORS[releaseType],
         };
@@ -248,6 +253,7 @@ export async function checkTestFlight(bypass = false, extraChannelId?: string): 
             { name: "Expires", value: formatDate(build.expiration), inline: true },
             { name: "Size", value: `${(build.fileSizeUncompressed / (1024 * 1024)).toFixed(1)} MB`, inline: true },
             { name: "Beta Status", value: TESTFLIGHT_STATUS_LABELS[await getTestFlightStatus()], inline: true },
+            { name: "How to Join", value: "https://support.discord.com/hc/en-us/articles/360035675191-Discord-Testing-Clients#h_01JZ8MGFQXGKTZ04NYM5415AGT", inline: true },
         ],
         color: 0xEE850B,
     };
