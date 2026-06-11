@@ -1,6 +1,6 @@
 import { Member } from "oceanic.js";
 import Config from "~/config";
-import { Millis } from "~/constants";
+import { IGNORE_BADGES, Millis } from "~/constants";
 import { fetchJsons } from "~/util/fetch";
 import { Vaius } from "../Client";
 
@@ -30,7 +30,7 @@ async function getDevAndBadgeIDs() {
 
     cachedDonors = new Set(
         Object.entries(donors)
-            .filter(([id, badges]: [string, any]) => badges.some(b => b.tooltip !== "Equicord Translator"))
+            .filter(([id, badges]: [string, any]) => badges.some(b => !IGNORE_BADGES.includes(b.tooltip)))
             .map(([id]) => id)
     );
 

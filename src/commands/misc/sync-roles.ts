@@ -1,6 +1,7 @@
 import { Member } from "oceanic.js";
 import { defineCommand } from "~/Commands";
 import Config from "~/config";
+import { IGNORE_BADGES } from "~/constants";
 import { fetchJsons } from "~/util/fetch";
 
 const DEVS_JSON = "https://raw.githubusercontent.com/Equicord/Equibored/main/devs.json";
@@ -23,7 +24,7 @@ async function getDevAndBadgeIDs() {
 
     const donorsSet = new Set(
         Object.entries(donors)
-            .filter(([id, badges]: [string, any]) => badges.some(b => b.tooltip !== "Equicord Translator"))
+            .filter(([id, badges]: [string, any]) => badges.some(b => !IGNORE_BADGES.includes(b.tooltip)))
             .map(([id]) => String(id))
             .filter(id => id !== "0" && id !== "0n")
     );

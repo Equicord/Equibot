@@ -5,7 +5,7 @@ import { makeConstants } from "~/util/objects";
 import Config from "./config";
 
 export const EQUICORD_SITE = "https://equicord.org";
-
+export const IGNORE_BADGES = ["Equicord Translator", "Equicord Founder (real trust)"];
 export const ASSET_DIR = join(__dirname, "..", "assets");
 export const DATA_DIR = join(__dirname, "..", "data");
 mkdirSync(DATA_DIR, { recursive: true });
