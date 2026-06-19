@@ -1,4 +1,4 @@
-:import fs from "fs";
+import fs from "fs";
 import { join } from "path";
 import { ButtonStyles, MessageFlags, SeparatorSpacingSize } from "oceanic.js";
 import { Vaius } from "~/Client";
