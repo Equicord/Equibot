@@ -171,8 +171,8 @@ export async function checkAndroid(bypass = false, extraChannelId?: string): Pro
                 <TextDisplay>{vendettaGrid(versionCode)}</TextDisplay>
             </Container>
             <ActionRow>
-                <Button style={ButtonStyles.LINK} label="Google Play Store" url={GOOGLE_PLAY_URL} />
-                {["alpha", "beta"].includes(releaseType) && <Button style={ButtonStyles.LINK} label="How to Join" url={HOW_TO_JOIN_URL_ALPHA} />}
+                <Button style={ButtonStyles.LINK} url={GOOGLE_PLAY_URL}>Google Play Store</Button>
+                {["alpha", "beta"].includes(releaseType) && <Button style={ButtonStyles.LINK} url={HOW_TO_JOIN_URL_ALPHA}>How to Join</Button>}
             </ActionRow>
         </>;
 
@@ -218,7 +218,7 @@ export async function checkAppStore(bypass = false, extraChannelId?: string): Pr
             {description && <TextDisplay>{description}</TextDisplay>}
         </Container>
         <ActionRow>
-            <Button style={ButtonStyles.LINK} label="View on App Store" url={APP_STORE_URL} />
+            <Button style={ButtonStyles.LINK} url={APP_STORE_URL}>View on App Store</Button>
         </ActionRow>
     </>;
 
@@ -289,8 +289,8 @@ export async function checkTestFlight(bypass = false, extraChannelId?: string): 
             <TextDisplay>-# Released {formatDate(build.releaseDate)} · Expires {formatDate(build.expiration)}</TextDisplay>
         </Container>
         <ActionRow>
-            {status === "open" && <Button style={ButtonStyles.LINK} label="Join TestFlight" url={TESTFLIGHT_URL} />}
-            <Button style={ButtonStyles.LINK} label="How to Join" url={HOW_TO_JOIN_URL_TF} />
+            {status === "open" && <Button style={ButtonStyles.LINK} url={TESTFLIGHT_URL}>Join TestFlight</Button>}
+            <Button style={ButtonStyles.LINK} url={HOW_TO_JOIN_URL_TF}>How to Join</Button>
         </ActionRow>
     </>;
 
