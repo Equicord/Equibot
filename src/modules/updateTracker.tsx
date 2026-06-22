@@ -1,10 +1,13 @@
 import fs from "fs";
+import { ButtonStyles, MessageFlags, SeparatorSpacingSize } from "oceanic.js";
 import { join } from "path";
 import { Vaius } from "~/Client";
 import Config from "~/config";
 import { DATA_DIR, Millis } from "~/constants";
 import { toTitle } from "~/util/text";
 import { sleep } from "~/util/time";
+
+import { ActionRow, Button, Container, Separator, TextDisplay } from "~components";
 
 type ReleaseType = "stable" | "beta" | "alpha";
 type TestFlightStatus = "open" | "full" | "closed" | "unknown" | "notfound" | "ratelimited";
@@ -18,6 +21,7 @@ interface iTunesResult {
     currentVersionReleaseDate: string;
     releaseNotes: string;
     artworkUrl100: string;
+    fileSizeBytes: string;
 }
 
 interface TFBuild {
@@ -35,15 +39,16 @@ const DISCORD_PKG = "com.discord";
 const GOOGLE_PLAY_URL = `https://play.google.com/store/apps/details?id=${DISCORD_PKG}`;
 const TRACKER_BASE = "https://tracker.vendetta.rocks/tracker/download";
 const TRACKER_INDEX = "https://tracker.vendetta.rocks/tracker/index";
-const ANDROID_SPLITS = ["base", "config.arm64_v8a", "config.armeabi_v7a", "config.x86_64", "config.x86", "config.hdpi", "config.xxhdpi", "config.de", "config.en"];
-const ANDROID_COLORS: Record<ReleaseType, number> = { stable: 0x675AF5, beta: 0xEE850B, alpha: 0xFEF40C };
 
 const ITUNES_API = "https://itunes.apple.com/lookup?bundleId=com.hammerandchisel.discord&country=us";
 const APP_STORE_URL = "https://apps.apple.com/app/discord/id985746746";
 
 const TESTFLIGHT_URL = "https://testflight.apple.com/join/gdE4pRzI";
+const HOW_TO_JOIN_URL_ALPHA = "https://support.discord.com/hc/en-us/articles/360035675191-Discord-Testing-Clients#h_01HT0CCGC6NZYJ4C7D6G0BAPAD";
+const HOW_TO_JOIN_URL_TF = "https://support.discord.com/hc/en-us/articles/360035675191-Discord-Testing-Clients#h_01JZ8MGFQXGKTZ04NYM5415AGT";
+
 const TESTFLIGHT_STATUS_LABELS: Record<TestFlightStatus, string> = {
-    open: `[Join Beta](${TESTFLIGHT_URL})`,
+    open: "Open",
     full: "Full",
     closed: "Closed",
     unknown: "Unknown",
@@ -51,8 +56,7 @@ const TESTFLIGHT_STATUS_LABELS: Record<TestFlightStatus, string> = {
     ratelimited: "Rate Limited",
 };
 
-const DISCORD_ICON = "https://icons.duckduckgo.com/ip3/discord.com.ico";
-const DISCORD_AUTHOR_NAME = "Discord - Talk, Play, Hang Out";
+const ANDROID_COLORS: Record<ReleaseType, number> = { stable: 0x675AF5, beta: 0xEE850B, alpha: 0xFEF40C };
 
 function readVersion(file: string): number {
     try {
@@ -82,10 +86,13 @@ function resolveChannelIds(extraChannelId?: string): string[] {
     return ids;
 }
 
-async function postEmbed(channelIds: string[], embed: object, tag: string): Promise<void> {
+async function postUpdateMessage(channelIds: string[], components: any[], tag: string): Promise<void> {
     for (const channelId of channelIds) {
         try {
-            const message = await Vaius.rest.channels.createMessage(channelId, { embeds: [embed] });
+            const message = await Vaius.rest.channels.createMessage(channelId, {
+                flags: MessageFlags.IS_COMPONENTS_V2,
+                components,
+            });
             await Vaius.rest.channels.crosspostMessage(channelId, message.id);
         } catch (err) {
             console.error(`[UpdateTracker ${tag}] Failed to post to ${channelId}:`, err);
@@ -97,8 +104,28 @@ function trackerUrl(buildID: number, split: string): string {
     return `${TRACKER_BASE}/${buildID}/${split}`;
 }
 
-function vendettaLinks(versionCode: number): string {
-    return ANDROID_SPLITS.map(s => `[${s}.apk](${trackerUrl(versionCode, s)})`).join("\n");
+function vendettaGrid(versionCode: number): string {
+    const core = `[base.apk](${trackerUrl(versionCode, "base")})`;
+    const arch = ["config.arm64_v8a", "config.armeabi_v7a", "config.x86_64", "config.x86"]
+        .map(s => `[${s.replace("config.", "")}](${trackerUrl(versionCode, s)})`).join(" · ");
+    const density = ["config.hdpi", "config.xxhdpi"]
+        .map(s => `[${s.replace("config.", "")}](${trackerUrl(versionCode, s)})`).join(" · ");
+    const lang = ["config.en", "config.de"]
+        .map(s => `[${s === "config.en" ? "English (en)" : "German (de)"}](${trackerUrl(versionCode, s)})`).join(" · ");
+
+    return [
+        "**Core Files**",
+        core,
+        "",
+        "**Architecture (CPU)**",
+        arch,
+        "",
+        "**Screen Density (Display)**",
+        density,
+        "",
+        "**Language**",
+        lang,
+    ].join("\n");
 }
 
 function formatReleaseName(versionCode: number, releaseType: ReleaseType): string {
@@ -133,21 +160,23 @@ export async function checkAndroid(bypass = false, extraChannelId?: string): Pro
 
         if (!bypass && readVersion(versionFile) >= versionCode) continue;
 
-        const embed = {
-            author: { name: DISCORD_AUTHOR_NAME, url: GOOGLE_PLAY_URL, iconURL: DISCORD_ICON },
-            title: `New Android Release: ${formatReleaseName(versionCode, releaseType)}`,
-            description: `Build \`${versionCode}\` is now available.\nDetected at ${formatDate(new Date())}`,
-            fields: [
-                { name: "Google Play Store", value: GOOGLE_PLAY_URL, inline: true },
-                { name: "Vendetta Tracker", value: vendettaLinks(versionCode), inline: true },
-                ...(["alpha", "beta"].includes(releaseType) ? [
-                    { name: "How to Join", value: "https://support.discord.com/hc/en-us/articles/360035675191-Discord-Testing-Clients#h_01HT0CCGC6NZYJ4C7D6G0BAPAD", inline: true }
-                ] : []),
-            ],
-            color: ANDROID_COLORS[releaseType],
-        };
+        const name = formatReleaseName(versionCode, releaseType);
+        const accentColor = ANDROID_COLORS[releaseType];
 
-        await postEmbed(channelIds, embed, `Android ${releaseType}`);
+        const components = <>
+            <Container accentColor={accentColor}>
+                <TextDisplay>**New Android Release**</TextDisplay>
+                <TextDisplay>-# {name} · Detected {formatDate(new Date())}</TextDisplay>
+                <Separator spacing={SeparatorSpacingSize.LARGE} />
+                <TextDisplay>{vendettaGrid(versionCode)}</TextDisplay>
+            </Container>
+            <ActionRow>
+                <Button style={ButtonStyles.LINK} label="Google Play Store" url={GOOGLE_PLAY_URL} />
+                {["alpha", "beta"].includes(releaseType) && <Button style={ButtonStyles.LINK} label="How to Join" url={HOW_TO_JOIN_URL_ALPHA} />}
+            </ActionRow>
+        </>;
+
+        await postUpdateMessage(channelIds, components as any, `Android ${releaseType}`);
         writeVersion(versionFile, versionCode);
     }
 }
@@ -173,23 +202,27 @@ export async function checkAppStore(bypass = false, extraChannelId?: string): Pr
         return;
     }
 
-    const { version, currentVersionReleaseDate, releaseNotes, artworkUrl100 } = result;
+    const { version, currentVersionReleaseDate, releaseNotes, artworkUrl100, fileSizeBytes } = result;
     const versionCode = Number(version.replace(/\./g, ""));
+    const size = (Number(fileSizeBytes) / (1024 * 1024)).toFixed(1);
 
     if (!bypass && readVersion(versionFile) >= versionCode) return;
 
-    const embed = {
-        author: { name: DISCORD_AUTHOR_NAME, url: APP_STORE_URL, iconURL: artworkUrl100 },
-        title: `New App Store Release: ${version}`,
-        description: releaseNotes.slice(0, 300) + (releaseNotes.length > 300 ? "…" : ""),
-        fields: [
-            { name: "Released", value: formatDate(currentVersionReleaseDate), inline: true },
-            { name: "App Store", value: APP_STORE_URL, inline: true },
-        ],
-        color: 0x675AF5,
-    };
+    const description = releaseNotes.slice(0, 300) + (releaseNotes.length > 300 ? "…" : "");
 
-    await postEmbed(resolveChannelIds(extraChannelId), embed, "AppStore");
+    const components = <>
+        <Container accentColor={0x007AFF}>
+            <TextDisplay>**New App Store Release**</TextDisplay>
+            <TextDisplay>-# {version} · {size} MB · Released {formatDate(currentVersionReleaseDate)}</TextDisplay>
+            <Separator spacing={SeparatorSpacingSize.LARGE} />
+            {description && <TextDisplay>{description}</TextDisplay>}
+        </Container>
+        <ActionRow>
+            <Button style={ButtonStyles.LINK} label="View on App Store" url={APP_STORE_URL} />
+        </ActionRow>
+    </>;
+
+    await postUpdateMessage(resolveChannelIds(extraChannelId), components as any, "AppStore");
     writeVersion(versionFile, versionCode);
 }
 
@@ -244,21 +277,24 @@ export async function checkTestFlight(bypass = false, extraChannelId?: string): 
 
     if (!bypass && readVersion(versionFile) >= versionCode) return;
 
-    const embed = {
-        author: { name: DISCORD_AUTHOR_NAME, url: TESTFLIGHT_URL, iconURL: DISCORD_ICON },
-        title: `New TestFlight Release: ${build.cfBundleShortVersion} (${build.cfBundleVersion})`,
-        description: build.whatsNew,
-        fields: [
-            { name: "Released", value: formatDate(build.releaseDate), inline: true },
-            { name: "Expires", value: formatDate(build.expiration), inline: true },
-            { name: "Size", value: `${(build.fileSizeUncompressed / (1024 * 1024)).toFixed(1)} MB`, inline: true },
-            { name: "Beta Status", value: TESTFLIGHT_STATUS_LABELS[await getTestFlightStatus()], inline: true },
-            { name: "How to Join", value: "https://support.discord.com/hc/en-us/articles/360035675191-Discord-Testing-Clients#h_01JZ8MGFQXGKTZ04NYM5415AGT", inline: true },
-        ],
-        color: 0xEE850B,
-    };
+    const status = await getTestFlightStatus();
+    const size = (build.fileSizeUncompressed / (1024 * 1024)).toFixed(1);
 
-    await postEmbed(resolveChannelIds(extraChannelId), embed, "TestFlight");
+    const components = <>
+        <Container accentColor={0xFF6B35}>
+            <TextDisplay>**New TestFlight Release**</TextDisplay>
+            <TextDisplay>-# {build.cfBundleShortVersion} · Build `{build.cfBundleVersion}` · {size} MB · Status: {TESTFLIGHT_STATUS_LABELS[status]}</TextDisplay>
+            <Separator spacing={SeparatorSpacingSize.LARGE} />
+            <TextDisplay>{build.whatsNew}</TextDisplay>
+            <TextDisplay>-# Released {formatDate(build.releaseDate)} · Expires {formatDate(build.expiration)}</TextDisplay>
+        </Container>
+        <ActionRow>
+            {status === "open" && <Button style={ButtonStyles.LINK} label="Join TestFlight" url={TESTFLIGHT_URL} />}
+            <Button style={ButtonStyles.LINK} label="How to Join" url={HOW_TO_JOIN_URL_TF} />
+        </ActionRow>
+    </>;
+
+    await postUpdateMessage(resolveChannelIds(extraChannelId), components as any, "TestFlight");
     writeVersion(versionFile, versionCode);
 }
 
