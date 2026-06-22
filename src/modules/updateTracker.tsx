@@ -70,12 +70,9 @@ function writeVersion(file: string, version: number): void {
     fs.writeFileSync(file, version.toString(), "utf-8");
 }
 
-function formatDate(date: string | Date): string {
-    return new Date(date).toLocaleString("en-US", {
-        timeZone: "America/New_York",
-        dateStyle: "long",
-        timeStyle: "short",
-    });
+function discordTimestamp(date: string | Date, format: "f" | "F" | "d" | "D" | "t" | "T" | "R" = "f"): string {
+    const unix = Math.floor(new Date(date).getTime() / 1000);
+    return `<t:${unix}:${format}>`;
 }
 
 function resolveChannelIds(extraChannelId?: string): string[] {
@@ -167,7 +164,7 @@ export async function checkAndroid(bypass = false, extraChannelId?: string): Pro
             <Container accentColor={accentColor}>
                 <Section accessory={<Thumbnail url={`${Config.httpServer.domain}/public/googleplay.png`} />}>
                     <TextDisplay>New Android Release</TextDisplay>
-                    <TextDisplay>{name} · Detected {formatDate(new Date())}</TextDisplay>
+                    <TextDisplay>{name} · Detected {discordTimestamp(new Date())}</TextDisplay>
                     <TextDisplay>{vendettaGrid(versionCode)}</TextDisplay>
                 </Section>
             </Container>
@@ -215,7 +212,7 @@ export async function checkAppStore(bypass = false, extraChannelId?: string): Pr
         <Container accentColor={0x007AFF}>
             <Section accessory={<Thumbnail url={`${Config.httpServer.domain}/public/appstore.png`} />}>
                 <TextDisplay>New App Store Release</TextDisplay>
-                <TextDisplay>{version} · {size} MB · Released {formatDate(currentVersionReleaseDate)}</TextDisplay>
+                <TextDisplay>{version} · {size} MB · Released {discordTimestamp(currentVersionReleaseDate)}</TextDisplay>
                 {description && <TextDisplay>{description}</TextDisplay>}
             </Section>
         </Container>
@@ -288,7 +285,7 @@ export async function checkTestFlight(bypass = false, extraChannelId?: string): 
                 <TextDisplay>New TestFlight Release</TextDisplay>
                 <TextDisplay>{build.cfBundleShortVersion} · Build `{build.cfBundleVersion}` · {size} MB · Status: {TESTFLIGHT_STATUS_LABELS[status]}</TextDisplay>
                 <TextDisplay>{build.whatsNew}</TextDisplay>
-                <TextDisplay>Released {formatDate(build.releaseDate)} · Expires {formatDate(build.expiration)}</TextDisplay>
+                <TextDisplay>Released {discordTimestamp(build.releaseDate)} · Expires {discordTimestamp(build.expiration)}</TextDisplay>
             </Section>
         </Container>
         <ActionRow>
