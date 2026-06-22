@@ -4,13 +4,13 @@ import { childrenToString } from "./utils";
 
 export { ButtonStyles } from "oceanic.js";
 
-type Button = Omit<TextButton, "type" | "label"> | Omit<URLButton, "type" | "label">;
+type Button = Omit<TextButton, "type"> | Omit<URLButton, "type">;
 export type ButtonProps = Button & { children?: any; };
 
-export function Button({ children, ...props }: ButtonProps): ButtonComponent {
+export function Button({ label, children, ...props }: ButtonProps): ButtonComponent {
     return {
         type: ComponentTypes.BUTTON,
-        label: childrenToString("Button", children) ?? undefined,
+        label: childrenToString("Button", children) ?? label ?? undefined,
         ...props
     };
 }

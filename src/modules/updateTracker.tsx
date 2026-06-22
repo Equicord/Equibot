@@ -1,6 +1,6 @@
 import fs from "fs";
-import { join } from "path";
 import { ButtonStyles, MessageFlags, SeparatorSpacingSize } from "oceanic.js";
+import { join } from "path";
 import { Vaius } from "~/Client";
 import Config from "~/config";
 import { DATA_DIR, Millis } from "~/constants";
@@ -39,7 +39,6 @@ const DISCORD_PKG = "com.discord";
 const GOOGLE_PLAY_URL = `https://play.google.com/store/apps/details?id=${DISCORD_PKG}`;
 const TRACKER_BASE = "https://tracker.vendetta.rocks/tracker/download";
 const TRACKER_INDEX = "https://tracker.vendetta.rocks/tracker/index";
-const ANDROID_SPLITS = ["base", "config.arm64_v8a", "config.armeabi_v7a", "config.x86_64", "config.x86", "config.hdpi", "config.xxhdpi", "config.de", "config.en"];
 
 const ITUNES_API = "https://itunes.apple.com/lookup?bundleId=com.hammerandchisel.discord&country=us";
 const APP_STORE_URL = "https://apps.apple.com/app/discord/id985746746";
@@ -57,7 +56,7 @@ const TESTFLIGHT_STATUS_LABELS: Record<TestFlightStatus, string> = {
     ratelimited: "Rate Limited",
 };
 
-const ANDROID_COLORS: Record<ReleaseType, number> = { stable: 0x3BA55C, beta: 0xFEE75C, alpha: 0xEB459E };
+const ANDROID_COLORS: Record<ReleaseType, number> = { stable: 0x675AF5, beta: 0xEE850B, alpha: 0xFEF40C };
 
 function readVersion(file: string): number {
     try {
