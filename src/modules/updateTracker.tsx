@@ -165,7 +165,7 @@ export async function checkAndroid(bypass = false, extraChannelId?: string): Pro
 
         const components = <>
             <Container accentColor={accentColor}>
-                <Section accessory={<Thumbnail url={`${Config.httpServer.domain}/public/google.png`} />}>
+                <Section accessory={<Thumbnail url={`${Config.httpServer.domain}/public/googleplay.png`} />}>
                     <TextDisplay>New Android Release</TextDisplay>
                     <TextDisplay>{name} · Detected {formatDate(new Date())}</TextDisplay>
                     <TextDisplay>{vendettaGrid(versionCode)}</TextDisplay>
