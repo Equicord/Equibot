@@ -167,9 +167,9 @@ export async function checkAndroid(bypass = false, extraChannelId?: string): Pro
             <Container accentColor={accentColor}>
                 <Section accessory={<Thumbnail url={`${Config.httpServer.domain}/public/google.png`} />}>
                     <TextDisplay>New Android Release</TextDisplay>
+                    <TextDisplay>{name} · Detected {formatDate(new Date())}</TextDisplay>
+                    <TextDisplay>{vendettaGrid(versionCode)}</TextDisplay>
                 </Section>
-                <TextDisplay>{name} · Detected {formatDate(new Date())}</TextDisplay>
-                <TextDisplay>{vendettaGrid(versionCode)}</TextDisplay>
             </Container>
             <ActionRow>
                 <Button style={ButtonStyles.LINK} url={GOOGLE_PLAY_URL}>Google Play Store</Button>
@@ -215,9 +215,9 @@ export async function checkAppStore(bypass = false, extraChannelId?: string): Pr
         <Container accentColor={0x007AFF}>
             <Section accessory={<Thumbnail url={`${Config.httpServer.domain}/public/appstore.png`} />}>
                 <TextDisplay>New App Store Release</TextDisplay>
+                <TextDisplay>{version} · {size} MB · Released {formatDate(currentVersionReleaseDate)}</TextDisplay>
+                {description && <TextDisplay>{description}</TextDisplay>}
             </Section>
-            <TextDisplay>{version} · {size} MB · Released {formatDate(currentVersionReleaseDate)}</TextDisplay>
-            {description && <TextDisplay>{description}</TextDisplay>}
         </Container>
         <ActionRow>
             <Button style={ButtonStyles.LINK} url={APP_STORE_URL}>View on App Store</Button>
@@ -286,10 +286,10 @@ export async function checkTestFlight(bypass = false, extraChannelId?: string): 
         <Container accentColor={0xFF6B35}>
             <Section accessory={<Thumbnail url={`${Config.httpServer.domain}/public/testflight.png`} />}>
                 <TextDisplay>New TestFlight Release</TextDisplay>
+                <TextDisplay>{build.cfBundleShortVersion} · Build `{build.cfBundleVersion}` · {size} MB · Status: {TESTFLIGHT_STATUS_LABELS[status]}</TextDisplay>
+                <TextDisplay>{build.whatsNew}</TextDisplay>
+                <TextDisplay>Released {formatDate(build.releaseDate)} · Expires {formatDate(build.expiration)}</TextDisplay>
             </Section>
-            <TextDisplay>{build.cfBundleShortVersion} · Build `{build.cfBundleVersion}` · {size} MB · Status: {TESTFLIGHT_STATUS_LABELS[status]}</TextDisplay>
-            <TextDisplay>{build.whatsNew}</TextDisplay>
-            <TextDisplay>Released {formatDate(build.releaseDate)} · Expires {formatDate(build.expiration)}</TextDisplay>
         </Container>
         <ActionRow>
             {status === "open" && <Button style={ButtonStyles.LINK} url={TESTFLIGHT_URL}>Join TestFlight</Button>}
