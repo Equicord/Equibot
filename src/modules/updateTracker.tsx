@@ -1,5 +1,5 @@
 import fs from "fs";
-import { ButtonStyles, MessageFlags, SeparatorSpacingSize } from "oceanic.js";
+import { ButtonStyles, MessageFlags } from "oceanic.js";
 import { join } from "path";
 import { Vaius } from "~/Client";
 import Config from "~/config";
@@ -7,7 +7,7 @@ import { DATA_DIR, Millis } from "~/constants";
 import { toTitle } from "~/util/text";
 import { sleep } from "~/util/time";
 
-import { ActionRow, Button, Container, Section, Separator, TextDisplay, Thumbnail } from "~components";
+import { ActionRow, Button, Container, Section, TextDisplay, Thumbnail } from "~components";
 
 type ReleaseType = "stable" | "beta" | "alpha";
 type TestFlightStatus = "open" | "full" | "closed" | "unknown" | "notfound" | "ratelimited";
@@ -169,7 +169,6 @@ export async function checkAndroid(bypass = false, extraChannelId?: string): Pro
                     <TextDisplay>New Android Release</TextDisplay>
                 </Section>
                 <TextDisplay>{name} · Detected {formatDate(new Date())}</TextDisplay>
-                <Separator spacing={SeparatorSpacingSize.LARGE} />
                 <TextDisplay>{vendettaGrid(versionCode)}</TextDisplay>
             </Container>
             <ActionRow>
@@ -218,7 +217,6 @@ export async function checkAppStore(bypass = false, extraChannelId?: string): Pr
                 <TextDisplay>New App Store Release</TextDisplay>
             </Section>
             <TextDisplay>{version} · {size} MB · Released {formatDate(currentVersionReleaseDate)}</TextDisplay>
-            <Separator spacing={SeparatorSpacingSize.LARGE} />
             {description && <TextDisplay>{description}</TextDisplay>}
         </Container>
         <ActionRow>
@@ -290,7 +288,6 @@ export async function checkTestFlight(bypass = false, extraChannelId?: string): 
                 <TextDisplay>New TestFlight Release</TextDisplay>
             </Section>
             <TextDisplay>{build.cfBundleShortVersion} · Build `{build.cfBundleVersion}` · {size} MB · Status: {TESTFLIGHT_STATUS_LABELS[status]}</TextDisplay>
-            <Separator spacing={SeparatorSpacingSize.LARGE} />
             <TextDisplay>{build.whatsNew}</TextDisplay>
             <TextDisplay>Released {formatDate(build.releaseDate)} · Expires {formatDate(build.expiration)}</TextDisplay>
         </Container>
