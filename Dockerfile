@@ -36,6 +36,7 @@ RUN apt-get update && \
 
 COPY package*.json pnpm-*.yaml ./
 COPY assets ./assets
+COPY public ./public
 RUN pnpm install --prod --frozen-lockfile
 
 COPY --from=build /app/dist ./dist

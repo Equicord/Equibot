@@ -7,7 +7,7 @@ import { DATA_DIR, Millis } from "~/constants";
 import { toTitle } from "~/util/text";
 import { sleep } from "~/util/time";
 
-import { ActionRow, Button, Container, Separator, TextDisplay } from "~components";
+import { ActionRow, Button, Container, Section, Separator, TextDisplay, Thumbnail } from "~components";
 
 type ReleaseType = "stable" | "beta" | "alpha";
 type TestFlightStatus = "open" | "full" | "closed" | "unknown" | "notfound" | "ratelimited";
@@ -165,8 +165,10 @@ export async function checkAndroid(bypass = false, extraChannelId?: string): Pro
 
         const components = <>
             <Container accentColor={accentColor}>
-                <TextDisplay>**New Android Release**</TextDisplay>
-                <TextDisplay>-# {name} · Detected {formatDate(new Date())}</TextDisplay>
+                <Section accessory={<Thumbnail url={`${Config.httpServer.domain}/public/google.png`} />}>
+                    <TextDisplay>New Android Release</TextDisplay>
+                </Section>
+                <TextDisplay>{name} · Detected {formatDate(new Date())}</TextDisplay>
                 <Separator spacing={SeparatorSpacingSize.LARGE} />
                 <TextDisplay>{vendettaGrid(versionCode)}</TextDisplay>
             </Container>
@@ -212,8 +214,10 @@ export async function checkAppStore(bypass = false, extraChannelId?: string): Pr
 
     const components = <>
         <Container accentColor={0x007AFF}>
-            <TextDisplay>**New App Store Release**</TextDisplay>
-            <TextDisplay>-# {version} · {size} MB · Released {formatDate(currentVersionReleaseDate)}</TextDisplay>
+            <Section accessory={<Thumbnail url={`${Config.httpServer.domain}/public/appstore.png`} />}>
+                <TextDisplay>New App Store Release</TextDisplay>
+            </Section>
+            <TextDisplay>{version} · {size} MB · Released {formatDate(currentVersionReleaseDate)}</TextDisplay>
             <Separator spacing={SeparatorSpacingSize.LARGE} />
             {description && <TextDisplay>{description}</TextDisplay>}
         </Container>
@@ -282,11 +286,13 @@ export async function checkTestFlight(bypass = false, extraChannelId?: string): 
 
     const components = <>
         <Container accentColor={0xFF6B35}>
-            <TextDisplay>**New TestFlight Release**</TextDisplay>
-            <TextDisplay>-# {build.cfBundleShortVersion} · Build `{build.cfBundleVersion}` · {size} MB · Status: {TESTFLIGHT_STATUS_LABELS[status]}</TextDisplay>
+            <Section accessory={<Thumbnail url={`${Config.httpServer.domain}/public/testflight.png`} />}>
+                <TextDisplay>New TestFlight Release</TextDisplay>
+            </Section>
+            <TextDisplay>{build.cfBundleShortVersion} · Build `{build.cfBundleVersion}` · {size} MB · Status: {TESTFLIGHT_STATUS_LABELS[status]}</TextDisplay>
             <Separator spacing={SeparatorSpacingSize.LARGE} />
             <TextDisplay>{build.whatsNew}</TextDisplay>
-            <TextDisplay>-# Released {formatDate(build.releaseDate)} · Expires {formatDate(build.expiration)}</TextDisplay>
+            <TextDisplay>Released {formatDate(build.releaseDate)} · Expires {formatDate(build.expiration)}</TextDisplay>
         </Container>
         <ActionRow>
             {status === "open" && <Button style={ButtonStyles.LINK} url={TESTFLIGHT_URL}>Join TestFlight</Button>}

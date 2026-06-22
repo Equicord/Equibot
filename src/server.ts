@@ -1,6 +1,8 @@
 import Fastify from "fastify";
 
+import fastifyStatic from "@fastify/static";
 import { readFile } from "fs/promises";
+import { join } from "path";
 import Config from "./config";
 import { PROD } from "./constants";
 import { getGitRemote } from "./util/git";
@@ -28,8 +30,11 @@ if (enabled) {
         res
             .type("text/html")
             .send(await getIndex());
+    });
 
-
+    fastify.register(fastifyStatic, {
+        root: join(__dirname, "..", "public"),
+        prefix: "/public/",
     });
 
     fastify.get("/health", () => ({ ok: true }));

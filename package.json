@@ -15,6 +15,7 @@
     "keywords": [],
     "author": "Vendicated <vendicated+npm@riseup.net>",
     "dependencies": {
+        "@fastify/static": "^9.1.3",
         "@google/genai": "^1.34.0",
         "@napi-rs/canvas": "^0.1.88",
         "@tensorflow/tfjs": "^4.22.0",
