@@ -126,29 +126,32 @@ function commandHelp(cmd: FullCommand, { prefix }: CommandContext) {
     return (
         <ComponentMessage>
             <Container>
-                <TextDisplay>## {toTitle(cmd.name)}</TextDisplay>
-                <TextDisplay>{cmd.description}</TextDisplay>
-                <Separator />
+                <TextDisplay>
+                    ## {toTitle(cmd.name)}
+                    <br />
+                    {cmd.description}
+                    {cmd.aliases && (
+                        <>
+                            <br /><br />
+                            ### Aliases
+                            <br />
+                            {cmd.aliases.map(toInlineCode).join(", ")}
+                        </>
+                    )}
+                    {cmd.usage && (
+                        <>
+                            <br /><br />
+                            ### Usage
+                            <br />
+                            {toCodeblock(`${prefix}${cmd.name} ${cmd.usage}`)}
+                        </>
+                    )}
+                </TextDisplay>
 
-                {cmd.aliases && (
-                    <TextDisplay>
-                        ### Aliases
-                        <br />
-                        {cmd.aliases.map(toInlineCode).join(", ")}
-                    </TextDisplay>
-                )}
-                {cmd.usage && (
-                    <TextDisplay>
-                        ### Usage
-                        <br />
-                        {toCodeblock(`${prefix}${cmd.name} ${cmd.usage}`)}
-                    </TextDisplay>
-                )}
-
-                {!!notes && (
+                {!!notes.trim() && (
                     <>
                         <Separator spacing={SeparatorSpacingSize.LARGE} />
-                        <TextDisplay>{notes}</TextDisplay>
+                        <TextDisplay>{notes.trim()}</TextDisplay>
                     </>
                 )}
             </Container>
