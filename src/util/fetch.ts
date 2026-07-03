@@ -9,6 +9,12 @@ import { sleep } from "./time";
 
 type Url = string | URL;
 
+class FetchError extends Error {
+    constructor(message: string, public readonly code: number, public readonly response: Response) {
+        super(message);
+    }
+}
+
 /**
  * @param options.retryCount Number of times to retry on network failure. Default is 3.
  * @param options.retryDelayMs Delay between retries in milliseconds. Default is 1000.
@@ -40,7 +46,7 @@ export async function doFetch(
         message += `\n${reason.slice(0, 500)}`;
     } catch { }
 
-    throw new Error(message);
+    throw new FetchError(message, res.status, res);
 }
 
 export async function fetchBuffer(url: Url, init?: RequestInit) {
