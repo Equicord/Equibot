@@ -283,9 +283,8 @@ export async function checkTestFlight(bypass = false, extraChannelId?: string): 
         <Container accentColor={0xFF6B35}>
             <Section accessory={<Thumbnail url={`${Config.httpServer.domain}/public/testflight.png`} />}>
                 <TextDisplay>New TestFlight Release</TextDisplay>
-                <TextDisplay>{build.cfBundleShortVersion} · Build `{build.cfBundleVersion}` · {size} MB · Status: {TESTFLIGHT_STATUS_LABELS[status]}</TextDisplay>
+                <TextDisplay>{build.cfBundleShortVersion} · Build `{build.cfBundleVersion}` · {size} MB · Status: {TESTFLIGHT_STATUS_LABELS[status]}{"\n"}Released {discordTimestamp(build.releaseDate)} · Expires {discordTimestamp(build.expiration)}</TextDisplay>
                 <TextDisplay>{build.whatsNew}</TextDisplay>
-                <TextDisplay>Released {discordTimestamp(build.releaseDate)} · Expires {discordTimestamp(build.expiration)}</TextDisplay>
             </Section>
         </Container>
         <ActionRow>
