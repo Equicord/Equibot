@@ -24,6 +24,7 @@ const Config = {
         // always includes channels.support
         "supportAllowedChannels": [
             "1281600060261535825", // bot spam
+            "1263790880528269405" // staff commands
         ],
     },
 
