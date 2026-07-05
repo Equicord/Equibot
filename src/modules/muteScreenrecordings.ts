@@ -1,37 +1,15 @@
 import { mkdtemp, readFile, rm } from "fs/promises";
-import { Message, MessageFlags } from "oceanic.js";
+import { ButtonStyles, ComponentTypes, InteractionTypes, Message, MessageFlags } from "oceanic.js";
 import { tmpdir } from "os";
 import { join } from "path";
 
 import { Vaius } from "~/Client";
+import { handleInteraction } from "~/SlashCommands";
 import { execFileP } from "~/util/childProcess";
 import { reply } from "~/util/discord";
 import { downloadToFile } from "~/util/fetch";
 
 const UsersToMute = ["521819891141967883"];
-
-async function hasAudio(file: string) {
-    const res = await execFileP("ffprobe", ["-i", file, "-show_streams", "-select_streams", "a", "-loglevel", "error"]);
-
-    const stdout = res.stdout.trim();
-    if (!stdout.length) return false;
-
-    const durationString = stdout.split("\n").find(line => line.startsWith("duration="))?.split("=")[1];
-    if (!durationString) return false;
-
-    const silenceRes = await execFileP("ffmpeg", ["-hide_banner", "-i", file, "-af", "silencedetect=n=-50dB:d=0.5", "-f", "null", "/dev/null"]);
-    const silenceStderr = silenceRes.stderr.trim();
-
-    const silenceDurationString = silenceStderr.match(/silence_duration: (\d+(?:\.\d+)?)/);
-    if (!silenceDurationString) return false;
-
-    const silenceDuration = parseFloat(silenceDurationString[1]);
-    const duration = parseFloat(durationString);
-
-    if (isNaN(silenceDuration) || isNaN(duration)) return false;
-
-    return Math.floor(duration - silenceDuration) > 1;
-}
 
 async function muteVideo(file: string, outFile: string) {
     const res = await execFileP("ffmpeg", ["-i", file, "-c", "copy", "-an", outFile]);
@@ -80,10 +58,33 @@ Vaius.on("messageCreate", async msg => {
             files: [{
                 contents: await readFile(mutedFile),
                 name: video.filename
+            }],
+            components: [{
+                type: ComponentTypes.ACTION_ROW,
+                components: [{
+                    type: ComponentTypes.BUTTON,
+                    customID: "mute-screenrecordings-delete",
+                    style: ButtonStyles.DANGER,
+                    label: "Delete"
+                }]
             }]
         });
         await msg.delete();
     } finally {
         await rm(tempDir, { recursive: true, force: true });
+    }
+});
+
+handleInteraction({
+    type: InteractionTypes.MESSAGE_COMPONENT,
+    isMatch: i => i.data.customID === "mute-screenrecordings-delete",
+    async handle(interaction) {
+        if (!UsersToMute.includes(interaction.user.id)) {
+            return interaction.reply({
+                content: "You are not allowed to delete this.",
+                flags: MessageFlags.EPHEMERAL
+            });
+        }
+        await interaction.message.delete();
     }
 });
