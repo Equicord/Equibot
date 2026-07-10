@@ -2,9 +2,9 @@ import { MessageFlags } from "oceanic.js";
 
 import { CommandContext, defineCommand } from "~/Commands";
 import { registerChatInputCommand } from "~/SlashCommands";
-import { CommandStringOption } from "~components";
 import { run } from "~/util/functions";
-import { Plugin, fetchPlugins, findSimilarPlugins, buildPluginInfoMessage } from "./pluginUtils";
+import { CommandStringOption } from "~components";
+import { Plugin, buildPluginInfoMessage, fetchPlugins, findSimilarPlugins } from "./pluginUtils";
 
 async function sendPluginInfo({ reply }: CommandContext, plugin: Plugin) {
     return reply(buildPluginInfoMessage(plugin));
@@ -28,7 +28,7 @@ defineCommand({
             if (!query) return;
 
             query = query.toLowerCase();
-            return plugins.find(p => p.name.toLowerCase().includes(query));
+            return plugins.find(p => p.name.toLowerCase() === query) || plugins.find(p => p.name.toLowerCase().includes(query));
         });
 
         if (match)
