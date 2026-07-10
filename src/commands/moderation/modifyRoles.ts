@@ -50,8 +50,6 @@ function parseArgs(msg: Message<AnyTextableGuildChannel>, args: string[]) {
     return { role, users: users as string[] };
 }
 
-
-
 defineCommand({
     name: "role-add",
     aliases: ["+", "ra"],

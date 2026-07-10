@@ -336,7 +336,6 @@ enabled && fastify.register(
     },
 );
 
-
 defineCommand({
     enabled,
 

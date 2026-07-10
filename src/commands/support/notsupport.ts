@@ -83,7 +83,6 @@ defineCommand({
     }
 });
 
-
 function draw(channels: Channels) {
     const canvas = createCanvas(WIDTH, HEIGHT);
     const ctx = canvas.getContext("2d");
