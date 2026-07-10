@@ -9,7 +9,10 @@ async function initScheduler() {
     const newScheduler = createScheduler();
 
     await Promise.all(Array.from({ length: 3 }, async () => {
-        const worker = await createWorker("eng", Tesseract.OEM.LSTM_ONLY, { cachePath: join(DATA_DIR, "tesscache") });
+        const worker = await createWorker("eng", Tesseract.OEM.LSTM_ONLY, {
+            cachePath: join(DATA_DIR, "tesscache"),
+            errorHandler: e => console.error("Tesseract worker error:", e)
+        });
         await worker.setParameters({
             tessedit_char_whitelist: "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ$.:/ ",
         });
