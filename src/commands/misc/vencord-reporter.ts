@@ -49,7 +49,7 @@ defineCommand({
                 onSubmit: (report, data) => {
                     let prLinkText = "";
                     if (report.prNumber) {
-                        prLinkText = `[PR #${report.prNumber}](https://github.com/Equicord/Equicord/pull/${report.prNumber})`;
+                        prLinkText = `[${report.prNumber}](https://github.com/Equicord/Equicord/pull/${report.prNumber})`;
                         data.embeds[0].description = `${prLinkText}\n${data.embeds[0].description || ""}`;
                     }
                     reply(msg, data);
@@ -58,7 +58,7 @@ defineCommand({
         );
 
         reply(msg, pr
-            ? `Now testing [#${refOrPr}](https://github.com/Equicord/Equicord/pull/${refOrPr}) (\`${pr.repo}@${pr.branch}\`)!`
+            ? `Now testing [${refOrPr}](<https://github.com/Equicord/Equicord/pull/${refOrPr}>) (\`${pr.repo}@${pr.branch}\`)!`
             : "Now testing!"
         );
     },
