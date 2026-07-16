@@ -24,29 +24,20 @@ interface ReportData {
     shouldUpdateStatus: boolean;
     onSubmit?(report: ReportData, data: any): void;
     submitCount: number;
-    prNumber?: string;
 }
 
 export const DefaultReporterBranch = "dev";
 
 const { canaryMessageId, enabled, logChannelId, pat, stableMessageId, statusChannelId, webhookSecret } = Config.reporter;
 
-const pendingReports = new TTLMap<string, ReportData>(
+const pendingReports = new TTLMap<string, ReportData & { ref?: string, prNumber?: number; }>(
     10 * Millis.MINUTE,
     (_id, report) => Vaius.rest.channels.createMessage(logChannelId, {
         content: `Timed out while testing ${report.branch} ${report.hash[report.branch] || "with unknown hash"}`,
     })
 );
 
-export async function triggerReportWorkflow({ ref, inputs }: {
-    ref: string;
-    inputs: {
-        discord_branch: Branch;
-        webhook_url?: string;
-        pr_repo?: string;
-        pr_branch?: string;
-    };
-}) {
+export async function triggerReportWorkflow({ ref, inputs }: { ref: string, inputs: { discord_branch: Branch; webhook_url?: string; }; }) {
     return await doFetch("https://api.github.com/repos/Equicord/Equicord/actions/workflows/reportBrokenPlugins.yml/dispatches", {
         method: "POST",
         headers: {
@@ -86,28 +77,67 @@ async function checkVersions() {
     }
 }
 
-export interface PROptions {
-    repo: string;
-    branch: string;
+type Options = Partial<Pick<ReportData, "shouldLog" | "shouldUpdateStatus" | "onSubmit">> & { ref?: string; };
+
+async function createTemporaryBranchForForkPR(pr: any): Promise<string> {
+    const tempBranch = `pr-${pr.number}`;
+    const { sha } = pr.head;
+
+    const res = await doFetch("https://api.github.com/repos/Equicord/Equicord/git/refs", {
+        method: "POST",
+        headers: {
+            Authorization: `Bearer ${pat}`,
+            Accept: "application/vnd.github+json"
+        },
+        body: JSON.stringify({
+            ref: `refs/heads/${tempBranch}`,
+            sha
+        })
+    });
+
+    if (!res.ok) throw new Error("Failed to create temporary branch for fork PR");
+    return tempBranch;
 }
 
-type Options = Partial<Pick<ReportData, "shouldLog" | "shouldUpdateStatus" | "onSubmit">> & {
-    ref?: string;
-    pr?: PROptions;
-    prNumber?: string;
-};
+async function deleteTemporaryBranch(branch: string) {
+    await doFetch(`https://api.github.com/repos/Equicord/Equicord/git/refs/heads/${branch}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${pat}` }
+    });
+}
 
-export async function testDiscordVersion<B extends Branch>(branch: B, hash: Record<B extends "both" ? "stable" | "canary" : B, string>, options: Options = {}) {
-    const {
-        shouldLog = true,
-        shouldUpdateStatus = true,
-        ref = DefaultReporterBranch,
-        onSubmit,
-        pr,
-        prNumber
-    } = options;
+async function resolveRef(ref: string): Promise<{ refName: string; isTemp?: boolean; prNumber?: number; }> {
+    const match = ref.match(/(?:pull\/)?(\d+)/);
+    if (!match) return { refName: ref };
 
+    const prNumber = parseInt(match[1], 10);
+
+    const res = await doFetch(`https://api.github.com/repos/Equicord/Equicord/pulls/${prNumber}`, {
+        headers: {
+            Authorization: `Bearer ${pat}`,
+            Accept: "application/vnd.github+json"
+        }
+    });
+
+    if (!res.ok) throw new Error(`PR #${prNumber} not found`);
+    const pr = await res.json();
+
+    if (pr.head.repo.full_name === "Equicord/Equicord") return { refName: pr.head.ref, prNumber };
+
+    const tempBranch = await createTemporaryBranchForForkPR(pr);
+    return { refName: tempBranch, isTemp: true, prNumber };
+}
+
+export async function testDiscordVersion<B extends Branch>(
+    branch: B,
+    hash: Record<B extends "both" ? "stable" | "canary" : B, string>,
+    options: Options = {}
+) {
+    const { shouldLog = true, shouldUpdateStatus = true, ref = DefaultReporterBranch, onSubmit } = options;
+
+    const { refName, isTemp, prNumber } = await resolveRef(ref);
     const runId = randomUUID();
+
     pendingReports.set(runId, {
         runId,
         branch,
@@ -116,20 +146,27 @@ export async function testDiscordVersion<B extends Branch>(branch: B, hash: Reco
         shouldUpdateStatus,
         onSubmit,
         submitCount: 0,
-        prNumber
+        prNumber,
     });
 
-    await triggerReportWorkflow({
-        ref,
-        inputs: {
-            discord_branch: branch,
-            webhook_url: `${Config.httpServer.domain}/reporter/webhook?runId=${runId}`,
-            ...(pr && { pr_repo: pr.repo, pr_branch: pr.branch })
+    try {
+        await triggerReportWorkflow({
+            ref: refName,
+            inputs: {
+                discord_branch: branch,
+                webhook_url: `${Config.httpServer.domain}/reporter/webhook?runId=${runId}`
+            }
+        });
+    } finally {
+        if (isTemp) {
+            setTimeout(() => {
+                deleteTemporaryBranch(refName).catch(console.error);
+            }, 2 * Millis.MINUTE);
         }
-    });
+    }
 }
 
-async function handleReportSubmit(report: ReportData, data: any) {
+async function handleReportSubmit(report: ReportData & { ref?: string, prNumber?: number; }, data: any) {
     const shouldRemoveFromPending = report.branch !== "both" || ++report.submitCount === 2;
     if (shouldRemoveFromPending) {
         pendingReports.delete(report.runId);
@@ -147,13 +184,17 @@ async function handleReportSubmit(report: ReportData, data: any) {
         ...data,
         allowedMentions: { parse: [] }
     };
-    // trolley
     data.embeds[0].author.iconURL = data.embeds[0].author.icon_url;
+
+    let prLinkText = "";
+    if (report.prNumber) {
+        prLinkText = `[PR #${report.prNumber}](https://github.com/Equicord/Equicord/pull/${report.prNumber})`;
+        data.embeds[0].description = `${prLinkText}\n${data.embeds[0].description || ""}`;
+    }
 
     let descriptionTooLarge = false;
     const contentLength = data.embeds.reduce((total: number, embed: EmbedOptions) => {
         if (embed.description && embed.description.length > 4096) descriptionTooLarge = true;
-
         const lengths = [
             total,
             embed.title?.length || 0,
@@ -161,7 +202,6 @@ async function handleReportSubmit(report: ReportData, data: any) {
             embed.author?.name?.length || 0,
             embed.footer?.text?.length || 0
         ];
-
         return lengths.reduce((a, b) => a + b, 0);
     }, 0);
 
