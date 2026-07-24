@@ -1,37 +1,32 @@
 import { defineCommand } from "~/Commands";
 import Config from "~/config";
 import { BotState } from "~/db/botState";
-import { DefaultReporterBranch, testDiscordVersion } from "~/modules/discordTracker";
+import { DefaultReporterBranch, ReporterOptions, testDiscordVersion } from "~/modules/discordTracker";
 import { reply } from "~/util/discord";
-import { fetchJson } from "~/util/fetch";
+
+const PrRegex = /#(\d+)/;
 
 defineCommand({
     enabled: Config.reporter.enabled,
 
     name: "reporter",
     description: "Run the Equicord reporter workflow",
-    usage: "[prNum | ref = dev] [branch = both]",
+    usage: "[ref = dev] [branch = both]",
     aliases: ["report", "equicord-reporter", "test-patches", "test", "rep", "r"],
     allowedRoles: [Config.roles.mod, Config.roles.helper],
 
-    async execute({ msg }, refOrPr = DefaultReporterBranch, branch = "both") {
-        let ref = refOrPr;
-        let pr: { repo: string; branch: string; } | undefined;
+    async execute({ msg }, ref = DefaultReporterBranch, branch = "both") {
+        const options: ReporterOptions = { ref };
 
-        if (/^#(\d+)$/.test(refOrPr)) {
-            const prNum = refOrPr.match(/\d+/)![0];
-            let prData;
-            try {
-                prData = await fetchJson(`https://api.github.com/repos/Equicord/Equicord/pulls/${prNum}`);
-            } catch (e) {
-                return reply(msg, `Failed to fetch PR #${prNum}.`);
-            }
+        let isPR = false;
+        let prNumber = 0;
+        if (PrRegex.test(ref)) {
+            prNumber = parseInt(ref.match(PrRegex)![1]);
+            isPR = true;
 
-            pr = {
-                repo: prData.head.repo.full_name as string,
-                branch: prData.head.ref as string,
-            };
-            ref = DefaultReporterBranch;
+            options.ref = DefaultReporterBranch;
+            options.inputRepository = "Equicord/Equicord";
+            options.inputRef = `refs/pull/${prNumber}/head`;
         }
 
         testDiscordVersion(
@@ -41,15 +36,14 @@ defineCommand({
                 canary: BotState.discordTracker?.canaryHash!
             },
             {
-                ref,
-                pr,
-                prNumber: pr ? refOrPr : undefined,
+                ...options,
                 shouldLog: false,
-                shouldUpdateStatus: !pr && ref === DefaultReporterBranch,
-                onSubmit: (report, data) => {
+                shouldUpdateStatus: options.ref === DefaultReporterBranch,
+                isPR: isPR,
+                onSubmit: (_report, data) => {
                     let prLinkText = "";
-                    if (report.prNumber) {
-                        prLinkText = `[${report.prNumber}](https://github.com/Equicord/Equicord/pull/${report.prNumber})`;
+                    if (isPR) {
+                        prLinkText = `[#${prNumber}](https://github.com/Equicord/Equicord/pull/${prNumber})`;
                         data.embeds[0].description = `${prLinkText}\n${data.embeds[0].description || ""}`;
                     }
                     reply(msg, data);
@@ -57,8 +51,8 @@ defineCommand({
             }
         );
 
-        reply(msg, pr
-            ? `Now testing [${refOrPr}](<https://github.com/Equicord/Equicord/pull/${refOrPr}>) (\`${pr.repo}@${pr.branch}\`)!`
+        reply(msg, isPR
+            ? `Now testing [#${prNumber}](<https://github.com/Equicord/Equicord/pull/${prNumber}>)!`
             : "Now testing!"
         );
     },

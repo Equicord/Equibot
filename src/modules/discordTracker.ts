@@ -11,11 +11,6 @@ import { TTLMap } from "~/util/TTLMap";
 
 type Branch = "both" | "stable" | "canary";
 
-interface VersionData {
-    hash: string;
-    required: boolean;
-}
-
 interface ReportData {
     runId: string;
     branch: Branch;
@@ -24,7 +19,20 @@ interface ReportData {
     shouldUpdateStatus: boolean;
     onSubmit?(report: ReportData, data: any): void;
     submitCount: number;
-    prNumber?: string;
+    isPR?: boolean;
+}
+
+export type ReporterOptions = Partial<Pick<ReportData, "shouldLog" | "shouldUpdateStatus" | "onSubmit" | "isPR">> & {
+    ref?: string;
+    inputRepository?: string;
+    inputRef?: string;
+};
+
+interface DispatchInputs {
+    discord_branch: Branch;
+    webhook_url?: string;
+    repository?: string;
+    ref?: string;
 }
 
 export const DefaultReporterBranch = "dev";
@@ -38,15 +46,7 @@ const pendingReports = new TTLMap<string, ReportData>(
     })
 );
 
-export async function triggerReportWorkflow({ ref, inputs }: {
-    ref: string;
-    inputs: {
-        discord_branch: Branch;
-        webhook_url?: string;
-        pr_repo?: string;
-        pr_branch?: string;
-    };
-}) {
+export async function triggerReportWorkflow({ ref, inputs }: { ref: string, inputs: DispatchInputs; }) {
     return await doFetch("https://api.github.com/repos/Equicord/Equicord/actions/workflows/reportBrokenPlugins.yml/dispatches", {
         method: "POST",
         headers: {
@@ -86,25 +86,15 @@ async function checkVersions() {
     }
 }
 
-export interface PROptions {
-    repo: string;
-    branch: string;
-}
 
-type Options = Partial<Pick<ReportData, "shouldLog" | "shouldUpdateStatus" | "onSubmit">> & {
-    ref?: string;
-    pr?: PROptions;
-    prNumber?: string;
-};
-
-export async function testDiscordVersion<B extends Branch>(branch: B, hash: Record<B extends "both" ? "stable" | "canary" : B, string>, options: Options = {}) {
+export async function testDiscordVersion<B extends Branch>(branch: B, hash: Record<B extends "both" ? "stable" | "canary" : B, string>, options: ReporterOptions = {}) {
     const {
         shouldLog = true,
         shouldUpdateStatus = true,
         ref = DefaultReporterBranch,
-        onSubmit,
-        pr,
-        prNumber
+        inputRef,
+        inputRepository,
+        onSubmit
     } = options;
 
     const runId = randomUUID();
@@ -116,17 +106,19 @@ export async function testDiscordVersion<B extends Branch>(branch: B, hash: Reco
         shouldUpdateStatus,
         onSubmit,
         submitCount: 0,
-        prNumber
     });
 
-    await triggerReportWorkflow({
-        ref,
-        inputs: {
-            discord_branch: branch,
-            webhook_url: `${Config.httpServer.domain}/reporter/webhook?runId=${runId}`,
-            ...(pr && { pr_repo: pr.repo, pr_branch: pr.branch })
-        }
-    });
+    const inputs: DispatchInputs = {
+        discord_branch: branch,
+        webhook_url: `${Config.httpServer.domain}/reporter/webhook?runId=${runId}`
+    };
+
+    if (inputRef && inputRepository) {
+        inputs.ref = inputRef;
+        inputs.repository = inputRepository;
+    }
+
+    await triggerReportWorkflow({ ref, inputs });
 }
 
 async function handleReportSubmit(report: ReportData, data: any) {
@@ -181,7 +173,7 @@ async function handleReportSubmit(report: ReportData, data: any) {
         ? BotState.discordTracker!.canaryHash
         : BotState.discordTracker!.stableHash;
 
-    if (!report.shouldUpdateStatus || latestHash !== report.hash[report.branch] || report.prNumber) return;
+    if (!report.shouldUpdateStatus || latestHash !== report.hash[report.branch] || report.isPR) return;
 
     const time = Math.round(Date.now() / 1000);
     data.embeds[0].description = `Last updated: <t:${time}:R> @ <t:${time}:f>`;
