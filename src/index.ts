@@ -47,7 +47,6 @@ process.on("unhandledRejection", err => handleError("Unhandled Rejection", err))
 
 process.on("uncaughtException", async err => {
     await silently(handleError("Uncaught Exception. Restarting process", err));
-
     process.exit(1);
 });
 

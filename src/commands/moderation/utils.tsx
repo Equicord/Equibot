@@ -1,4 +1,6 @@
 import { ButtonStyles, Member, SeparatorSpacingSize, User } from "oceanic.js";
+import { Colors } from "~/constants";
+import { getUserEmoji } from "~/modules/userEmojis";
 
 import { getHighestRole, ID_REGEX } from "~/util/discord";
 import { logModerationAction } from "~/util/logAction";
@@ -44,10 +46,10 @@ export async function logUserRestriction(data: {
     expires?: Date;
     extraContext?: any;
     messageProps?: Omit<ComponentMessageProps, "children">;
-}) {
+}, logger = logModerationAction) {
     const { title, user, id, reason, moderator, jumpLink, color, expires, extraContext, messageProps } = data;
 
-    logModerationAction(
+    logger(
         <ComponentMessage {...messageProps}>
             <Container accentColor={color}>
                 {user
@@ -68,7 +70,7 @@ export async function logUserRestriction(data: {
                 <Separator spacing={SeparatorSpacingSize.LARGE} />
 
                 {expires && <TextDisplay>**Expires:** {`<t:${Math.floor(expires.getTime() / 1000)}:R>`}</TextDisplay>}
-                <TextDisplay>-# by {moderator.tag}</TextDisplay>
+                <TextDisplay>-# by {await getUserEmoji(moderator)} {moderator.tag}</TextDisplay>
 
                 {!!jumpLink &&
                     <ActionRow>
@@ -81,7 +83,7 @@ export async function logUserRestriction(data: {
 }
 
 export enum ModerationColor {
-    Severe = 0xffb3ba,
-    Light = 0xffffba,
-    Positive = 0xbaffc9
+    Severe = Colors.Pink,
+    Light = Colors.Banana,
+    Positive = Colors.Green
 }
