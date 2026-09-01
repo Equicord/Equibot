@@ -21,6 +21,8 @@ interface BotState {
 
     stickyThreads: string[];
 
+    mutedUsers: string[];
+
     restartData?: {
         channelId: string;
         messageId: string;
@@ -30,7 +32,8 @@ interface BotState {
 
 const defaultState: BotState = {
     stickies: {},
-    stickyThreads: []
+    stickyThreads: [],
+    mutedUsers: []
 };
 
 const savedState = run(() => {

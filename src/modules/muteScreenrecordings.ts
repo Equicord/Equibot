@@ -1,15 +1,14 @@
 import { mkdtemp, readFile, rm } from "fs/promises";
-import { ButtonStyles, ComponentTypes, InteractionTypes, Message, MessageFlags } from "oceanic.js";
+import { ButtonStyles, ComponentTypes, Message, MessageFlags } from "oceanic.js";
 import { tmpdir } from "os";
 import { join } from "path";
 
 import { Vaius } from "~/Client";
-import { handleInteraction } from "~/SlashCommands";
+import { BotState } from "~/db/botState";
 import { execFileP } from "~/util/childProcess";
 import { reply } from "~/util/discord";
 import { downloadToFile } from "~/util/fetch";
-
-const UsersToMute = ["521819891141967883"];
+import { buildContent } from "~/util/muteScreenrecordingsFormat";
 
 async function muteVideo(file: string, outFile: string) {
     const res = await execFileP("ffmpeg", ["-i", file, "-c", "copy", "-an", outFile]);
@@ -38,7 +37,7 @@ function getVideoInfo(msg: Message) {
 Vaius.on("messageCreate", async msg => {
     if (!msg.inCachedGuildChannel()) return;
 
-    if (!UsersToMute.includes(msg.author.id)) return;
+    if (!BotState.mutedUsers.includes(msg.author.id)) return;
 
     const video = getVideoInfo(msg);
     if (!video) return;
@@ -53,7 +52,7 @@ Vaius.on("messageCreate", async msg => {
         await muteVideo(file, mutedFile);
 
         await reply(msg, {
-            content: `From ${msg.author.mention} (video muted):\n\n${msg.content}`,
+            content: buildContent(msg.author.id, msg.content),
             flags: MessageFlags.SUPPRESS_EMBEDS,
             files: [{
                 contents: await readFile(mutedFile),
@@ -61,30 +60,24 @@ Vaius.on("messageCreate", async msg => {
             }],
             components: [{
                 type: ComponentTypes.ACTION_ROW,
-                components: [{
-                    type: ComponentTypes.BUTTON,
-                    customID: "mute-screenrecordings-delete",
-                    style: ButtonStyles.DANGER,
-                    label: "Delete"
-                }]
+                components: [
+                    {
+                        type: ComponentTypes.BUTTON,
+                        customID: `mute-screenrecordings-edit:${msg.author.id}`,
+                        style: ButtonStyles.SECONDARY,
+                        label: "Edit"
+                    },
+                    {
+                        type: ComponentTypes.BUTTON,
+                        customID: `mute-screenrecordings-delete:${msg.author.id}`,
+                        style: ButtonStyles.DANGER,
+                        label: "Delete"
+                    }
+                ]
             }]
         });
         await msg.delete();
     } finally {
         await rm(tempDir, { recursive: true, force: true });
-    }
-});
-
-handleInteraction({
-    type: InteractionTypes.MESSAGE_COMPONENT,
-    isMatch: i => i.data.customID === "mute-screenrecordings-delete",
-    async handle(interaction) {
-        if (!UsersToMute.includes(interaction.user.id)) {
-            return interaction.reply({
-                content: "You are not allowed to delete this.",
-                flags: MessageFlags.EPHEMERAL
-            });
-        }
-        await interaction.message.delete();
     }
 });
