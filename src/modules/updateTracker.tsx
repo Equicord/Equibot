@@ -31,6 +31,9 @@ interface TFBuild {
     expiration: string;
     whatsNew: string;
     fileSizeUncompressed: number;
+    compatibilityStatement: string | null;
+    compatibilityInstructions: string | null;
+    compatibilityMessage: string | null;
 }
 
 const { enabled, android, appstore, testflight, testflightSecret, testflightApi, logChannelId } = Config.updateTracker;
@@ -259,11 +262,40 @@ async function fetchTestFlightBuild(): Promise<TFBuild | null> {
             expiration: build.expiration,
             whatsNew: build.whatsNew,
             fileSizeUncompressed: build.fileSizeUncompressed,
+            compatibilityStatement: build.compatibilityStatement,
+            compatibilityInstructions: build.compatibilityInstructions,
+            compatibilityMessage: build.compatibilityMessage,
         };
     } catch (err) {
         console.error("[UpdateTracker TestFlight] TF fetch failed:", err);
         return null;
     }
+}
+
+function formatCompatibilityStatement(s: string): string {
+    return toTitle(s).replace(/\bIpad\b/g, "iPad").replace(/\bIphone\b/g, "iPhone").replace(/\bIpod\b/g, "iPod");
+}
+
+function testFlightGrid(build: TFBuild, status: TestFlightStatus, size: string): string {
+    const sections: [string, string][] = [
+        ["**Status**", TESTFLIGHT_STATUS_LABELS[status]],
+        ["**Size**", `${size} MB`],
+        ["**Released**", discordTimestamp(build.releaseDate)],
+        ["**Expires**", discordTimestamp(build.expiration)],
+    ];
+
+    const compatibilityLines = [
+        build.compatibilityStatement && `**${formatCompatibilityStatement(build.compatibilityStatement)}**${build.compatibilityInstructions ? ` · ${build.compatibilityInstructions}` : ""}`,
+        build.compatibilityMessage,
+    ].filter(Boolean).join("\n");
+    if (compatibilityLines) sections.push(["**Compatibility**", compatibilityLines]);
+
+    if (build.whatsNew) {
+        const whatsNew = build.whatsNew.slice(0, 300) + (build.whatsNew.length > 300 ? "…" : "");
+        sections.push(["**What's New**", whatsNew]);
+    }
+
+    return sections.flatMap(([header, value], i) => i === 0 ? [header, value] : ["", header, value]).join("\n");
 }
 
 export async function checkTestFlight(bypass = false, extraChannelId?: string): Promise<void> {
@@ -283,8 +315,8 @@ export async function checkTestFlight(bypass = false, extraChannelId?: string): 
         <Container accentColor={0xFF6B35}>
             <Section accessory={<Thumbnail url={`${Config.httpServer.domain}/public/testflight.png`} />}>
                 <TextDisplay>New TestFlight Release</TextDisplay>
-                <TextDisplay>{build.cfBundleShortVersion} · Build `{build.cfBundleVersion}` · {size} MB · Status: {TESTFLIGHT_STATUS_LABELS[status]}{"\n"}Released {discordTimestamp(build.releaseDate)} · Expires {discordTimestamp(build.expiration)}</TextDisplay>
-                <TextDisplay>{build.whatsNew}</TextDisplay>
+                <TextDisplay>{build.cfBundleShortVersion} · Build `{build.cfBundleVersion}`</TextDisplay>
+                <TextDisplay>{testFlightGrid(build, status, size)}</TextDisplay>
             </Section>
         </Container>
         <ActionRow>
