@@ -1,6 +1,5 @@
 import { SeparatorSpacingSize, User } from "oceanic.js";
 import { defineCommand } from "~/Commands";
-import { getEmoji } from "~/modules/emojiManager";
 import { getLevelForXp, getRequiredXpForNextLevel, getXpForUser } from "~/modules/xp";
 import { resolveUser } from "~/util/resolvers";
 import { ComponentMessage, Container, Section, Separator, TextDisplay, Thumbnail } from "~components";
@@ -15,7 +14,7 @@ async function buildXpEmbed(level: number, xp: number, requiredXp: number, targe
                     <TextDisplay>**` XP    `**   {xp.toLocaleString()} / {requiredXp.toLocaleString()}</TextDisplay>
                 </Section>
                 <Separator spacing={SeparatorSpacingSize.LARGE} />
-                <TextDisplay>-# {getEmoji("vennie")} {targetUser.id === commandUser.id ? "You" : targetUser.username} will need `{(requiredXp - xp).toLocaleString()}` more XP to level up!</TextDisplay>
+                <TextDisplay>-# {targetUser.id === commandUser.id ? "You" : targetUser.username} will need `{(requiredXp - xp).toLocaleString()}` more XP to level up!</TextDisplay>
             </Container>
         </ComponentMessage>
     );
