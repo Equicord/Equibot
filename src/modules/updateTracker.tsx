@@ -18,10 +18,10 @@ interface TrackerIndex {
 
 interface iTunesResult {
     version: string;
-    currentVersionReleaseDate: string;
     releaseNotes: string;
     artworkUrl100: string;
     fileSizeBytes: string;
+    minimumOsVersion: string;
 }
 
 interface TFBuild {
@@ -192,6 +192,20 @@ async function fetchAppStoreVersion(): Promise<iTunesResult> {
     return json.results[0] as iTunesResult;
 }
 
+function appStoreGrid(result: iTunesResult, size: string): string {
+    const sections: [string, string][] = [
+        ["**Size**", `${size} MB`],
+        ["**Requires**", `iOS ${result.minimumOsVersion}+`],
+    ];
+
+    if (result.releaseNotes) {
+        const notes = result.releaseNotes.slice(0, 300) + (result.releaseNotes.length > 300 ? "…" : "");
+        sections.push(["**What's New**", notes]);
+    }
+
+    return sections.flatMap(([header, value], i) => i === 0 ? [header, value] : ["", header, value]).join("\n");
+}
+
 export async function checkAppStore(bypass = false, extraChannelId?: string): Promise<void> {
     const versionFile = join(DATA_DIR, "./discord_version.ios.txt");
 
@@ -203,20 +217,18 @@ export async function checkAppStore(bypass = false, extraChannelId?: string): Pr
         return;
     }
 
-    const { version, currentVersionReleaseDate, releaseNotes, artworkUrl100, fileSizeBytes } = result;
+    const { version, fileSizeBytes } = result;
     const versionCode = Number(version.replace(/\./g, ""));
     const size = (Number(fileSizeBytes) / (1024 * 1024)).toFixed(1);
 
     if (!bypass && readVersion(versionFile) >= versionCode) return;
 
-    const description = releaseNotes.slice(0, 300) + (releaseNotes.length > 300 ? "…" : "");
-
     const components = <>
         <Container accentColor={0x007AFF}>
             <Section accessory={<Thumbnail url={`${Config.httpServer.domain}/public/appstore.png`} />}>
                 <TextDisplay>New App Store Release</TextDisplay>
-                <TextDisplay>{version} · {size} MB · Released {discordTimestamp(currentVersionReleaseDate)}</TextDisplay>
-                {description && <TextDisplay>{description}</TextDisplay>}
+                <TextDisplay>{version} · Detected {discordTimestamp(new Date())}</TextDisplay>
+                <TextDisplay>{appStoreGrid(result, size)}</TextDisplay>
             </Section>
         </Container>
         <ActionRow>
