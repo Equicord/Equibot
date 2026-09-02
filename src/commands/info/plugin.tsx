@@ -28,7 +28,11 @@ defineCommand({
             if (!query) return;
 
             query = query.toLowerCase();
-            return plugins.find(p => p.name.toLowerCase() === query) || plugins.find(p => p.name.toLowerCase().includes(query));
+            return plugins.find(p => p.name.toLowerCase() === query) || plugins.find(p =>
+                p.name.toLowerCase().includes(query) ||
+                p.name.match(/[A-Z]/g)?.join("").toLowerCase().includes(query) ||
+                p.description.toLowerCase().includes(query)
+            );
         });
 
         if (match)
@@ -65,7 +69,12 @@ registerChatInputCommand(
         async handle(interaction) {
             const pluginName = interaction.data.options.getString("name", true);
             const plugins = await fetchPlugins();
-            const plugin = plugins.find(p => p.name.toLowerCase() === pluginName.toLowerCase()) || plugins.find(p => p.name.toLowerCase().includes(pluginName.toLowerCase()));
+            const search = pluginName.toLowerCase();
+            const plugin = plugins.find(p => p.name.toLowerCase() === search) || plugins.find(p =>
+                p.name.toLowerCase().includes(search) ||
+                p.name.match(/[A-Z]/g)?.join("").toLowerCase().includes(search) ||
+                p.description.toLowerCase().includes(search)
+            );
 
             if (!plugin) {
                 const similarPlugins = findSimilarPlugins(plugins, pluginName).slice(0, 5);
@@ -92,7 +101,11 @@ registerChatInputCommand(
 
             const plugins = await fetchPlugins();
 
-            const includesMatches = plugins.filter(p => p.name.toLowerCase().includes(focusedValue));
+            const includesMatches = plugins.filter(p =>
+                p.name.toLowerCase().includes(focusedValue) ||
+                p.name.match(/[A-Z]/g)?.join("").toLowerCase().includes(focusedValue) ||
+                p.description.toLowerCase().includes(focusedValue)
+            );
             const similarMatches = findSimilarPlugins(plugins, focusedValue)
                 .map(p => plugins.find(pl => pl.name === p.name)!);
 

@@ -53,8 +53,8 @@ const TranslatorBadgeTooltip = "Equicord Translator";
 
 async function optimizeImage(imgData: Buffer, ext: string) {
     const { child } = ext === "gif"
-        ? spawnP("gifsicle", ["-O3", "--colors", "256", "--resize", "64x64"], {})
-        : spawnP("convert", ["-", "-background", "none", "-resize", "64x64", "-quality", "75", "WEBP:-"], {});
+        ? spawnP("gifsicle", ["-O3", "--colors", "256", "--resize", "128x128"], {})
+        : spawnP("convert", ["-", "-background", "none", "-resize", "128x128", "-quality", "75", "WEBP:-"], {});
 
     child.stdin!.end(imgData);
 
