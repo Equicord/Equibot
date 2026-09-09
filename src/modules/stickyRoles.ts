@@ -23,7 +23,12 @@ Vaius.on("guildMemberAdd", async member => {
         .executeTakeFirst();
 
     if (!sticky) return;
-    await member.edit({ roles: sticky.roleids.split(","), reason: "Sticky Roles" });
+
+    const roles = sticky.roleids
+        .split(",")
+        .filter(roleId => !shouldIgnoreRole(roleId, member.guild));
+
+    await member.edit({ roles, reason: "Sticky Roles" });
 });
 
 Vaius.on("guildAuditLogEntryCreate", async (maybeUncachedGuild, entry) => {
