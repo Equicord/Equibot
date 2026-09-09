@@ -1,7 +1,6 @@
 import { SeparatorSpacingSize } from "oceanic.js";
 import { defineCommand } from "~/Commands";
 import { handleError } from "~/index";
-import { getEmoji } from "~/modules/emojiManager";
 import { fetchJson } from "~/util/fetch";
 import { makeConstants } from "~/util/objects";
 import { toInlineCode, toTitle } from "~/util/text";
@@ -81,7 +80,7 @@ async function buildStatusEmbed(components: DiscordComponentsResponse, incidents
     return (
         <ComponentMessage>
             <Container>
-                <TextDisplay># {getEmoji("discord_logo")} Discord Status</TextDisplay>
+                <TextDisplay># Discord Status</TextDisplay>
                 <TextDisplay>{systemStatus}</TextDisplay>
 
                 {systemOutages && (
