@@ -14,7 +14,7 @@ defineCommand({
     guildOnly: true,
     async execute({ msg }) {
         const isStaff = msg.member.roles.some(r => [Config.roles.mod, Config.roles.helper].includes(r));
-        if (!isStaff && msg.member.roles.some(r => FOTD_ROLE_PINGERS.includes(r)))
+        if (!isStaff && !msg.member.roles.includes(FOTD_ROLE_PINGERS))
             return silently(msg.createReaction(Emoji.Anger));
 
         await msg.client.rest.channels.createMessage(FOTD_CHANNEL_ID, {
