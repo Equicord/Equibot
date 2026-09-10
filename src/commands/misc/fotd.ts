@@ -19,6 +19,9 @@ defineCommand({
 
         await msg.client.rest.channels.createMessage(FOTD_CHANNEL_ID, {
             content: `<@&${FOTD_ROLE_ID}>`,
+            allowedMentions: {
+                roles: [FOTD_ROLE_ID],
+            },
         });
     },
 });
