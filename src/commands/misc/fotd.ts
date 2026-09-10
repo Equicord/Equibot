@@ -3,23 +3,22 @@ import Config from "~/config";
 import { Emoji } from "~/constants";
 import { silently } from "~/util/functions";
 
-const FACT_CHANNEL_ID = "1547329048177414185";
-const FACT_ROLE_ID = "1547329300586434740";
-const EXTRA_ALLOWED_USER_ID = "463702169443368970";
+const FOTD_CHANNEL_ID = "1547329048177414185";
+const FOTD_ROLE_ID = "1547329300586434740";
+const FOTD_ROLE_PINGERS = "1547574643639197726";
 
 defineCommand({
-    name: "fact-of-the-day",
+    name: "fotd",
     description: "Sends the fact of the day ping",
     usage: "",
-    aliases: ["fotd"],
     guildOnly: true,
     async execute({ msg }) {
         const isStaff = msg.member.roles.some(r => [Config.roles.mod, Config.roles.helper].includes(r));
-        if (!isStaff && msg.author.id !== EXTRA_ALLOWED_USER_ID)
+        if (!isStaff && msg.member.roles.some(r => FOTD_ROLE_PINGERS.includes(r)))
             return silently(msg.createReaction(Emoji.Anger));
 
-        await msg.client.rest.channels.createMessage(FACT_CHANNEL_ID, {
-            content: `<@${FACT_ROLE_ID}>`,
+        await msg.client.rest.channels.createMessage(FOTD_CHANNEL_ID, {
+            content: `<@&${FOTD_ROLE_ID}>`,
         });
     },
 });
