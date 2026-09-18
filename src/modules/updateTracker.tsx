@@ -31,9 +31,6 @@ interface TFBuild {
     expiration: string;
     whatsNew: string;
     fileSizeUncompressed: number;
-    compatibilityStatement: string | null;
-    compatibilityInstructions: string | null;
-    compatibilityMessage: string | null;
 }
 
 const { enabled, android, appstore, testflight, testflightSecret, testflightApi, logChannelId } = Config.updateTracker;
@@ -274,18 +271,11 @@ async function fetchTestFlightBuild(): Promise<TFBuild | null> {
             expiration: build.expiration,
             whatsNew: build.whatsNew,
             fileSizeUncompressed: build.fileSizeUncompressed,
-            compatibilityStatement: build.compatibilityStatement,
-            compatibilityInstructions: build.compatibilityInstructions,
-            compatibilityMessage: build.compatibilityMessage,
         };
     } catch (err) {
         console.error("[UpdateTracker TestFlight] TF fetch failed:", err);
         return null;
     }
-}
-
-function formatCompatibilityStatement(s: string): string {
-    return toTitle(s).replace(/\bIpad\b/g, "iPad").replace(/\bIphone\b/g, "iPhone").replace(/\bIpod\b/g, "iPod");
 }
 
 function testFlightGrid(build: TFBuild, status: TestFlightStatus, size: string): string {
@@ -295,12 +285,6 @@ function testFlightGrid(build: TFBuild, status: TestFlightStatus, size: string):
         ["**Released**", discordTimestamp(build.releaseDate)],
         ["**Expires**", discordTimestamp(build.expiration)],
     ];
-
-    const compatibilityLines = [
-        build.compatibilityStatement && `**${formatCompatibilityStatement(build.compatibilityStatement)}**${build.compatibilityInstructions ? ` · ${build.compatibilityInstructions}` : ""}`,
-        build.compatibilityMessage,
-    ].filter(Boolean).join("\n");
-    if (compatibilityLines) sections.push(["**Compatibility**", compatibilityLines]);
 
     if (build.whatsNew) {
         const whatsNew = build.whatsNew.slice(0, 300) + (build.whatsNew.length > 300 ? "…" : "");
