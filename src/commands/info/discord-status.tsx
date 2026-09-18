@@ -3,7 +3,7 @@ import { defineCommand } from "~/Commands";
 import { handleError } from "~/index";
 import { fetchJson } from "~/util/fetch";
 import { makeConstants } from "~/util/objects";
-import { toInlineCode, toTitle } from "~/util/text";
+import { snakeToTitle, toInlineCode, toTitle } from "~/util/text";
 import { ComponentMessage, Container, Separator, TextDisplay } from "~components";
 
 const StatusEmoji = makeConstants({
@@ -56,20 +56,20 @@ async function getDiscordStatusIncidents(): Promise<DiscordIncidentsResponse | n
         .catch(e => handleError("Error fetching Discord incidents:", e));
 }
 
-async function buildStatusEmbed(components: DiscordComponentsResponse, incidents: DiscordIncidentsResponse) {
+async function buildStatusEmbed(components: DiscordComponentsResponse, { incidents }: DiscordIncidentsResponse) {
     const systemStatus = components.components
         .filter(c => c.status !== "operational")
-        .map(c => `### ${getStatusEmoji(c.status)} ${toTitle(c.status)}`)
+        .map(c => `### ${getStatusEmoji(c.status)} ${c.name}: ${snakeToTitle(c.status)}`)
         .join("\n") || `### ${getStatusEmoji("operational")} All Systems Operational`;
 
-    const systemOutages = incidents.incidents
+    const formattedIncidents = incidents
         .filter(i => i.status !== "resolved")
         .slice(0, 1)
         .map(i => {
             const updates = [...i.incident_updates]
                 .reverse()
                 .map(update =>
-                    `**${toTitle(update.status)}** - ${update.body}\n<t:${Math.floor(new Date(update.created_at).getTime() / 1000)}:f>`
+                    `<t:${Math.floor(new Date(update.created_at).getTime() / 1000)}:R> **${toTitle(update.status)}** - ${update.body}`
                 )
                 .join("\n\n");
 
@@ -80,19 +80,17 @@ async function buildStatusEmbed(components: DiscordComponentsResponse, incidents
     return (
         <ComponentMessage>
             <Container>
-                <TextDisplay># Discord Status</TextDisplay>
+                <TextDisplay>## [Discord Status](https://discordstatus.com)</TextDisplay>
+                <Separator spacing={SeparatorSpacingSize.SMALL} divider={false} />
                 <TextDisplay>{systemStatus}</TextDisplay>
-
-                {systemOutages && (
-                    <>
-                        <Separator spacing={SeparatorSpacingSize.LARGE} />
-                        <TextDisplay>{systemOutages}</TextDisplay>
-                    </>
-                )}
-
-                <Separator spacing={SeparatorSpacingSize.LARGE} />
-                <TextDisplay>-# Powered by [Discord Status](https://discordstatus.com/)</TextDisplay>
             </Container>
+            {formattedIncidents && (
+                <Container>
+                    <TextDisplay>## Incidents</TextDisplay>
+                    <Separator spacing={SeparatorSpacingSize.SMALL} divider={false} />
+                    <TextDisplay>{formattedIncidents}</TextDisplay>
+                </Container>
+            )}
         </ComponentMessage>
     );
 }

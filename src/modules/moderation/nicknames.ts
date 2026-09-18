@@ -3,6 +3,8 @@ import { Vaius } from "~/Client";
 import Config from "~/config";
 import { silently } from "~/util/functions";
 
+const HoistCharactersRegex = /^[!"#$%'+,.*-\s]+/;
+
 export async function moderateNick(member: Member) {
     if (member.bot || !member.guild.permissionsOf(Vaius.user.id).has("MANAGE_NICKNAMES")) return;
 
@@ -11,9 +13,13 @@ export async function moderateNick(member: Member) {
 
     const name = member.displayName;
     const normalizedName = name
-        .normalize("NFKD")
-        .replace(/[\u0300-\u036f]/g, "")
+        .normalize("NFKC")
+        .replace(HoistCharactersRegex, "")
+        .replace(/[\u0300-\u036f\u0489]/g, "") // diacritics
+        .replace(/[\u20df\u3099-\u309C]/g, "") // renders as a space and can be used for "empty" usernames
+        .replace(/[\p{Script=Cuneiform}\p{Script=Egyptian_Hieroglyphs}]/gu, "")
         .replace(/[^A-Za-z0-9 ]/g, "")
+        .replaceAll("﷽", "")
         .trim()
         || member.username.replace(/[^A-Za-z0-9 ]/g, "").trim()
         || "unknown username";
