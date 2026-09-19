@@ -14,9 +14,9 @@ Unzip it, and run `Equilotl.app`.
 
 If the graphical installer fails to open, download the CLI build for your Mac:
 
-- Universal (Intel and Apple Silicon) <https://github.com/Equicord/Equilotl/releases/latest/download/EquilotlCli-darwin-universal>
-- Intel (x64) <https://github.com/Equicord/Equilotl/releases/latest/download/EquilotlCli-darwin-x64>
-- Apple Silicon (ARM64) <https://github.com/Equicord/Equilotl/releases/latest/download/EquilotlCli-darwin-arm64>
+- Universal (Intel and Apple Silicon) <https://github.com/Equicord/Equilotl/releases/latest/download/EquilotlCli-universal>
+- Intel (x64) <https://github.com/Equicord/Equilotl/releases/latest/download/EquilotlCli-x64>
+- Apple Silicon (ARM64) <https://github.com/Equicord/Equilotl/releases/latest/download/EquilotlCli-arm64>
 
 Then open Terminal, `chmod +x` the downloaded file, run it and follow the instructions provided in the terminal window to install Equicord.
 
