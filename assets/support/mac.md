@@ -5,7 +5,7 @@ emoji: 🍎
 
 Download the installer for your Mac:
 
-- GUI: [Universal (works on both)](https://github.com/Equicord/Equilotl/releases/latest/download/Equilotl-universal.dmg), [Apple Silicon (ARM64, M1 or newer)](https://github.com/Equicord/Equilotl/releases/latest/download/Equilotl-arm64.dmg), [Intel (x64)](https://github.com/Equicord/Equilotl/releases/latest/download/Equilotl-x64.dmg)
+- GUI: [Universal (works on both)](https://github.com/Equicord/Equilotl/releases/latest/download/Equilotl.dmg), [Apple Silicon (ARM64, M1 or newer)](https://github.com/Equicord/Equilotl/releases/latest/download/Equilotl-arm64.dmg), [Intel (x64)](https://github.com/Equicord/Equilotl/releases/latest/download/Equilotl-x64.dmg)
 
 Unzip it, and run `Equilotl.app`.
 
