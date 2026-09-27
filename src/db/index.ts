@@ -1,4 +1,4 @@
-import { Kysely, PostgresDialect } from "kysely";
+import { Generated, Kysely, PostgresDialect } from "kysely";
 import { Pool } from "pg";
 
 export interface DB {
@@ -10,6 +10,12 @@ export interface DB {
     linkedgithubs: {
         githubid: string;
         discordid: string;
+    };
+
+    tickets: {
+        id: Generated<number>;
+        userId: string;
+        channelId: string;
     };
 }
 

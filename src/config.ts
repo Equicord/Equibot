@@ -115,6 +115,14 @@ const Config = {
 
     "rulesChannelId": "1493395344015495289",
 
+    "modmail": {
+        "enabled": true,
+        "channelId": "1300883665244389478",
+        "logChannelId": "1515429714448351562",
+        "modRoleId": "1173520023239786538",
+        "banRoleId": "1302480459195879514"
+    },
+
     // http server used for some features.
     // github linking and reporter both depend on this server
     "httpServer": {
