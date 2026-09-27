@@ -16,6 +16,7 @@ registerChatInputCommand(
     },
     {
         ownerOnly: true,
+        homeGuildOnly: true,
         async handle(i) {
             const content = i.data.options.getString("content", true);
             const reply = i.data.options.getString("reply-to");

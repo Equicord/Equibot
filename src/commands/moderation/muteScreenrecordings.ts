@@ -56,6 +56,7 @@ registerChatInputCommand(
     },
     {
         guildOnly: true,
+        homeGuildOnly: true,
         async handle(i) {
             if (!canManageMutedUsers(i.user.id, i.member?.roles))
                 return i.createMessage({ content: "You are not allowed to do this.", flags: MessageFlags.EPHEMERAL });

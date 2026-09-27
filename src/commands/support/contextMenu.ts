@@ -10,6 +10,7 @@ const enum Commands {
 
 registerMessageCommand({
     name: Commands.Support,
+    homeGuildOnly: true,
     async handle(interaction) {
         const options = SupportTagList.map(tags => ({
             value: tags[0],

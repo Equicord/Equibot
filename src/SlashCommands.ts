@@ -129,6 +129,9 @@ export function registerMessageCommand(handler: NamedCommandInteractionHandler) 
         name: handler.name,
     });
 
+    if (handler.homeGuildOnly)
+        HomeGuildOnlyCommands.add(handler.name);
+
     handleCommandInteraction(handler);
 }
 
