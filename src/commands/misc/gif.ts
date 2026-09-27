@@ -3,13 +3,15 @@ import { readdirSync } from "fs";
 import { readFile } from "fs/promises";
 import { applyPalette, GIFEncoder, quantize } from "gifenc";
 import { decompressFrames, parseGIF } from "gifuct-js";
-import { Member, User } from "oceanic.js";
+import { Member, MessageFlags, User } from "oceanic.js";
 import { join } from "path";
 import { format } from "util";
 
 import { defineCommand } from "~/Commands";
 import { ASSET_DIR } from "~/constants";
+import { registerChatInputCommand } from "~/SlashCommands";
 import { resolveUser } from "~/util/resolvers";
+import { CommandBooleanOption, CommandStringOption, CommandUserOption } from "~components";
 
 type TemplateConfig = typeof import("../../../assets/image-gen/gif-templates/hammer/config.json");
 
@@ -148,50 +150,89 @@ defineCommand({
             ? await msg.guild.getMember(user.id).catch(() => user)
             : user;
 
-        const avatarProvider = await makeAvatarProvider(memberOrUser);
-
-        if (templateName === "jumpscare") {
-            return reply({
-                files: [{
-                    name: `${user.username} jumpscare.gif`,
-                    contents: generateJumpscare(avatarProvider, reverse) as Buffer
-                }]
-            });
-        }
-
-        const { config: { width, height, avatarLocation, delay, filename }, frames } = await loadTemplate(templateName);
-
-        const gif = GIFEncoder();
-        const canvas = createCanvas(width, height);
-        const ctx = canvas.getContext("2d");
-
-        function processFrame(img: Image, avatarIdx: number) {
-            ctx.drawImage(img, 0, 0, width, height);
-            ctx.drawImage(avatarProvider.getFrame(avatarIdx).frame, avatarLocation.x, avatarLocation.y, avatarLocation.width, avatarLocation.height);
-
-            const { data } = ctx.getImageData(0, 0, width, height);
-
-            const palette = quantize(data, 256);
-
-            const index = applyPalette(data, palette);
-            gif.writeFrame(index, width, height, { palette, delay });
-        }
-
-        if (reverse) {
-            for (let i = frames.length - 1; i >= 0; i--) {
-                processFrame(frames[i], frames.length - i - 1);
-            }
-        } else {
-            for (let i = 0; i < frames.length; i++) {
-                processFrame(frames[i], i);
-            }
-        }
-
-        gif.finish();
-
-        return reply({ files: [{ name: format(filename, user.username) + ".gif", contents: gif.bytesView() as Buffer }] });
+        return reply({ files: [await generateGif(templateName, memberOrUser, user.username, reverse)] });
     }
 });
+
+registerChatInputCommand(
+    {
+        name: "gif",
+        description: "Insert a user's avatar into a gif template",
+        options: [
+            CommandStringOption({
+                name: "template",
+                description: "The gif template",
+                required: true,
+                choices: templates.slice(0, 25).map(t => ({ name: t, value: t }))
+            }),
+            CommandUserOption({ name: "user", description: "The user (default: you)" }),
+            CommandBooleanOption({ name: "reverse", description: "Play the gif in reverse" })
+        ]
+    },
+    {
+        async handle(interaction) {
+            const templateName = interaction.data.options.getString("template", true);
+            const reverse = interaction.data.options.getBoolean("reverse") ?? false;
+            const user = interaction.data.options.getUser("user") ?? interaction.user;
+            const memberOrUser = interaction.data.options.getMember("user")
+                ?? (user.id === interaction.user.id ? interaction.member : undefined)
+                ?? user;
+
+            if (!templates.includes(templateName)) {
+                return interaction.reply({
+                    content: `Available templates: ${templates.join(", ")}`,
+                    flags: MessageFlags.EPHEMERAL
+                });
+            }
+
+            await interaction.defer();
+            await interaction.createFollowup({ files: [await generateGif(templateName, memberOrUser, user.username, reverse)] });
+        }
+    }
+);
+
+async function generateGif(templateName: string, memberOrUser: User | Member, username: string, reverse: boolean) {
+    const avatarProvider = await makeAvatarProvider(memberOrUser);
+
+    if (templateName === "jumpscare") {
+        return {
+            name: `${username} jumpscare.gif`,
+            contents: generateJumpscare(avatarProvider, reverse) as Buffer
+        };
+    }
+
+    const { config: { width, height, avatarLocation, delay, filename }, frames } = await loadTemplate(templateName);
+
+    const gif = GIFEncoder();
+    const canvas = createCanvas(width, height);
+    const ctx = canvas.getContext("2d");
+
+    function processFrame(img: Image, avatarIdx: number) {
+        ctx.drawImage(img, 0, 0, width, height);
+        ctx.drawImage(avatarProvider.getFrame(avatarIdx).frame, avatarLocation.x, avatarLocation.y, avatarLocation.width, avatarLocation.height);
+
+        const { data } = ctx.getImageData(0, 0, width, height);
+
+        const palette = quantize(data, 256);
+
+        const index = applyPalette(data, palette);
+        gif.writeFrame(index, width, height, { palette, delay });
+    }
+
+    if (reverse) {
+        for (let i = frames.length - 1; i >= 0; i--) {
+            processFrame(frames[i], frames.length - i - 1);
+        }
+    } else {
+        for (let i = 0; i < frames.length; i++) {
+            processFrame(frames[i], i);
+        }
+    }
+
+    gif.finish();
+
+    return { name: format(filename, username) + ".gif", contents: gif.bytesView() as Buffer };
+}
 
 function generateJumpscare(avatarProvider: AvatarFrameProvider, reverse: boolean) {
     const FINAL_SIZE = 400;

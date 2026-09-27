@@ -1,6 +1,7 @@
 import { SeparatorSpacingSize } from "oceanic.js";
 import { defineCommand } from "~/Commands";
 import { handleError } from "~/index";
+import { registerChatInputCommand } from "~/SlashCommands";
 import { fetchJson } from "~/util/fetch";
 import { makeConstants } from "~/util/objects";
 import { snakeToTitle, toInlineCode, toTitle } from "~/util/text";
@@ -95,19 +96,34 @@ async function buildStatusEmbed(components: DiscordComponentsResponse, { inciden
     );
 }
 
+async function getStatusMessage() {
+    const [components, incidents] = await Promise.all([getDiscordStatusComponents(), getDiscordStatusIncidents()]);
+
+    if (!components || !incidents)
+        return { content: "Can't get discord status at the moment :c" };
+
+    return buildStatusEmbed(components, incidents);
+}
+
 defineCommand({
     name: "discord-status",
     aliases: ["dstatus", "ds"],
     description: "Check if discord incidents are happening",
     usage: null,
     async execute({ reply }) {
-        const components = await getDiscordStatusComponents();
-        const incidents = await getDiscordStatusIncidents();
-
-        if (!components || !incidents) {
-            return reply("Can't get discord status at the moment :c");
-        }
-
-        return reply(await buildStatusEmbed(components, incidents));
+        return reply(await getStatusMessage());
     }
 });
+
+registerChatInputCommand(
+    {
+        name: "discord-status",
+        description: "Check if discord incidents are happening",
+    },
+    {
+        async handle(interaction) {
+            await interaction.defer();
+            await interaction.createFollowup(await getStatusMessage());
+        }
+    }
+);

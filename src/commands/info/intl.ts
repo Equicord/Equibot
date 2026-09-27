@@ -1,7 +1,9 @@
 import { hash as h64 } from "@intrnl/xxhash64";
 import { defineCommand } from "~/Commands";
 import { Millis } from "~/constants";
+import { registerChatInputCommand } from "~/SlashCommands";
 import { makeCachedJsonFetch } from "~/util/fetch";
+import { CommandStringOption } from "~components";
 
 const getIntlMap = makeCachedJsonFetch<Record<string, string>>("https://sadan.zip/assets/key-mappings.json", 1 * Millis.HOUR);
 
@@ -25,6 +27,39 @@ defineCommand({
         reply(runtimeHashMessageKey(name));
     }
 });
+
+registerChatInputCommand(
+    {
+        name: "intl",
+        description: "Look up the name of a Discord intl message hash",
+        options: [
+            CommandStringOption({ name: "hash", description: "The intl message hash", required: true })
+        ]
+    },
+    {
+        async handle(interaction) {
+            const hash = interaction.data.options.getString("hash", true);
+            const map = await getIntlMap();
+            return interaction.reply({ content: map[hash] ?? "Nothing found :(" });
+        }
+    }
+);
+
+registerChatInputCommand(
+    {
+        name: "hash",
+        description: "Look up the hash of a Discord intl message name",
+        options: [
+            CommandStringOption({ name: "name", description: "The intl message name", required: true })
+        ]
+    },
+    {
+        handle(interaction) {
+            const name = interaction.data.options.getString("name", true);
+            return interaction.reply({ content: runtimeHashMessageKey(name) });
+        }
+    }
+);
 
 
 /**

@@ -1,5 +1,7 @@
 import { defineCommand } from "~/Commands";
 import { ZWSP } from "~/constants";
+import { registerChatInputCommand } from "~/SlashCommands";
+import { CommandStringOption } from "~components";
 
 let unicodeNameMap: Record<number, string> | undefined;
 
@@ -18,6 +20,18 @@ async function requireMap() {
     return unicodeNameMap;
 }
 
+async function inspectChars(text: string) {
+    const map = await requireMap();
+
+    const result = Array.from(text, (char, i) => {
+        const name = map[char.codePointAt(0)!];
+
+        return `${i === 0 ? ZWSP : ""}\`\`${ZWSP} ${char} ${ZWSP}\`\` ${name || "?"}`;
+    }).join("\n");
+
+    return result.length > 2000 ? "Result too long D:" : result;
+}
+
 defineCommand({
     name: "chars",
     aliases: ["ch", "charinfo", "char-info"],
@@ -30,17 +44,22 @@ defineCommand({
         if (!text)
             return reply("Please give me a proper input :(");
 
-        const map = await requireMap();
-
-        let result = Array.from(text, (char, i) => {
-            const name = map[char.codePointAt(0)!];
-
-            return `${i === 0 ? ZWSP : ""}\`\`${ZWSP} ${char} ${ZWSP}\`\` ${name || "?"}`;
-        }).join("\n");
-
-        if (result.length > 2000)
-            result = "Result too long D:";
-
-        return reply(result);
+        return reply(await inspectChars(text));
     },
 });
+
+registerChatInputCommand(
+    {
+        name: "chars",
+        description: "Inspect the unicode characters in a string",
+        options: [
+            CommandStringOption({ name: "text", description: "The text to inspect", required: true })
+        ]
+    },
+    {
+        async handle(interaction) {
+            const text = interaction.data.options.getString("text", true);
+            return interaction.reply({ content: await inspectChars(text) });
+        }
+    }
+);
