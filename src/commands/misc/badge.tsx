@@ -78,6 +78,7 @@ function normaliseCdnUrl(rawUrl: string) {
 }
 
 const handler: CommandInteractionHandler = {
+    homeGuildOnly: true,
     async handle(i) {
         if (i.user.id !== OwnerId) {
             if (!i.member?.roles.includes(Config.roles.mod))

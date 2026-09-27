@@ -9,6 +9,7 @@ interface BaseInteractionHandler {
     ownerOnly?: boolean;
     guildOnly?: boolean;
     allowedRoles?: string[];
+    homeGuildOnly?: boolean;
 }
 interface AnyInteractionHandler extends BaseInteractionHandler {
     handle(interaction: AnyInteractionGateway): any;
@@ -120,6 +121,7 @@ Vaius.on("interactionCreate", async interaction => {
 });
 
 const SlashCommands = [] as CreateGuildApplicationCommandOptions[];
+const HomeGuildOnlyCommands = new Set<string>();
 
 export function registerMessageCommand(handler: NamedCommandInteractionHandler) {
     SlashCommands.push({
@@ -139,6 +141,9 @@ export function registerChatInputCommand(options: ChatInputCommandOptions, handl
         description: options.description || "No description provided"
     });
 
+    if (handler.homeGuildOnly)
+        HomeGuildOnlyCommands.add(options.name);
+
     handleCommandInteraction({
         name: options.name,
         ...handler
@@ -148,7 +153,7 @@ export function registerChatInputCommand(options: ChatInputCommandOptions, handl
 Vaius.once("ready", async () => {
     await Vaius.application.bulkEditGuildCommands(Config.homeGuildId, SlashCommands);
 
-    await Vaius.application.bulkEditGlobalCommands(SlashCommands.map(cmd => ({
+    await Vaius.application.bulkEditGlobalCommands(SlashCommands.filter(cmd => !HomeGuildOnlyCommands.has(cmd.name)).map(cmd => ({
         ...cmd,
         integrationTypes: [ApplicationIntegrationTypes.USER_INSTALL],
         contexts: [InteractionContextTypes.BOT_DM, InteractionContextTypes.GUILD, InteractionContextTypes.PRIVATE_CHANNEL],
