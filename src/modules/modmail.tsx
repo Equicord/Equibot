@@ -288,10 +288,9 @@ if (enabled) {
 
             if (!thread) return;
 
-            void thread.createMessage({
-                content: `<@${DONOR_TICKET_USER_ID}>`,
-                allowedMentions: { users: [DONOR_TICKET_USER_ID] }
-            });
+            thread.createMessage({ content: "Adding Indi..." })
+                .then(m => m.edit({ content: `Join Indi <@&${DONOR_TICKET_USER_ID}>`, allowedMentions: { roles: [DONOR_TICKET_USER_ID] } }))
+                .then(m => m.delete());
 
             await thread.createMessage(
                 <ComponentMessage allowedMentions={{ users: [interaction.user.id] }}>
@@ -411,10 +410,9 @@ if (enabled) {
             const [images, otherFiles] = partition(files, f => f.contentType?.startsWith("image/") ?? false);
 
             if (reason === Ids.REASON_DONOR) {
-                void thread.createMessage({
-                    content: `<@${DONOR_TICKET_USER_ID}>`,
-                    allowedMentions: { users: [DONOR_TICKET_USER_ID] }
-                });
+                thread.createMessage({ content: "Adding Indi..." })
+                    .then(m => m.edit({ content: `Join Indi <@&${DONOR_TICKET_USER_ID}>`, allowedMentions: { roles: [DONOR_TICKET_USER_ID] } }))
+                    .then(m => m.delete());
             } else {
                 thread.createMessage({ content: "Adding ticket staff to thread..." })
                     .then(m => m.edit({ content: `Join, my brethren <@&${TICKET_ROLE_ID}>`, allowedMentions: { roles: [TICKET_ROLE_ID] } }))
