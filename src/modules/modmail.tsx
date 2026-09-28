@@ -410,15 +410,15 @@ if (enabled) {
 
             const [images, otherFiles] = partition(files, f => f.contentType?.startsWith("image/") ?? false);
 
-            thread.createMessage({ content: "Adding ticket staff to thread..." })
-                .then(m => m.edit({ content: `Join, my brethren <@&${TICKET_ROLE_ID}>`, allowedMentions: { roles: [TICKET_ROLE_ID] } }))
-                .then(m => m.delete());
-
             if (reason === Ids.REASON_DONOR) {
                 void thread.createMessage({
                     content: `<@${DONOR_TICKET_USER_ID}>`,
                     allowedMentions: { users: [DONOR_TICKET_USER_ID] }
                 });
+            } else {
+                thread.createMessage({ content: "Adding ticket staff to thread..." })
+                    .then(m => m.edit({ content: `Join, my brethren <@&${TICKET_ROLE_ID}>`, allowedMentions: { roles: [TICKET_ROLE_ID] } }))
+                    .then(m => m.delete());
             }
 
             const msg = await thread.createMessage(
