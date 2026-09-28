@@ -1,99 +1,164 @@
-import { ActivityTypes, AnyTextableGuildChannel, ButtonStyles, ChannelTypes, CommandInteraction, ComponentInteraction, ComponentTypes, InteractionTypes, MessageFlags, ModalSubmitInteraction, SeparatorSpacingSize, TextChannel, TextInputStyles } from "oceanic.js";
+import { ActivityTypes, AnyTextableGuildChannel, ButtonStyles, ChannelTypes, CommandInteraction, ComponentInteraction, ComponentTypes, InteractionTypes, MessageFlags, ModalSubmitInteraction, PrivateThreadChannel, SeparatorSpacingSize, TextChannel, TextInputStyles, User } from "oceanic.js";
 
 import { db } from "~/db";
 import { handleComponentInteraction, handleInteraction, registerChatInputCommand } from "~/SlashCommands";
 import { kebabToTitle, stripIndent } from "~/util/text";
 
 import Config from "~/config";
-import { MANAGEABLE_ROLES, PROD } from "~/constants";
+import { partition } from "~/util/arrays";
 import { sendDm } from "~/util/discord";
 import { fetchBuffer } from "~/util/fetch";
-import { isNonNullish } from "~/util/guards";
-import { ActionRow, Button, ComponentMessage, Container, File, FileUpload, MediaGallery, MediaGalleryItem, ModalLabel, Separator, StringOption, StringSelect, TextDisplay, TextInput } from "~components";
+import { run } from "~/util/functions";
+import { isNonNullish, isTruthy } from "~/util/guards";
+import { ActionRow, Button, ComponentMessage, Container, File, FileUpload, MediaGallery, MediaGalleryItem, ModalLabel, Section, Separator, StringOption, StringSelect, TextDisplay, TextInput, Thumbnail } from "~components";
 import { Vaius } from "../Client";
 import { defineCommand } from "../Commands";
+import { Colors, Emoji, MANAGEABLE_ROLES, PROD } from "../constants";
 
 const { banRoleId, channelId, enabled, logChannelId, modRoleId } = Config.modmail;
-const commandName = PROD ? "modmail" : "devmodmail";
+const TICKET_ROLE_ID = "1553932869754421268";
+const DONOR_TICKET_USER_ID = "929208515883569182";
 
 const enum Ids {
-    OPEN_TICKET = "modmail:open-ticket",
-    OPEN_SUBMIT = "modmail:open-submit",
-    CLOSE = "modmail:close:",
-    CLOSE_BAN = "modmail:close-ban:",
-    MANAGE_ROLES = "modmail:manage-roles:",
-    ADD_ROLE = "modmail:add-role:",
-    REMOVE_ROLE = "modmail:remove-role:"
+    OPEN_TICKET = "modmail:open_ticket",
+    OPEN_SUBMIT = "modmail:open_submit",
+
+    REASON_SUPPORT = "modmail:support",
+    REASON_MOD = "modmail:mod",
+    REASON_DONOR = "modmail:donor",
+    REASON_CSS = "modmail:css",
+    REASON_JS = "modmail:js"
 }
 
-const Reasons = {
-    moderation: ["moderation", "I need to talk to a moderator", "Please provide any relevant details or supporting media."],
-    report: ["report", "I need to report something in this server", "Please describe what happened and attach any relevant evidence."],
-    other: ["ticket", "Something else related to this server", "Please describe how we can help."],
-} as const;
+const ChannelNameAndPrompt: Record<string, [string, string]> = {
+    [Ids.REASON_DONOR]: ["donor-perks", stripIndent`
+        If you are here to redeem donor perks, provide the following:
 
-type TicketReason = keyof typeof Reasons;
+        1. Receipt in the form of a downloaded PDF file
+        2. A photo and tooltip for the custom badge you would like *(for donations of $5 or more)*
+    `],
+    [Ids.REASON_MOD]: ["ticket", "Please post any supporting media or information that you have."],
+    [Ids.REASON_CSS]: ["css-submission", "Please post the full message + image(s) that you would like to post in the css snippet channel."],
+    [Ids.REASON_JS]: ["js-submission", "Please post the full message + image(s) that you would like to post in the js snippet channel."],
+};
+
+const COMMAND_NAME = PROD ? "modmail" : "devmodmail";
+
 type GuildInteraction = ComponentInteraction<ComponentTypes.BUTTON, AnyTextableGuildChannel> | CommandInteraction<AnyTextableGuildChannel>;
 
-let ticketsTableReady: Promise<void> | undefined;
+async function log(data: {
+    color: number;
+    user: User;
+    title: string;
+    viewLink: string;
+    footer?: any;
+}) {
+    const { color, user, title, viewLink, footer } = data;
 
-function ensureTicketsTable() {
-    return ticketsTableReady ??= db.schema
-        .createTable("tickets")
-        .ifNotExists()
-        .addColumn("id", "serial", column => column.primaryKey())
-        .addColumn("userId", "varchar(20)", column => column.notNull().unique())
-        .addColumn("channelId", "varchar(20)", column => column.notNull())
-        .execute()
-        .then(() => undefined);
+    return Vaius.rest.channels.createMessage(logChannelId,
+        <ComponentMessage>
+            <Container accentColor={color}>
+                <Section accessory={<Thumbnail url={user.avatarURL(undefined, 128)} />}>
+                    <TextDisplay>## {title}</TextDisplay>
+                    <TextDisplay>**{user.tag}**</TextDisplay>
+                    <TextDisplay>-# {`<@${user.id}>`} - {user.id}</TextDisplay>
+                </Section>
+
+
+                <Separator spacing={footer ? SeparatorSpacingSize.SMALL : SeparatorSpacingSize.SMALL} />
+
+                {footer && <TextDisplay>-# {footer}</TextDisplay>}
+
+                <ActionRow>
+                    <Button style={ButtonStyles.LINK} url={viewLink}>View</Button>
+                </ActionRow>
+            </Container>
+        </ComponentMessage>
+    );
 }
 
 function getThreadParent() {
-    const channel = Vaius.getChannel(channelId);
-    if (!channel) throw new Error("Modmail parent channel is not available");
+    const c = Vaius.getChannel(channelId);
+    if (!c) throw new Error("Modmail category not found");
 
-    return channel as TextChannel;
+    return c as TextChannel;
 }
 
-function log(content: string) {
-    return Vaius.rest.channels.createMessage(logChannelId, { content });
-}
-
-async function createTicketModal(interaction: GuildInteraction) {
+async function createModmailModal(interaction: GuildInteraction) {
     if (interaction.member.roles.includes(banRoleId)) {
         return interaction.createMessage({
-            content: "You are banned from opening tickets.",
+            content: "You are banned from using modmail.",
             flags: MessageFlags.EPHEMERAL
         });
     }
 
-    return interaction.createModal({
+    const options = [
+        {
+            label: "I donated and want to redeem my perks",
+            value: Ids.REASON_DONOR,
+            emoji: { name: "❤️" }
+        },
+        {
+            label: "I need help with Equicord",
+            value: Ids.REASON_SUPPORT + 1,
+            emoji: { name: "🛟" }
+        },
+        {
+            label: "My Equicord is broken!",
+            value: Ids.REASON_SUPPORT + 2,
+            emoji: { name: "🛟" }
+        },
+        {
+            label: "I need to talk to a moderator",
+            value: Ids.REASON_MOD,
+            emoji: { name: "👥" }
+        },
+        {
+            label: "I want to submit my css snippet",
+            value: Ids.REASON_CSS,
+            emoji: { name: "🎨" }
+        },
+        {
+            label: "I want to submit my js snippet",
+            value: Ids.REASON_JS,
+            emoji: { name: "🛠️" }
+        },
+    ];
+
+    await interaction.createModal({
         title: "Open a Ticket",
         customID: Ids.OPEN_SUBMIT,
         components: <>
             <TextDisplay>
                 {stripIndent`
-                    Tickets are for matters in this server that need moderator attention.
-                    For Equicord support or questions, use <#${Config.channels.support}>.
-                    We cannot moderate DMs or events outside this server.
+                    Before submitting your ticket, please make sure it follows the rules:
+                    - Tickets are **only for issues regarding this server** that require moderator attention
+                    - Tickets are **not for Equicord support or questions**! Use <#${Config.channels.support}>
+                    - We only moderate things that happen in this server. **Don't report users for things that happened elsewhere**. This includes DMs! Block users to stop them from messaging you.
                 `}
             </TextDisplay>
-            <ModalLabel label="Why are you opening a ticket?">
-                <StringSelect customID="reason" placeholder="Choose a reason" required>
-                    {Object.entries(Reasons).map(([value, [, label]]) => <StringOption label={label} value={value} />)}
+
+            <ModalLabel label="Why are you opening this ticket?">
+                <StringSelect
+                    placeholder="Choose a Reason"
+                    customID="reason"
+                    required
+                >
+                    {options}
                 </StringSelect>
             </ModalLabel>
-            <ModalLabel label="Message" description="Include all relevant information.">
+
+            <ModalLabel label="Type your message" description="Include any relevant information.">
                 <TextInput
-                    customID="message"
                     style={TextInputStyles.PARAGRAPH}
                     placeholder="Write your message here..."
+                    customID="message"
                     minLength={20}
                     maxLength={1000}
                     required
                 />
             </ModalLabel>
-            <ModalLabel label="Supporting media" description="Optional; up to ten files.">
+            <ModalLabel label="Add supporting media" description="Include any relevant attachments.">
                 <FileUpload customID="attachments" minValues={0} maxValues={10} required={false} />
             </ModalLabel>
         </>
@@ -104,19 +169,45 @@ defineCommand({
     enabled,
     name: "modmail:post",
     ownerOnly: true,
-    description: "Post the ticket panel",
+    description: "Post the modmail message",
     usage: null,
     execute() {
         return Vaius.rest.channels.createMessage(channelId,
             <ComponentMessage>
                 <Container>
-                    <TextDisplay># Contact the moderation team</TextDisplay>
-                    <TextDisplay>Open a private ticket for an issue in this server that needs moderator attention.</TextDisplay>
+                    <TextDisplay># Equicord Modmail</TextDisplay>
+
+                    <TextDisplay>Do you need to talk to a moderator? Get in touch by opening a ticket!</TextDisplay>
+
                     <Separator spacing={SeparatorSpacingSize.LARGE} />
-                    <TextDisplay>{`-# For Equicord support and general questions, please use <#${Config.channels.support}> instead.`}</TextDisplay>
+
+                    <TextDisplay>## Get Support</TextDisplay>
+                    <TextDisplay>Do you need help with Equicord or have a question about it? Ask in our support channel!</TextDisplay>
                     <ActionRow>
-                        <Button customID={Ids.OPEN_TICKET} style={ButtonStyles.SECONDARY} emoji={{ name: "📩" }}>
-                            Open a ticket
+                        <Button
+                            style={ButtonStyles.LINK}
+                            emoji={{ name: "🫂" }}
+                            url={`https://discord.com/channels/${Config.homeGuildId}/${Config.channels.support}`}
+                        >
+                            Get help with Equicord
+                        </Button>
+                    </ActionRow>
+
+                    <Separator spacing={SeparatorSpacingSize.LARGE} />
+
+                    <TextDisplay>## Open a Ticket</TextDisplay>
+                    <TextDisplay>
+                        - To claim or manage Donor Perks, open a ticket and select the donor-perks option.<br />
+                        - Only for matters that require a moderator. For Equicord support or general questions, see above.<br />
+                        - We only moderate things that happen **in this server**. Don't report anything that happens in DMs or other servers/platforms.
+                    </TextDisplay>
+                    <ActionRow>
+                        <Button
+                            style={ButtonStyles.SECONDARY}
+                            customID={Ids.OPEN_TICKET}
+                            emoji={{ name: "🗣️" }}
+                        >
+                            Talk to a Mod
                         </Button>
                     </ActionRow>
                 </Container>
@@ -126,153 +217,273 @@ defineCommand({
 });
 
 if (enabled) {
-    registerChatInputCommand({
-        name: commandName,
-        description: "Open a private moderation ticket"
-    }, {
-        guildOnly: true,
-        handle: createTicketModal
-    });
+    registerChatInputCommand(
+        {
+            name: COMMAND_NAME,
+            description: "Open a modmail ticket",
+        },
+        {
+            guildOnly: true,
+            handle: createModmailModal
+        }
+    );
 
     handleComponentInteraction({
         customID: Ids.OPEN_TICKET,
         guildOnly: true,
-        handle: createTicketModal
+        handle: createModmailModal
     });
+
 
     handleInteraction({
         type: InteractionTypes.MODAL_SUBMIT,
-        guildOnly: true,
-        isMatch: interaction => interaction.data.customID === Ids.OPEN_SUBMIT,
+        isMatch: i => i.data.customID === Ids.OPEN_SUBMIT,
         async handle(interaction: ModalSubmitInteraction<TextChannel>) {
             if (interaction.member.roles.includes(banRoleId)) {
                 return interaction.createMessage({
-                    content: "You are banned from opening tickets.",
+                    content: "You are banned from using modmail.",
                     flags: MessageFlags.EPHEMERAL
                 });
             }
 
-            const reason = interaction.data.components.getStringSelectValues("reason", true)[0] as TicketReason;
-            const reasonInfo = Reasons[reason];
-            if (!reasonInfo)
-                return interaction.createMessage({ content: "Invalid ticket reason.", flags: MessageFlags.EPHEMERAL });
+            const reason = interaction.data.components.getStringSelectValues("reason", true)[0];
+
+            if (reason.startsWith(Ids.REASON_SUPPORT)) {
+                return await interaction.createMessage({
+                    content: `To get Equicord support, use <#${Config.channels.support}>`,
+                    flags: MessageFlags.EPHEMERAL
+                });
+            }
 
             await interaction.defer(MessageFlags.EPHEMERAL);
-            await ensureTicketsTable();
 
-            const thread = await db.transaction().execute(async transaction => {
-                const ticket = await transaction.insertInto("tickets")
-                    .values({ channelId: "0", userId: interaction.user.id })
-                    .onConflict(conflict => conflict.column("userId").doUpdateSet({ id: expression => expression.ref("excluded.id") }))
+            const [channelName, prompt] = ChannelNameAndPrompt[reason];
+            if (!channelName) return interaction.createFollowup({ content: "Something went wrong", flags: MessageFlags.EPHEMERAL });
+
+            const thread = await db.transaction().execute(async t => {
+                const { channelId, id } = await t.insertInto("tickets")
+                    .values({
+                        channelId: "0",
+                        userId: interaction.user.id
+                    })
+                    .onConflict(oc => oc
+                        .column("userId")
+                        .doUpdateSet({ id: eb => eb.ref("excluded.id") })
+                    )
                     .returning(["channelId", "id"])
                     .executeTakeFirstOrThrow();
 
-                if (ticket.channelId !== "0") {
-                    await interaction.createFollowup({
-                        content: `You already have an open ticket: <#${ticket.channelId}>`,
+                if (channelId !== "0") {
+                    interaction.createFollowup({
+                        content: `You already have a modmail ticket open: <#${channelId}>`,
                         flags: MessageFlags.EPHEMERAL
                     });
                     return null;
                 }
 
-                const newThread = await getThreadParent().startThreadWithoutMessage({
+                const thread = await getThreadParent().startThreadWithoutMessage({
                     type: ChannelTypes.PRIVATE_THREAD,
-                    name: `${reasonInfo[0]}-${ticket.id}`,
+                    name: `${channelName}-${id}`,
                     invitable: false
-                });
+                }) as PrivateThreadChannel;
 
-                await transaction.updateTable("tickets")
-                    .set("channelId", newThread.id)
-                    .where("id", "=", ticket.id)
+                await t.updateTable("tickets")
+                    .set("channelId", thread.id)
+                    .where("id", "=", id)
                     .execute();
 
-                return newThread;
+                return thread;
             });
 
             if (!thread) return;
 
-            const attachments = interaction.data.components.getFileUploadValues("attachments") ?? [];
-            const files = await Promise.all(attachments.map(async ({ url, filename, contentType }, index) => ({
-                name: `${index}-${filename}`,
-                contents: await fetchBuffer(url),
-                contentType
-            })));
-            const images = files.filter(file => file.contentType?.startsWith("image/"));
-            const otherFiles = files.filter(file => !file.contentType?.startsWith("image/"));
             const message = interaction.data.components.getTextInput("message", true);
+            const ephemeralAttachments = interaction.data.components.getFileUploadValues("attachments") ?? [];
 
-            await thread.createMessage({
-                content: `<@&${modRoleId}>`,
-                allowedMentions: { roles: [modRoleId] }
-            });
+            // need to reupload attachments as the ephemeral ones will expire
+            const files = await Promise.all(ephemeralAttachments.map(async ({ url, filename, contentType }, i) => {
+                const buf = await fetchBuffer(url);
 
-            await thread.createMessage(
+                return {
+                    name: `${i}-${filename}`,
+                    contents: buf,
+                    contentType
+                };
+            }));
+
+            const [images, otherFiles] = partition(files, f => f.contentType?.startsWith("image/") ?? false);
+
+            thread.createMessage({ content: "Adding ticket staff to thread..." })
+                .then(m => m.edit({ content: `Join, my brethren <@&${TICKET_ROLE_ID}>`, allowedMentions: { roles: [TICKET_ROLE_ID] } }))
+                .then(m => m.delete());
+
+            if (reason === Ids.REASON_DONOR) {
+                void thread.createMessage({
+                    content: `<@${DONOR_TICKET_USER_ID}>`,
+                    allowedMentions: { users: [DONOR_TICKET_USER_ID] }
+                });
+            }
+
+            const msg = await thread.createMessage(
                 <ComponentMessage allowedMentions={{ users: [interaction.user.id] }} files={files}>
                     <Container>
-                        <TextDisplay>👋 {interaction.user.mention}<br /><br />{reasonInfo[2]}<br />A moderator will be with you shortly.</TextDisplay>
+                        <TextDisplay>
+                            👋 {interaction.user.mention}
+                            <br /><br />
+                            {prompt}
+                            <br />
+                            A moderator will be with you shortly!
+                        </TextDisplay>
                     </Container>
+
                     <Container>
-                        <TextDisplay>### User Message<br />{message}</TextDisplay>
+                        <TextDisplay>
+                            ### User Message
+                            <br />
+                            {message}
+                        </TextDisplay>
+
                         {files.length > 0 && <Separator spacing={SeparatorSpacingSize.LARGE} divider={false} />}
-                        {images.length > 0 && <MediaGallery>{images.map(file => <MediaGalleryItem url={`attachment://${file.name}`} />)}</MediaGallery>}
-                        {otherFiles.map(file => <File filename={file.name} />)}
+
+                        {images.length > 0 && (
+                            <MediaGallery>
+                                {images.map(f => <MediaGalleryItem url={`attachment://${f.name}`} />)}
+                            </MediaGallery>
+                        )}
+                        {otherFiles.map(f => <File filename={f.name} />)}
                     </Container>
+
                     <ActionRow>
-                        <Button customID={`${Ids.CLOSE}${thread.id}`} style={ButtonStyles.DANGER}>Close ticket</Button>
-                        <Button customID={`${Ids.CLOSE_BAN}${thread.id}`} style={ButtonStyles.DANGER}>Close & ban from tickets</Button>
-                        <Button customID={`${Ids.MANAGE_ROLES}${thread.id}`} style={ButtonStyles.SECONDARY}>Manage roles</Button>
+                        <Button
+                            customID={`modmail:close:${thread.id}`}
+                            style={ButtonStyles.DANGER}
+                            emoji={{ name: Emoji.TrashCan }}
+                        >
+                            Close ticket
+                        </Button>
+                        <Button
+                            customID={`modmail:close-ban:${thread.id}`}
+                            style={ButtonStyles.DANGER}
+                            emoji={{ name: Emoji.Hammer }}
+                        >
+                            Close ticket & modmail-ban user
+                        </Button>
+                        <Button
+                            customID={`modmail:manage-roles:${thread.id}`}
+                            style={ButtonStyles.SECONDARY}
+                            emoji={{ name: "👤" }}
+                        >
+                            Manage Roles
+                        </Button>
                     </ActionRow>
                 </ComponentMessage>
             );
 
-            await interaction.createFollowup({ content: `Your ticket is ready: ${thread.mention}`, flags: MessageFlags.EPHEMERAL });
-            await log(`${interaction.user.mention} opened ${kebabToTitle(thread.name)} (${thread.mention}).`);
+            await interaction.createFollowup({
+                content: `📩 👉 ${thread.mention}`,
+                flags: MessageFlags.EPHEMERAL
+            });
+
+            await log({
+                color: Colors.Green,
+                user: interaction.user,
+                title: `${kebabToTitle(thread.name)} opened`,
+                viewLink: `https://discord.com/channels/${interaction.guild.id}/${thread.id}`,
+            });
         }
     });
+
 
     handleInteraction({
         type: InteractionTypes.MESSAGE_COMPONENT,
         guildOnly: true,
-        isMatch: interaction => interaction.data.customID.startsWith(Ids.CLOSE) || interaction.data.customID.startsWith(Ids.CLOSE_BAN),
+        isMatch: i => i.data.customID.startsWith("modmail:close:") || i.data.customID.startsWith("modmail:close-ban:"),
         async handle(interaction) {
             if (interaction.channel.type !== ChannelTypes.PRIVATE_THREAD || interaction.channel.threadMetadata.archived)
                 return;
 
-            const isModerator = interaction.member.roles.includes(modRoleId);
-            const banUser = interaction.data.customID.startsWith(Ids.CLOSE_BAN);
-            if (banUser && !isModerator) return;
+            const isBan = interaction.data.customID.startsWith("modmail:close-ban:");
+            const isModAction = interaction.member.roles.includes(modRoleId);
 
-            await ensureTicketsTable();
-            const ticket = await db.selectFrom("tickets")
+            if (isBan && !isModAction) return;
+
+            const res = await db.selectFrom("tickets")
                 .where("channelId", "=", interaction.channel.id)
-                .select(["id", "userId"])
+                .select(["userId", "id"])
                 .executeTakeFirst();
-            if (!ticket || (!isModerator && ticket.userId !== interaction.user.id)) return;
+            if (!res) return;
+
+            if (res.userId !== interaction.user.id && !isModAction)
+                return;
 
             await interaction.defer(MessageFlags.EPHEMERAL);
+
             await interaction.channel.edit({ archived: true, locked: true });
-            await db.deleteFrom("tickets").where("id", "=", ticket.id).execute();
+            await db.deleteFrom("tickets")
+                .where("id", "=", res.id)
+                .execute();
 
-            const member = await interaction.guild.getMember(ticket.userId).catch(() => null);
-            if (banUser && member)
-                await member.addRole(banRoleId, `Banned from tickets by ${interaction.user.tag}`);
+            const footer = [
+                isBan && "Banned from Modmail -",
+                "Closed by",
+                interaction.user.username
+            ].filter(isTruthy).join(" ");
 
-            if (member) {
-                const status = banUser ? "closed and you have been banned from opening tickets" : "closed as resolved";
-                await sendDm(member.user, { content: `Your ticket has been ${status}. You can still find it in the Threads tab if you need the history.` });
+            await log({
+                color: Colors.Pink,
+                user: interaction.client.users.get(res.userId) ?? await interaction.client.rest.users.get(res.userId),
+                title: `${kebabToTitle(interaction.channel.name)} closed`,
+                viewLink: `https://discord.com/channels/${interaction.guild.id}/${interaction.channel.id}`,
+                footer
+            });
+
+            await interaction.createFollowup({
+                content: "Ticket closed.",
+                flags: MessageFlags.EPHEMERAL
+            });
+
+            const member = await interaction.guild.getMember(res.userId).catch(() => null);
+            if (!member) return;
+
+            const messageContent = run(() => {
+                if (isBan) {
+                    member.addRole(banRoleId);
+                    return stripIndent`
+                        Your modmail ticket has been closed and you have been banned from creating tickets.
+
+                        This is most likely because you didn't follow the modmail rules. See <#${channelId}> for more information.
+                    `;
+                } else {
+                    return stripIndent`
+                        Your modmail ticket has been closed as resolved.
+
+                        It will remain accessible at ${interaction.channel.mention} for future reference. (If it says \`#unknown\`, just click on it to load it)
+                    `;
+                }
+            });
+
+            const sentDm = await sendDm(member.user, { content: messageContent });
+            if (!sentDm) {
+                await interaction.channel.createMessage({
+                    allowedMentions: { users: [member.id] },
+                    content: stripIndent`
+                        ${member.user.mention}
+
+                        This ticket has been closed as resolved${isBan ? " and you have been banned from creating tickets due to breaking the rules.\n" : ". "}You can find this ticket again in the future via the Threads tab.
+                    `
+                });
+                await interaction.channel.edit({ archived: true, locked: true });
             }
-
-            await interaction.createFollowup({ content: "Ticket closed.", flags: MessageFlags.EPHEMERAL });
-            await log(`${interaction.user.mention} closed ${interaction.channel.mention}${banUser ? " and banned the ticket opener" : ""}.`);
         }
     });
 
     handleInteraction({
         type: InteractionTypes.MESSAGE_COMPONENT,
         guildOnly: true,
-        isMatch: interaction => interaction.data.customID.startsWith(Ids.MANAGE_ROLES),
+        isMatch: i => i.data.customID.startsWith("modmail:manage-roles:"),
         async handle(interaction) {
-            if (!interaction.member.roles.includes(modRoleId)) return;
+            const isModAction = interaction.member.roles.includes(modRoleId);
+            if (!isModAction) return;
 
             const options = MANAGEABLE_ROLES
                 .map(roleId => interaction.guild.roles.get(roleId))
@@ -284,9 +495,13 @@ if (enabled) {
             await interaction.createMessage(
                 <ComponentMessage flags={MessageFlags.EPHEMERAL}>
                     <Container>
-                        <TextDisplay>## Manage ticket opener roles</TextDisplay>
-                        <ActionRow><StringSelect customID={interaction.data.customID.replace(Ids.MANAGE_ROLES, Ids.ADD_ROLE)} placeholder="Add role">{options}</StringSelect></ActionRow>
-                        <ActionRow><StringSelect customID={interaction.data.customID.replace(Ids.MANAGE_ROLES, Ids.REMOVE_ROLE)} placeholder="Remove role">{options}</StringSelect></ActionRow>
+                        <TextDisplay>## Manage User Roles</TextDisplay>
+                        <ActionRow>
+                            <StringSelect customID={interaction.data.customID.replace("manage-roles", "add-role")} placeholder="Add role" >{options}</StringSelect>
+                        </ActionRow>
+                        <ActionRow>
+                            <StringSelect customID={interaction.data.customID.replace("manage-roles", "remove-role")} placeholder="Remove role" >{options}</StringSelect>
+                        </ActionRow>
                     </Container>
                 </ComponentMessage>
             );
@@ -296,33 +511,43 @@ if (enabled) {
     handleInteraction({
         type: InteractionTypes.MESSAGE_COMPONENT,
         guildOnly: true,
-        isMatch: interaction => interaction.data.customID.startsWith(Ids.ADD_ROLE) || interaction.data.customID.startsWith(Ids.REMOVE_ROLE),
+        isMatch: i => i.data.customID.startsWith("modmail:add-role:") || i.data.customID.startsWith("modmail:remove-role:"),
         async handle(interaction: ComponentInteraction<ComponentTypes.STRING_SELECT, AnyTextableGuildChannel>) {
-            if (!interaction.member.roles.includes(modRoleId)) return;
+            const isModAction = interaction.member.roles.includes(modRoleId);
+            if (!isModAction) return;
 
             const roleId = interaction.data.values.getStrings()[0];
             if (!roleId || !MANAGEABLE_ROLES.includes(roleId)) return;
 
-            await ensureTicketsTable();
-            const ticket = await db.selectFrom("tickets")
-                .where("channelId", "=", interaction.channel.id)
-                .select("userId")
-                .executeTakeFirst();
-            if (!ticket) return;
+            const isAdd = interaction.data.customID.startsWith("modmail:add-role:");
 
-            const isAdd = interaction.data.customID.startsWith(Ids.ADD_ROLE);
-            await interaction.defer(MessageFlags.EPHEMERAL);
+            await interaction.defer();
+
+            const res = await db.selectFrom("tickets")
+                .where("channelId", "=", interaction.channel.id)
+                .select(["userId", "id"])
+                .executeTakeFirst();
+            if (!res) return;
+
             await interaction.guild[isAdd ? "addMemberRole" : "removeMemberRole"](
-                ticket.userId,
-                roleId,
-                `${isAdd ? "Added" : "Removed"} by ${interaction.user.tag} in ticket`
+                res.userId,
+                interaction.data.values.getStrings()[0],
+                `${isAdd ? "Added" : "Removed"} by ${interaction.user.tag} via ticket ${res.id}`
             );
-            await interaction.createFollowup({ content: `Role <@&${roleId}> ${isAdd ? "added to" : "removed from"} the ticket opener.`, flags: MessageFlags.EPHEMERAL });
+
+            await interaction.createFollowup({
+                allowedMentions: { users: [res.userId] },
+                content: `<@${res.userId}>\n\nThe role <@&${roleId}> has been ${isAdd ? "added to" : "removed from"} you by ${interaction.user.tag}.`,
+            });
         }
     });
 
     Vaius.once("ready", () => {
-        if (PROD)
-            Vaius.editStatus("online", [{ type: ActivityTypes.LISTENING, name: "/modmail" }]);
+        if (PROD) {
+            Vaius.editStatus("online", [{
+                type: ActivityTypes.LISTENING,
+                name: "/modmail"
+            }]);
+        }
     });
 }
