@@ -21,6 +21,7 @@ const DONOR_TICKET_USER_ID = "929208515883569182";
 
 const enum Ids {
     OPEN_TICKET = "modmail:open_ticket",
+    OPEN_DONOR_TICKET = "modmail:open_donor_ticket",
     OPEN_SUBMIT = "modmail:open_submit",
 
     REASON_SUPPORT = "modmail:support",
@@ -93,11 +94,6 @@ async function createModmailModal(interaction: GuildInteraction) {
     }
 
     const options = [
-        {
-            label: "I donated and want to redeem my perks",
-            value: Ids.REASON_DONOR,
-            emoji: { name: "❤️" }
-        },
         {
             label: "I need help with Equicord",
             value: Ids.REASON_SUPPORT + 1,
@@ -197,7 +193,7 @@ defineCommand({
 
                     <TextDisplay>## Open a Ticket</TextDisplay>
                     <TextDisplay>
-                        - To claim or manage Donor Perks, open a ticket and select the donor-perks option.<br />
+                        - To claim or manage Donor Perks, use the Claim Donor Perks button below.<br />
                         - Only for matters that require a moderator. For Equicord support or general questions, see above.<br />
                         - We only moderate things that happen **in this server**. Don't report anything that happens in DMs or other servers/platforms.
                     </TextDisplay>
@@ -208,6 +204,13 @@ defineCommand({
                             emoji={{ name: "🗣️" }}
                         >
                             Talk to a Mod
+                        </Button>
+                        <Button
+                            style={ButtonStyles.SECONDARY}
+                            customID={Ids.OPEN_DONOR_TICKET}
+                            emoji={{ name: "❤️" }}
+                        >
+                            Claim Donor Perks
                         </Button>
                     </ActionRow>
                 </Container>
@@ -232,6 +235,100 @@ if (enabled) {
         customID: Ids.OPEN_TICKET,
         guildOnly: true,
         handle: createModmailModal
+    });
+
+    handleComponentInteraction({
+        customID: Ids.OPEN_DONOR_TICKET,
+        guildOnly: true,
+        async handle(interaction) {
+            if (interaction.member.roles.includes(banRoleId)) {
+                return interaction.createMessage({
+                    content: "You are banned from using modmail.",
+                    flags: MessageFlags.EPHEMERAL
+                });
+            }
+
+            await interaction.defer(MessageFlags.EPHEMERAL);
+
+            const [channelName, prompt] = ChannelNameAndPrompt[Ids.REASON_DONOR];
+            const thread = await db.transaction().execute(async t => {
+                const { channelId, id } = await t.insertInto("tickets")
+                    .values({
+                        channelId: "0",
+                        userId: interaction.user.id
+                    })
+                    .onConflict(oc => oc
+                        .column("userId")
+                        .doUpdateSet({ id: eb => eb.ref("excluded.id") })
+                    )
+                    .returning(["channelId", "id"])
+                    .executeTakeFirstOrThrow();
+
+                if (channelId !== "0") {
+                    await interaction.createFollowup({
+                        content: `You already have a modmail ticket open: <#${channelId}>`,
+                        flags: MessageFlags.EPHEMERAL
+                    });
+                    return null;
+                }
+
+                const thread = await getThreadParent().startThreadWithoutMessage({
+                    type: ChannelTypes.PRIVATE_THREAD,
+                    name: `${channelName}-${id}`,
+                    invitable: false
+                }) as PrivateThreadChannel;
+
+                await t.updateTable("tickets")
+                    .set("channelId", thread.id)
+                    .where("id", "=", id)
+                    .execute();
+
+                return thread;
+            });
+
+            if (!thread) return;
+
+            void thread.createMessage({
+                content: `<@${DONOR_TICKET_USER_ID}>`,
+                allowedMentions: { users: [DONOR_TICKET_USER_ID] }
+            });
+
+            await thread.createMessage(
+                <ComponentMessage allowedMentions={{ users: [interaction.user.id] }}>
+                    <Container>
+                        <TextDisplay>
+                            👋 {interaction.user.mention}
+                            <br /><br />
+                            {prompt}
+                            <br />
+                            A moderator will be with you shortly!
+                        </TextDisplay>
+                    </Container>
+
+                    <ActionRow>
+                        <Button
+                            customID={`modmail:close:${thread.id}`}
+                            style={ButtonStyles.DANGER}
+                            emoji={{ name: Emoji.TrashCan }}
+                        >
+                            Close ticket
+                        </Button>
+                    </ActionRow>
+                </ComponentMessage>
+            );
+
+            await interaction.createFollowup({
+                content: `📩 👉 ${thread.mention}`,
+                flags: MessageFlags.EPHEMERAL
+            });
+
+            await log({
+                color: Colors.Green,
+                user: interaction.user,
+                title: `${kebabToTitle(thread.name)} opened`,
+                viewLink: `https://discord.com/channels/${interaction.guild.id}/${thread.id}`,
+            });
+        }
     });
 
 
