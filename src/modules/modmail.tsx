@@ -227,6 +227,7 @@ if (enabled) {
         },
         {
             guildOnly: true,
+            homeGuildOnly: true,
             handle: createModmailModal
         }
     );
