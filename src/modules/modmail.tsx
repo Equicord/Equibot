@@ -110,6 +110,11 @@ async function createModmailModal(interaction: GuildInteraction) {
             emoji: { name: "👥" }
         },
         {
+            label: "I want to claim or manage donor perks",
+            value: Ids.REASON_DONOR,
+            emoji: { name: "❤️" }
+        },
+        {
             label: "I want to submit my css snippet",
             value: Ids.REASON_CSS,
             emoji: { name: "🎨" }
