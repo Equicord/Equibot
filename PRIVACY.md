@@ -1,6 +1,6 @@
 # Equibot Privacy Policy
 
-**Last updated:** October 8, 2026
+**Last updated:** October 15, 2026
 
 Equibot ("the bot", "we", "us") is a Discord bot run by the Equicord team for the [Equicord Discord server](https://equicord.org/discord). This policy explains what data the bot handles, why, and what you can do about it.
 
@@ -8,8 +8,8 @@ Equibot is free software. Its full source code is public at [github.com/Equicord
 
 ## Summary
 
-- Equibot only runs in the Equicord server. It is not a public bot.
-- It reads messages in the server to provide commands and automatic moderation. **It does not store message history.**
+- Equibot can only be added as a bot to the Equicord server. Anyone can also install it as a user app to use some of its slash commands elsewhere, such as `/plugin` and `/translate`.
+- It reads messages in the Equicord server to provide commands and automatic moderation. **It does not store message history.**
 - It stores a small amount of data tied to your Discord user ID, listed below.
 - Some features send content to third-party services (Google, GitHub). These are listed below.
 - We do not sell your data or use it for advertising.
@@ -35,6 +35,7 @@ The bot also stores server settings (sticky messages, watched threads, and simil
 To work, the bot reads events Discord sends it, including messages, attachments, member joins and leaves, nicknames, and role changes. It handles these in memory and does not keep a copy. Specifically:
 
 - **Commands.** The bot reads messages to find commands and respond to them.
+- **User app commands.** If you install Equibot as a user app, it only receives the slash commands and message commands you run, along with the options you give them and, for message commands, the message you picked. Outside the Equicord server it does not receive or read any other messages.
 - **Automatic moderation.** The bot checks messages, nicknames, invite links, and attachments for spam, scams, and harmful content. Image checks (text recognition and NSFW detection) run entirely on our own server. Images are not sent to any outside service for this.
 - **Modmail tickets.** Tickets are private threads in the Equicord server. Messages and attachments you send there are stored by Discord, not by the bot, and moderators can read them. Closed tickets stay available in Discord for future reference.
 
@@ -75,7 +76,7 @@ To make a request, open a modmail ticket in the [Equicord Discord server](https:
 
 Some data may be kept after a deletion request if we need it to enforce a ban or mute.
 
-If you don't want the bot to process your messages at all, the only option is to not use the Equicord server, because the bot moderates every channel.
+If you don't want the bot to process your messages at all, the only option is to not use the Equicord server, because the bot moderates every channel. If you installed Equibot as a user app, you can remove it at any time from your Discord settings under Authorized Apps.
 
 ## Children
 

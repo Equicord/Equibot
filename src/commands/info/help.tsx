@@ -52,11 +52,12 @@ function JumpToCategory({ pages, paginator }: { pages: string[], paginator: Pagi
 }
 
 async function renderTableOfContents(pages: string[], { prefix, commandName }: CommandContext, paginator: PaginatorCv2<FullCommand>) {
+    const gitRemote = await getGitRemote();
     const description = stripIndent`
         My ${Config.prefixes.length === 1 ? "prefix is" : "prefixes are"} ${Config.prefixes.map(toInlineCode).join(", ")}.
         Use \`${prefix}${commandName} <command>\` for more information on a specific command!
 
-        You can find my source code [here](${await getGitRemote()}).
+        You can find my source code [here](${gitRemote}) and my privacy policy [here](${gitRemote}/blob/main/PRIVACY.md).
     `;
 
     return (
