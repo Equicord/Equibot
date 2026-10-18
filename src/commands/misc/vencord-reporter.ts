@@ -4,6 +4,7 @@ import { BotState } from "~/db/botState";
 import { DefaultReporterBranch, ReporterOptions, testDiscordVersion } from "~/modules/discordTracker";
 import { reply } from "~/util/discord";
 import { isOneOf } from "~/util/guards";
+import { toCodeblock } from "~/util/text";
 
 const PrRegex = /#(\d+)/;
 
@@ -33,7 +34,7 @@ defineCommand({
             options.inputRef = `refs/pull/${prNumber}/head`;
         }
 
-        testDiscordVersion(
+        await testDiscordVersion(
             branch,
             {
                 stable: BotState.discordTracker?.stableHash!,
@@ -53,11 +54,12 @@ defineCommand({
                     reply(msg, data);
                 }
             }
-        );
-
-        reply(msg, isPR
-            ? `Now testing [#${prNumber}](<https://github.com/Equicord/Equicord/pull/${prNumber}>)!`
-            : "Now testing!"
+        ).then(
+            () => reply(msg, isPR
+                ? `Now testing [#${prNumber}](<https://github.com/Equicord/Equicord/pull/${prNumber}>)!`
+                : "Now testing!"
+            ),
+            err => reply(msg, "### Something went wrong\n" + toCodeblock(String(err.cause ?? err)))
         );
     },
 });

@@ -5,6 +5,7 @@ import { CommandContext, Commands } from "./Commands";
 import Config from "./config";
 import { Emoji, Millis } from "./constants";
 import { BotState } from "./db/botState";
+import { handleGithubLines } from "./modules/githubLines";
 import { moderateMessage } from "./modules/moderation";
 import { reply } from "./util/discord";
 import { silently } from "./util/functions";
@@ -23,7 +24,7 @@ export const Vaius = new Client({
 export let OwnerId: string;
 Vaius.once("ready", async () => {
     Vaius.rest.oauth.getApplication().then(app => {
-        OwnerId = app.ownerID;
+        OwnerId = app.team?.ownerID ?? app.ownerID;
     });
 
     console.log("hi");
@@ -56,7 +57,9 @@ Vaius.on("messageUpdate", (msg, oldMsg) => {
 
 async function handleMessage(msg: Message, isEdit: boolean) {
     if (msg.author.bot) return;
-    await moderateMessage(msg, isEdit);
+
+    moderateMessage(msg, isEdit);
+    handleGithubLines(msg);
 
     const lowerContent = msg.content.toLowerCase();
 
