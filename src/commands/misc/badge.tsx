@@ -44,17 +44,31 @@ const TranslatorBadgeUrl = "https://badge.equicord.org/translator.png";
 const TranslatorBadgeTooltip = "Equicord Translator";
 
 async function optimizeImage(imgData: Buffer, ext: string) {
-    const { child } = ext === "gif"
+    const { child, promise } = ext === "gif"
         ? spawnP("gifsicle", ["-O3", "--colors", "256", "--resize", "128x128"], {})
         : spawnP("convert", ["-", "-background", "none", "-resize", "128x128", "-quality", "75", "WEBP:-"], {});
 
+    // the process may exit before consuming all of stdin
+    child.stdin!.on("error", () => { });
     child.stdin!.end(imgData);
 
-    const res = await buffer(child.stdout!);
+    const stdout = buffer(child.stdout!);
+    const stderr = buffer(child.stderr!);
+
+    let res: Buffer;
+    try {
+        [res] = await Promise.all([stdout, promise]);
+    } catch (err) {
+        console.error("Failed to optimize badge image", err, (await stderr).toString());
+        res = Buffer.alloc(0);
+    }
+
+    // a failed run produces empty output, which must not be mistaken for a smaller image
+    const useOptimized = res.byteLength > 0 && res.byteLength < imgData.byteLength;
 
     return [
-        res.byteLength < imgData.byteLength ? res : imgData,
-        ext === "gif" ? "gif" : "webp",
+        useOptimized ? res : imgData,
+        useOptimized ? (ext === "gif" ? "gif" : "webp") : ext,
         imgData.byteLength,
         res.byteLength
     ] as const;
@@ -362,7 +376,9 @@ const handler: CommandInteractionHandler = {
             let sizes: [number, number];
             ([imgData, ext, ...sizes] = await optimizeImage(imgData, ext));
 
-            footer = `${(sizes[0] / 1024).toFixed(2)}k -> ${(sizes[1] / 1024).toFixed(2)}k\n`;
+            footer = sizes[1] === 0
+                ? "Optimization failed, kept original image\n"
+                : `${(sizes[0] / 1024).toFixed(2)}k -> ${(sizes[1] / 1024).toFixed(2)}k\n`;
         }
 
         const hash = createHash("sha1").update(imgData).digest("hex");
