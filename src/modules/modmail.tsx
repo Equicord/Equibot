@@ -416,7 +416,7 @@ if (enabled) {
             const [images, otherFiles] = partition(files, f => f.contentType?.startsWith("image/") ?? false);
 
             if (reason === Ids.REASON_DONOR) {
-                thread.createMessage({ content: `Adding Indi <@&${DONOR_TICKET_USER_ID}>`, allowedMentions: { roles: [DONOR_TICKET_USER_ID] } })
+                thread.createMessage({ content: `Adding Indi <@${DONOR_TICKET_USER_ID}>`, allowedMentions: { roles: [DONOR_TICKET_USER_ID] } })
                     .then(m => m.delete());
             } else {
                 thread.createMessage({ content: `Adding Team Members <@&${TICKET_ROLE_ID}>`, allowedMentions: { roles: [TICKET_ROLE_ID] } })
