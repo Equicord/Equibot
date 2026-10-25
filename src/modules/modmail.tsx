@@ -415,19 +415,20 @@ if (enabled) {
 
             const [images, otherFiles] = partition(files, f => f.contentType?.startsWith("image/") ?? false);
 
-            if (reason === Ids.REASON_DONOR) {
-                thread.createMessage({ content: `Adding Indi <@${DONOR_TICKET_USER_ID}>`, allowedMentions: { roles: [DONOR_TICKET_USER_ID] } })
-                    .then(m => m.delete());
-            } else {
-                thread.createMessage({ content: `Adding Team Members <@&${TICKET_ROLE_ID}>`, allowedMentions: { roles: [TICKET_ROLE_ID] } })
-                    .then(m => m.delete());
-            }
+            const isDonor = reason === Ids.REASON_DONOR;
+            const staffMention = isDonor ? `<@${DONOR_TICKET_USER_ID}>` : `<@&${TICKET_ROLE_ID}>`;
 
             const msg = await thread.createMessage(
-                <ComponentMessage allowedMentions={{ users: [interaction.user.id] }} files={files}>
+                <ComponentMessage
+                    allowedMentions={{
+                        users: isDonor ? [interaction.user.id, DONOR_TICKET_USER_ID] : [interaction.user.id],
+                        roles: isDonor ? [] : [TICKET_ROLE_ID]
+                    }}
+                    files={files}
+                >
                     <Container>
                         <TextDisplay>
-                            👋 {interaction.user.mention}
+                            👋 {interaction.user.mention} {staffMention}
                             <br /><br />
                             {prompt}
                             <br />
