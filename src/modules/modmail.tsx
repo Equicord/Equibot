@@ -294,15 +294,11 @@ if (enabled) {
 
             if (!thread) return;
 
-            thread.createMessage({ content: "Adding Indi..." })
-                .then(m => m.edit({ content: `Join Indi <@&${DONOR_TICKET_USER_ID}>`, allowedMentions: { roles: [DONOR_TICKET_USER_ID] } }))
-                .then(m => m.delete());
-
             await thread.createMessage(
-                <ComponentMessage allowedMentions={{ users: [interaction.user.id] }}>
+                <ComponentMessage allowedMentions={{ users: [interaction.user.id, DONOR_TICKET_USER_ID] }}>
                     <Container>
                         <TextDisplay>
-                            👋 {interaction.user.mention}
+                            👋 {interaction.user.mention} {`<@${DONOR_TICKET_USER_ID}>`}
                             <br /><br />
                             {prompt}
                             <br />
