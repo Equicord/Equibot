@@ -1,11 +1,11 @@
 import { AuditLogActionTypes, Guild } from "oceanic.js";
 
-import { Vaius } from "~/Client";
 import { defineCommand } from "~/Commands";
 import Config from "~/config";
 import { db } from "~/db";
 import { reply } from "~/util/discord";
 import { isNonNullish } from "~/util/guards";
+import { Vaius } from "~/Vaius";
 
 const ignoreRoles = new Set([
     "1267567672233689130", // Server Booster

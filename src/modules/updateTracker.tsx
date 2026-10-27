@@ -1,7 +1,7 @@
 import fs from "fs";
 import { ButtonStyles, MessageFlags } from "oceanic.js";
 import { join } from "path";
-import { Vaius } from "~/Client";
+import { Vaius } from "~/Vaius";
 import Config from "~/config";
 import { DATA_DIR, Millis } from "~/constants";
 import { toTitle } from "~/util/text";

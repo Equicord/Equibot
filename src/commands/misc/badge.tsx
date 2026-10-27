@@ -8,12 +8,13 @@ import { run } from "~/util/functions";
 
 import { buffer } from "stream/consumers";
 import Config from "~/config";
+import { OwnerId } from "~/owner";
 import { atomicWriteFileSync } from "~/util/atomicWriteFile";
 import { spawnP } from "~/util/childProcess";
 import { getHomeGuild } from "~/util/discord";
+import { lookupKlipyURL, lookupTenorURL } from "~/util/gifs";
 import { logBadgeAction } from "~/util/logAction";
 import { CommandAttachmentOption, CommandBooleanOption, CommandIntegerOption, CommandStringOption, CommandUserOption } from "~components";
-import { OwnerId } from "../../Client";
 import { PROD } from "../../constants";
 import { doFetch } from "../../util/fetch";
 
@@ -74,8 +75,10 @@ async function optimizeImage(imgData: Buffer, ext: string) {
     ] as const;
 }
 
-function normaliseCdnUrl(rawUrl: string) {
+async function normaliseUrl(rawUrl: string) {
     const url = new URL(rawUrl);
+    if (url.host === "tenor.com") return lookupTenorURL(url);
+    if (url.host === "klipy.com") return lookupKlipyURL(url);
     if (url.host !== "cdn.discordapp.com" || url.pathname.includes("/attachments/")) return rawUrl;
 
     url.searchParams.set("size", "128");
@@ -292,7 +295,7 @@ const handler: CommandInteractionHandler = {
         }
 
         if (subCommand === "remove") {
-            const existingBadge = BadgeData[user.id][existingBadgeIndex!];
+            const existingBadge = BadgeData[user.id]?.[existingBadgeIndex!];
             if (!existingBadge) return i.createMessage({
                 content: "Badge not found",
                 flags: MessageFlags.EPHEMERAL
@@ -326,7 +329,7 @@ const handler: CommandInteractionHandler = {
         const imageUrl = data.options.getString("image-url");
 
         let url = image?.url ?? imageUrl;
-        url &&= normaliseCdnUrl(url);
+        if (url) url = await normaliseUrl(url);
 
         if (!url || !tooltip) {
             const existing = existingBadgeIndex != null && BadgeData[user.id]?.[existingBadgeIndex];

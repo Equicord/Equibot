@@ -12,3 +12,6 @@ allowBuilds:
     protobufjs: true
     sharp: true
     tesseract.js: true
+
+patchedDependencies:
+    oceanic.js: patches/oceanic.js.patch

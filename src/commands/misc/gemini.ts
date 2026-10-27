@@ -1,9 +1,9 @@
 import { ContentListUnion, createModelContent, createUserContent, GoogleGenAI } from "@google/genai";
 import { AnyTextableGuildChannel, Message } from "oceanic.js";
-import { Vaius } from "~/Client";
 import Config from "~/config";
 import { PROD } from "~/constants";
 import { stripIndent } from "~/util/text";
+import { Vaius } from "~/Vaius";
 
 const { apiKey, enabled, allowedRoles, bannedRoles } = Config.gemini;
 

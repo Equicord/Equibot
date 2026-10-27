@@ -1,4 +1,4 @@
-import { OwnerId } from "~/Client";
+import { OwnerId } from "~/owner";
 import Config from "~/config";
 
 export function canManageMutedUsers(userId: string, roles?: string[] | null) {

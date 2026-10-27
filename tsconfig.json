@@ -8,8 +8,7 @@
             "esnext.asynciterable",
             "esnext.symbol"
         ],
-        "module": "ESNext",
-        "moduleResolution": "bundler",
+        "module": "preserve",
         "strict": true,
         "noImplicitAny": false,
         "target": "ESNEXT",

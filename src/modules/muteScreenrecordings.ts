@@ -3,7 +3,7 @@ import { ButtonStyles, ComponentTypes, Message, MessageFlags } from "oceanic.js"
 import { tmpdir } from "os";
 import { join } from "path";
 
-import { Vaius } from "~/Client";
+import { Vaius } from "~/Vaius";
 import { BotState } from "~/db/botState";
 import { execFileP } from "~/util/childProcess";
 import { reply } from "~/util/discord";

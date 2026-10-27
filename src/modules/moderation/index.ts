@@ -1,5 +1,4 @@
 import { Message } from "oceanic.js";
-import { Vaius } from "~/Client";
 import { isTruthy } from "~/util/guards";
 import { moderateInvites } from "./invites";
 import { moderateMultiChannelSpam } from "./multiChannelSpam";
@@ -10,7 +9,7 @@ import { moderateSuspiciousFiles } from "./suspiciousFiles";
 export async function moderateMessage(msg: Message, isEdit: boolean) {
     if (msg.author.bot) return;
     if (!msg.inCachedGuildChannel()) return;
-    if (!msg.channel.permissionsOf(Vaius.user.id).has("MANAGE_MESSAGES")) return;
+    if (!msg.channel.permissionsOf(msg.client.user.id).has("MANAGE_MESSAGES")) return;
 
     // FIXME: make this less bad
     if (msg.messageSnapshots?.length)

@@ -2,7 +2,7 @@ import { Member } from "oceanic.js";
 import Config from "~/config";
 import { IGNORE_BADGES, Millis } from "~/constants";
 import { fetchJsons } from "~/util/fetch";
-import { Vaius } from "../Client";
+import { Vaius } from "../Vaius";
 
 let cachedEquicordDevs: Set<string> | null = null;
 let cachedVencordDevs: Set<string> | null = null;

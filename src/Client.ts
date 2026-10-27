@@ -1,30 +1,20 @@
-import { AnyTextableChannel, Client, Message } from "oceanic.js";
+import { AnyTextableChannel, Member, Message, User } from "oceanic.js";
 
-import { handleError } from ".";
 import { CommandContext, Commands } from "./Commands";
 import Config from "./config";
 import { Emoji, Millis } from "./constants";
 import { BotState } from "./db/botState";
 import { handleGithubLines } from "./modules/githubLines";
 import { moderateMessage } from "./modules/moderation";
-import { reply } from "./util/discord";
+import { OwnerId, setOwnerId } from "./owner";
+import { messageContainsText, reply } from "./util/discord";
 import { silently } from "./util/functions";
+import { handleError } from "./util/handleError";
+import { Vaius } from "./Vaius";
 
-export const Vaius = new Client({
-    auth: "Bot " + Config.token,
-    gateway: { intents: ["ALL_NON_PRIVILEGED", "MESSAGE_CONTENT", "GUILD_MEMBERS"] },
-    allowedMentions: {
-        everyone: false,
-        repliedUser: false,
-        roles: false,
-        users: false
-    }
-});
-
-export let OwnerId: string;
 Vaius.once("ready", async () => {
     Vaius.rest.oauth.getApplication().then(app => {
-        OwnerId = app.team?.ownerID ?? app.ownerID;
+        setOwnerId(app.team?.ownerID ?? app.ownerID);
     });
 
     console.log("hi");
@@ -120,3 +110,24 @@ async function handleMessage(msg: Message, isEdit: boolean) {
         silently(reply(msg, { content: "oop, that didn't go well 💥" }));
     }
 }
+
+// React with X or TrashCan to delete responses
+Vaius.on("messageReactionAdd", async (maybeUncachedMsg, maybeUncachedReactor, reaction) => {
+    if (reaction.emoji.name !== Emoji.X && reaction.emoji.name !== Emoji.TrashCan) return;
+
+    const msg = maybeUncachedMsg instanceof Message
+        ? maybeUncachedMsg
+        : await silently(Vaius.rest.channels.getMessage(maybeUncachedMsg.channelID, maybeUncachedMsg.id));
+
+    if (!msg || msg.author.id !== Vaius.user.id) return;
+
+    const reactor = maybeUncachedReactor instanceof User || maybeUncachedReactor instanceof Member
+        ? maybeUncachedReactor
+        : await silently(Vaius.rest.users.get(maybeUncachedReactor.id));
+
+    if (!reactor) return;
+
+    const canDeleteMessage = msg.referencedMessage?.author.id === reactor.id || messageContainsText(msg, `Auto-response invoked by ${reactor.username}`);
+    if (canDeleteMessage)
+        silently(msg.delete());
+});
