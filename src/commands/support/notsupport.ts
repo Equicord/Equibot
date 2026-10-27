@@ -1,5 +1,5 @@
 import { createCanvas, GlobalFonts, Image, loadImage } from "@napi-rs/canvas";
-import { AnyGuildChannelWithoutThreads } from "oceanic.js";
+import { AnyGuildChannel } from "oceanic.js";
 import { join } from "path";
 
 import { defineCommand } from "~/Commands";
@@ -35,10 +35,13 @@ defineCommand({
     usage: "[destination channel] [destination caption] | [origin caption]",
     guildOnly: true,
     async execute({ msg, createMessage }, channelId, ...captionElements) {
-        let channel = msg.client.getChannel(Config.channels.support) as AnyGuildChannelWithoutThreads;
+        let channel = msg.client.getChannel(Config.channels.support) as AnyGuildChannel;
         let caption = captionElements.join(" ");
         if (channelId) {
-            const customChannel = msg.guild.channels.get(channelId.match(/\d+/)?.[0] || "");
+            const id = channelId.match(/\d+/)?.[0] || "";
+            const customChannel: AnyGuildChannel | undefined =
+                msg.guild.channels.get(id) ?? msg.guild.threads.get(id);
+
             if (customChannel) {
                 channel = customChannel;
             } else {
