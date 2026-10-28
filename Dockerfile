@@ -9,6 +9,7 @@ ENV PATH="$PNPM_HOME:$PATH"
 RUN corepack enable
 
 COPY package*.json pnpm-*.yaml ./
+COPY patches ./patches
 RUN pnpm install --frozen-lockfile --ignore-scripts
 
 COPY . .
@@ -36,6 +37,7 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/*
 
 COPY package*.json pnpm-*.yaml ./
+COPY patches ./patches
 COPY assets ./assets
 COPY public ./public
 RUN pnpm install --prod --frozen-lockfile
