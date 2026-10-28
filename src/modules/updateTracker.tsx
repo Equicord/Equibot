@@ -1,9 +1,11 @@
+import { createHmac, timingSafeEqual } from "crypto";
 import fs from "fs";
 import { ButtonStyles, MessageFlags } from "oceanic.js";
 import { join } from "path";
 import { Vaius } from "~/Vaius";
 import Config from "~/config";
 import { DATA_DIR, Millis } from "~/constants";
+import { fastify } from "~/server";
 import { toTitle } from "~/util/text";
 import { sleep } from "~/util/time";
 
@@ -12,35 +14,63 @@ import { ActionRow, Button, Container, Section, TextDisplay, Thumbnail } from "~
 type ReleaseType = "stable" | "beta" | "alpha";
 type TestFlightStatus = "open" | "full" | "closed" | "unknown" | "notfound" | "ratelimited";
 
-interface TrackerIndex {
-    latest: Record<ReleaseType, number>;
-}
-
-interface iTunesResult {
+interface AndroidRelease {
+    versionCode: number;
     version: string;
-    releaseNotes: string;
-    artworkUrl100: string;
-    fileSizeBytes: string;
-    minimumOsVersion: string;
+    versionName: string | null;
+    releasedAt: string | null;
+    fileSizeBytes: number | null;
+    targetSdkVersion: number | null;
+    releaseNotes: string | null;
 }
 
-interface TFBuild {
-    cfBundleShortVersion: string;
-    cfBundleVersion: string;
-    releaseDate: string;
-    expiration: string;
-    whatsNew: string;
-    fileSizeUncompressed: number;
+interface AppStoreRelease {
+    version: string;
+    releasedAt: string | null;
+    minimumOsVersion: string | null;
+    fileSizeBytes: number | null;
+    releaseNotes: string | null;
 }
 
-const { enabled, android, appstore, testflight, testflightSecret, testflightApi, logChannelId } = Config.updateTracker;
+interface TestFlightRelease {
+    version: string;
+    build: string;
+    releasedAt: string | null;
+    expiresAt: string | null;
+    fileSizeBytes: number | null;
+    whatsNew: string | null;
+}
+
+interface TestFlightProgram {
+    joinUrl: string;
+    status: TestFlightStatus;
+    checkedAt: string;
+}
+
+interface TrackerIndex {
+    android: { latest: Record<ReleaseType, AndroidRelease | null> };
+    ios: {
+        latest: { appstore: AppStoreRelease | null; testflight: TestFlightRelease | null };
+        testflight: TestFlightProgram | null;
+    };
+}
+
+type TrackerEvent =
+    | { type: "android"; channel: ReleaseType; release: AndroidRelease; previousVersionCode: number | null }
+    | { type: "appstore"; release: AppStoreRelease; previousVersion: string | null }
+    | { type: "testflight"; release: TestFlightRelease; previousBuild: string | null; program: TestFlightProgram | null };
+
+const { enabled, android, appstore, testflight, api, webhookSecret, logChannelId } = Config.updateTracker;
+
+const TRACKER_API = api.replace(/\/+$/, "");
+const TRACKER_BASE = `${TRACKER_API}/android/download`;
+const TRACKER_INDEX = `${TRACKER_API}/index`;
+
+const FALLBACK_POLL_INTERVAL = webhookSecret ? 30 * Millis.MINUTE : 5 * Millis.MINUTE;
 
 const DISCORD_PKG = "com.discord";
 const GOOGLE_PLAY_URL = `https://play.google.com/store/apps/details?id=${DISCORD_PKG}`;
-const TRACKER_BASE = "https://tracker.vendetta.rocks/tracker/download";
-const TRACKER_INDEX = "https://tracker.vendetta.rocks/tracker/index";
 
-const ITUNES_API = "https://itunes.apple.com/lookup?bundleId=com.hammerandchisel.discord&country=us";
 const APP_STORE_URL = "https://apps.apple.com/app/discord/id985746746";
 
 const TESTFLIGHT_URL = "https://testflight.apple.com/join/gdE4pRzI";
@@ -75,6 +105,10 @@ function discordTimestamp(date: string | Date, format: "f" | "F" | "d" | "D" | "
     return `<t:${unix}:${format}>`;
 }
 
+function formatSize(bytes: number | null): string {
+    return bytes === null ? "?" : (bytes / (1024 * 1024)).toFixed(1);
+}
+
 function resolveChannelIds(extraChannelId?: string): string[] {
     const ids = [logChannelId];
     if (extraChannelId && extraChannelId !== logChannelId) {
@@ -95,6 +129,19 @@ async function postUpdateMessage(channelIds: string[], components: any[], tag: s
             console.error(`[UpdateTracker ${tag}] Failed to post to ${channelId}:`, err);
         }
     }
+}
+
+let queue: Promise<unknown> = Promise.resolve();
+function serialized<T>(task: () => Promise<T>): Promise<T> {
+    const result = queue.then(task, task);
+    queue = result.catch(() => undefined);
+    return result;
+}
+
+async function fetchTrackerIndex(): Promise<TrackerIndex> {
+    const resp = await fetch(TRACKER_INDEX);
+    if (!resp.ok) throw new Error(`Tracker index fetch failed: ${resp.status} ${resp.statusText}`);
+    return resp.json();
 }
 
 function trackerUrl(buildID: number, split: string): string {
@@ -132,208 +179,244 @@ function formatReleaseName(versionCode: number, releaseType: ReleaseType): strin
     return `${versionStr} ${releaseStr} (${versionCode})`;
 }
 
-async function fetchLatestVersions(): Promise<TrackerIndex["latest"]> {
-    const resp = await fetch(TRACKER_INDEX);
-    if (!resp.ok) throw new Error(`Vendetta tracker fetch failed: ${resp.statusText}`);
-    const json: TrackerIndex = await resp.json();
-    return json.latest;
+export function checkAndroid(bypass = false, extraChannelId?: string, latest?: Partial<Record<ReleaseType, AndroidRelease | null>>): Promise<void> {
+    return serialized(async () => {
+        if (!latest) {
+            try {
+                latest = (await fetchTrackerIndex()).android.latest;
+            } catch (err) {
+                console.error("[UpdateTracker Android] Failed to fetch version:", err);
+                return;
+            }
+        }
+
+        const channelIds = resolveChannelIds(extraChannelId);
+
+        for (const releaseType of ["stable", "beta", "alpha"] as ReleaseType[]) {
+            const release = latest[releaseType];
+            if (!release) continue;
+
+            const { versionCode } = release;
+            const versionFile = join(DATA_DIR, `./discord_version.android.${releaseType}.txt`);
+
+            if (!bypass && readVersion(versionFile) >= versionCode) continue;
+
+            const name = formatReleaseName(versionCode, releaseType);
+            const accentColor = ANDROID_COLORS[releaseType];
+
+            const components = <>
+                <Container accentColor={accentColor}>
+                    <Section accessory={<Thumbnail url={`${Config.httpServer.domain}/public/googleplay.png`} />}>
+                        <TextDisplay>New Android Release</TextDisplay>
+                        <TextDisplay>{name} · Detected {discordTimestamp(new Date())}</TextDisplay>
+                        <TextDisplay>{vendettaGrid(versionCode)}</TextDisplay>
+                    </Section>
+                </Container>
+                <ActionRow>
+                    <Button style={ButtonStyles.LINK} url={GOOGLE_PLAY_URL}>Google Play Store</Button>
+                    {["alpha", "beta"].includes(releaseType) && <Button style={ButtonStyles.LINK} url={HOW_TO_JOIN_URL_ALPHA}>How to Join</Button>}
+                </ActionRow>
+            </>;
+
+            await postUpdateMessage(channelIds, components as any, `Android ${releaseType}`);
+            writeVersion(versionFile, versionCode);
+        }
+    });
 }
 
-export async function checkAndroid(bypass = false, extraChannelId?: string): Promise<void> {
-    let latest: TrackerIndex["latest"];
-
-    try {
-        latest = await fetchLatestVersions();
-    } catch (err) {
-        console.error("[UpdateTracker Android] Failed to fetch version:", err);
-        return;
-    }
-
-    const channelIds = resolveChannelIds(extraChannelId);
-
-    for (const releaseType of ["stable", "beta", "alpha"] as ReleaseType[]) {
-        const versionCode = latest[releaseType];
-        const versionFile = join(DATA_DIR, `./discord_version.android.${releaseType}.txt`);
-
-        if (!bypass && readVersion(versionFile) >= versionCode) continue;
-
-        const name = formatReleaseName(versionCode, releaseType);
-        const accentColor = ANDROID_COLORS[releaseType];
-
-        const components = <>
-            <Container accentColor={accentColor}>
-                <Section accessory={<Thumbnail url={`${Config.httpServer.domain}/public/googleplay.png`} />}>
-                    <TextDisplay>New Android Release</TextDisplay>
-                    <TextDisplay>{name} · Detected {discordTimestamp(new Date())}</TextDisplay>
-                    <TextDisplay>{vendettaGrid(versionCode)}</TextDisplay>
-                </Section>
-            </Container>
-            <ActionRow>
-                <Button style={ButtonStyles.LINK} url={GOOGLE_PLAY_URL}>Google Play Store</Button>
-                {["alpha", "beta"].includes(releaseType) && <Button style={ButtonStyles.LINK} url={HOW_TO_JOIN_URL_ALPHA}>How to Join</Button>}
-            </ActionRow>
-        </>;
-
-        await postUpdateMessage(channelIds, components as any, `Android ${releaseType}`);
-        writeVersion(versionFile, versionCode);
-    }
-}
-
-async function fetchAppStoreVersion(): Promise<iTunesResult> {
-    const resp = await fetch(ITUNES_API);
-    if (!resp.ok) throw new Error(`iTunes API failed: ${resp.statusText}`);
-
-    const json = await resp.json();
-    if (!json.results?.length) throw new Error("No results from iTunes API");
-
-    return json.results[0] as iTunesResult;
-}
-
-function appStoreGrid(result: iTunesResult, size: string): string {
+function appStoreGrid(release: AppStoreRelease, size: string): string {
     const sections: [string, string][] = [
         ["**Size**", `${size} MB`],
-        ["**Requires**", `iOS ${result.minimumOsVersion}+`],
+        ["**Requires**", `iOS ${release.minimumOsVersion ?? "?"}+`],
     ];
 
-    if (result.releaseNotes) {
-        const notes = result.releaseNotes.slice(0, 300) + (result.releaseNotes.length > 300 ? "…" : "");
+    if (release.releaseNotes) {
+        const notes = release.releaseNotes.slice(0, 300) + (release.releaseNotes.length > 300 ? "…" : "");
         sections.push(["**What's New**", notes]);
     }
 
     return sections.flatMap(([header, value], i) => i === 0 ? [header, value] : ["", header, value]).join("\n");
 }
 
-export async function checkAppStore(bypass = false, extraChannelId?: string): Promise<void> {
-    const versionFile = join(DATA_DIR, "./discord_version.ios.txt");
+export function checkAppStore(bypass = false, extraChannelId?: string, release?: AppStoreRelease | null): Promise<void> {
+    return serialized(async () => {
+        const versionFile = join(DATA_DIR, "./discord_version.ios.txt");
 
-    let result: iTunesResult;
-    try {
-        result = await fetchAppStoreVersion();
-    } catch (err) {
-        console.error("[UpdateTracker AppStore] Failed to fetch iOS version:", err);
-        return;
-    }
+        if (release === undefined) {
+            try {
+                release = (await fetchTrackerIndex()).ios.latest.appstore;
+            } catch (err) {
+                console.error("[UpdateTracker AppStore] Failed to fetch iOS version:", err);
+                return;
+            }
+        }
+        if (!release) return;
 
-    const { version, fileSizeBytes } = result;
-    const versionCode = Number(version.replace(/\./g, ""));
-    const size = (Number(fileSizeBytes) / (1024 * 1024)).toFixed(1);
+        const { version } = release;
+        const versionCode = Number(version.replace(/\./g, ""));
+        const size = formatSize(release.fileSizeBytes);
 
-    if (!bypass && readVersion(versionFile) >= versionCode) return;
+        if (!bypass && readVersion(versionFile) >= versionCode) return;
 
-    const components = <>
-        <Container accentColor={0x007AFF}>
-            <Section accessory={<Thumbnail url={`${Config.httpServer.domain}/public/appstore.png`} />}>
-                <TextDisplay>New App Store Release</TextDisplay>
-                <TextDisplay>{version} · Detected {discordTimestamp(new Date())}</TextDisplay>
-                <TextDisplay>{appStoreGrid(result, size)}</TextDisplay>
-            </Section>
-        </Container>
-        <ActionRow>
-            <Button style={ButtonStyles.LINK} url={APP_STORE_URL}>View on App Store</Button>
-        </ActionRow>
-    </>;
+        const components = <>
+            <Container accentColor={0x007AFF}>
+                <Section accessory={<Thumbnail url={`${Config.httpServer.domain}/public/appstore.png`} />}>
+                    <TextDisplay>New App Store Release</TextDisplay>
+                    <TextDisplay>{version} · Detected {discordTimestamp(new Date())}</TextDisplay>
+                    <TextDisplay>{appStoreGrid(release, size)}</TextDisplay>
+                </Section>
+            </Container>
+            <ActionRow>
+                <Button style={ButtonStyles.LINK} url={APP_STORE_URL}>View on App Store</Button>
+            </ActionRow>
+        </>;
 
-    await postUpdateMessage(resolveChannelIds(extraChannelId), components as any, "AppStore");
-    writeVersion(versionFile, versionCode);
+        await postUpdateMessage(resolveChannelIds(extraChannelId), components as any, "AppStore");
+        writeVersion(versionFile, versionCode);
+    });
 }
 
-async function getTestFlightStatus(): Promise<TestFlightStatus> {
-    try {
-        const resp = await fetch(TESTFLIGHT_URL);
-        if (!resp.ok) return "unknown";
-        if (resp.status === 404) return "notfound";
-        if (resp.status === 429) return "ratelimited";
-
-        const text = await resp.text();
-        if (text.includes("Join the Beta")) return "open";
-        if (text.includes("This beta is full.")) return "full";
-        if (text.includes("This beta isn't accepting any new testers right now.")) return "closed";
-        return "unknown";
-    } catch {
-        return "unknown";
-    }
-}
-
-async function fetchTestFlightBuild(): Promise<TFBuild | null> {
-    try {
-        const resp = await fetch(testflightApi!, {
-            headers: { Authorization: `Bearer ${testflightSecret}` },
-        });
-        if (!resp.ok) throw new Error(`TF API failed: ${resp.statusText}`);
-
-        const build = (await resp.json())?.data?.[0]?.platforms?.[0]?.build;
-        if (!build) return null;
-
-        return {
-            cfBundleShortVersion: build.cfBundleShortVersion,
-            cfBundleVersion: build.cfBundleVersion,
-            releaseDate: build.releaseDate,
-            expiration: build.expiration,
-            whatsNew: build.whatsNew,
-            fileSizeUncompressed: build.fileSizeUncompressed,
-        };
-    } catch (err) {
-        console.error("[UpdateTracker TestFlight] TF fetch failed:", err);
-        return null;
-    }
-}
-
-function testFlightGrid(build: TFBuild, status: TestFlightStatus, size: string): string {
+function testFlightGrid(release: TestFlightRelease, status: TestFlightStatus, size: string): string {
     const sections: [string, string][] = [
-        ["**Status**", TESTFLIGHT_STATUS_LABELS[status]],
+        ["**Status**", TESTFLIGHT_STATUS_LABELS[status] ?? TESTFLIGHT_STATUS_LABELS.unknown],
         ["**Size**", `${size} MB`],
-        ["**Released**", discordTimestamp(build.releaseDate)],
-        ["**Expires**", discordTimestamp(build.expiration)],
     ];
+    if (release.releasedAt) sections.push(["**Released**", discordTimestamp(release.releasedAt)]);
+    if (release.expiresAt) sections.push(["**Expires**", discordTimestamp(release.expiresAt)]);
 
-    if (build.whatsNew) {
-        const whatsNew = build.whatsNew.slice(0, 300) + (build.whatsNew.length > 300 ? "…" : "");
+    if (release.whatsNew) {
+        const whatsNew = release.whatsNew.slice(0, 300) + (release.whatsNew.length > 300 ? "…" : "");
         sections.push(["**What's New**", whatsNew]);
     }
 
     return sections.flatMap(([header, value], i) => i === 0 ? [header, value] : ["", header, value]).join("\n");
 }
 
-export async function checkTestFlight(bypass = false, extraChannelId?: string): Promise<void> {
-    const versionFile = join(DATA_DIR, "./discord_version.testflight.txt");
+export function checkTestFlight(bypass = false, extraChannelId?: string, release?: TestFlightRelease | null, program?: TestFlightProgram | null): Promise<void> {
+    return serialized(async () => {
+        const versionFile = join(DATA_DIR, "./discord_version.testflight.txt");
 
-    const build = await fetchTestFlightBuild();
-    if (!build) return;
+        if (release === undefined) {
+            try {
+                const { ios } = await fetchTrackerIndex();
+                release = ios.latest.testflight;
+                program = ios.testflight;
+            } catch (err) {
+                console.error("[UpdateTracker TestFlight] Failed to fetch build:", err);
+                return;
+            }
+        }
+        if (!release) return;
 
-    const versionCode = Number(build.cfBundleVersion);
+        const versionCode = Number(release.build);
 
-    if (!bypass && readVersion(versionFile) >= versionCode) return;
+        if (!bypass && readVersion(versionFile) >= versionCode) return;
 
-    const status = await getTestFlightStatus();
-    const size = (build.fileSizeUncompressed / (1024 * 1024)).toFixed(1);
+        const status = program?.status ?? "unknown";
+        const size = formatSize(release.fileSizeBytes);
 
-    const components = <>
-        <Container accentColor={0xFF6B35}>
-            <Section accessory={<Thumbnail url={`${Config.httpServer.domain}/public/testflight.png`} />}>
-                <TextDisplay>New TestFlight Release</TextDisplay>
-                <TextDisplay>{build.cfBundleShortVersion} · Build `{build.cfBundleVersion}`</TextDisplay>
-                <TextDisplay>{testFlightGrid(build, status, size)}</TextDisplay>
-            </Section>
-        </Container>
-        <ActionRow>
-            {status === "open" && <Button style={ButtonStyles.LINK} url={TESTFLIGHT_URL}>Join TestFlight</Button>}
-            <Button style={ButtonStyles.LINK} url={HOW_TO_JOIN_URL_TF}>How to Join</Button>
-        </ActionRow>
-    </>;
+        const components = <>
+            <Container accentColor={0xFF6B35}>
+                <Section accessory={<Thumbnail url={`${Config.httpServer.domain}/public/testflight.png`} />}>
+                    <TextDisplay>New TestFlight Release</TextDisplay>
+                    <TextDisplay>{release.version} · Build `{release.build}`</TextDisplay>
+                    <TextDisplay>{testFlightGrid(release, status, size)}</TextDisplay>
+                </Section>
+            </Container>
+            <ActionRow>
+                {status === "open" && <Button style={ButtonStyles.LINK} url={program?.joinUrl ?? TESTFLIGHT_URL}>Join TestFlight</Button>}
+                <Button style={ButtonStyles.LINK} url={HOW_TO_JOIN_URL_TF}>How to Join</Button>
+            </ActionRow>
+        </>;
 
-    await postUpdateMessage(resolveChannelIds(extraChannelId), components as any, "TestFlight");
-    writeVersion(versionFile, versionCode);
+        await postUpdateMessage(resolveChannelIds(extraChannelId), components as any, "TestFlight");
+        writeVersion(versionFile, versionCode);
+    });
+}
+
+function isTrackerEvent(value: any): value is TrackerEvent {
+    if (typeof value !== "object" || value === null || typeof value.release !== "object" || value.release === null) return false;
+    switch (value.type) {
+        case "android":
+            return ["stable", "beta", "alpha"].includes(value.channel) && typeof value.release.versionCode === "number";
+        case "appstore":
+            return typeof value.release.version === "string";
+        case "testflight":
+            return typeof value.release.version === "string" && typeof value.release.build === "string";
+        default:
+            return false;
+    }
+}
+
+async function handleTrackerEvent(event: TrackerEvent): Promise<void> {
+    switch (event.type) {
+        case "android":
+            if (android) await checkAndroid(false, undefined, { [event.channel]: event.release });
+            break;
+        case "appstore":
+            if (appstore) await checkAppStore(false, undefined, event.release);
+            break;
+        case "testflight":
+            if (testflight) await checkTestFlight(false, undefined, event.release, event.program);
+            break;
+    }
+}
+
+if (enabled && webhookSecret) {
+    fastify.register(async fastify => {
+        fastify.addContentTypeParser("application/json", { parseAs: "buffer" }, (req, body, done) => {
+            done(null, body);
+        });
+
+        fastify.post("/webhook", async (req, res) => {
+            const body = req.body as Buffer;
+            const signature = String(req.headers["x-signature"] ?? "").replace("sha256=", "");
+
+            const expected = createHmac("sha256", webhookSecret).update(body).digest();
+            const given = Buffer.from(signature, "hex");
+            if (given.length !== expected.length || !timingSafeEqual(given, expected)) {
+                res.status(401).send("Invalid X-Signature");
+                return;
+            }
+
+            let event: unknown;
+            try {
+                event = JSON.parse(body.toString("utf-8"))?.event;
+            } catch {
+                res.status(400).send("Invalid JSON");
+                return;
+            }
+            if (!isTrackerEvent(event)) {
+                res.status(400).send("Unknown event");
+                return;
+            }
+
+            await handleTrackerEvent(event);
+            res.status(200).send();
+        });
+    }, {
+        prefix: "/update-tracker"
+    });
 }
 
 export function initUpdateTracker(): void {
     if (!enabled) return;
+    if (!TRACKER_API) {
+        console.error("[UpdateTracker] UPDATE_TRACKER_API is not set");
+        return;
+    }
 
     (async () => {
         while (true) {
-            if (android) await checkAndroid();
-            if (appstore) await checkAppStore();
-            if (testflight) await checkTestFlight();
-            await sleep(5 * Millis.MINUTE);
+            try {
+                const index = await fetchTrackerIndex();
+                if (android) await checkAndroid(false, undefined, index.android.latest);
+                if (appstore) await checkAppStore(false, undefined, index.ios.latest.appstore);
+                if (testflight) await checkTestFlight(false, undefined, index.ios.latest.testflight, index.ios.testflight);
+            } catch (err) {
+                console.error("[UpdateTracker] Failed to fetch tracker index:", err);
+            }
+            await sleep(FALLBACK_POLL_INTERVAL);
         }
     })();
 }

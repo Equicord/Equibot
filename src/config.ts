@@ -1,5 +1,5 @@
 const Config = {
-    "token": process.env.BOT_TOKEN,
+    "token": process.env.BOT_TOKEN || "",
     "prefixes": ["e!", "e?", "e.", "eq"],
     // id of the home guild of the bot. used for registering commands, etc
     "homeGuildId": "1173279886065029291",
@@ -101,7 +101,7 @@ const Config = {
 
     "gemini": {
         "enabled": process.env.GEMINI_ENABLED === "true",
-        "apiKey": process.env.GEMINI_API_KEY,
+        "apiKey": process.env.GEMINI_API_KEY || "",
         "allowedRoles": [
             "1173520023239786538", // team
             "1326406112144265257", // helper
@@ -134,18 +134,18 @@ const Config = {
     // link-github command which gives out contributor & donor roles
     "githubLinking": {
         "enabled": process.env.GITHUB_LINKING_ENABLED === "true",
-        "clientId": process.env.GITHUB_LINKING_CLIENT_ID,
-        "clientSecret": process.env.GITHUB_LINKING_CLIENT_SECRET,
+        "clientId": process.env.GITHUB_LINKING_CLIENT_ID || "",
+        "clientSecret": process.env.GITHUB_LINKING_CLIENT_SECRET || "",
         // Github Personal Access Token. Used to check if user is sponsoring you https://github.com/settings/tokens/new
-        "pat": process.env.GITHUB_LINKING_PAT
+        "pat": process.env.GITHUB_LINKING_PAT || ""
     },
 
     "reporter": {
         "enabled": process.env.REPORTER_ENABLED === "true",
         // Github PAT with workflow dispatch scope. Used to trigger reporter workflow
-        "pat": process.env.REPORTER_PAT,
+        "pat": process.env.REPORTER_PAT || "",
         // generate with `openssl rand -hex 128`
-        "webhookSecret": process.env.REPORTER_WEBHOOK_SECRET,
+        "webhookSecret": process.env.REPORTER_WEBHOOK_SECRET || "",
         // channel where each individual report will be posted
         "logChannelId": "1371881823369564201",
         // channel where the bot will post the latest status of stable and canary
@@ -159,11 +159,10 @@ const Config = {
     "updateTracker": {
         "enabled": process.env.UPDATE_TRACKER_ENABLED === "true",
         "android": process.env.UPDATE_TRACKER_ANDROID === "true",
-        "androidWebhookSecret": process.env.UPDATE_TRACKER_ANDROID_WEBHOOK_SECRET,
         "appstore": process.env.UPDATE_TRACKER_APP_STORE === "true",
         "testflight": process.env.UPDATE_TRACKER_TEST_FLIGHT === "true",
-        "testflightSecret": process.env.UPDATE_TRACKER_TEST_FLIGHT_SECRET,
-        "testflightApi": process.env.UPDATE_TRACKER_TEST_FLIGHT_API,
+        "api": process.env.UPDATE_TRACKER_API || "",
+        "webhookSecret": process.env.UPDATE_TRACKER_WEBHOOK_SECRET || "",
         "logChannelId": "1268568848076898355"
     },
 
