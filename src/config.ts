@@ -165,7 +165,9 @@ const Config = {
         "testflightSecret": process.env.UPDATE_TRACKER_TEST_FLIGHT_SECRET,
         "testflightApi": process.env.UPDATE_TRACKER_TEST_FLIGHT_API,
         "logChannelId": "1268568848076898355"
-    }
+    },
+
+    "githubLinesEnabled": process.env.GITHUB_LINES_ENABLED === "true"
 };
 
 export default Config;

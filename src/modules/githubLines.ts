@@ -1,4 +1,5 @@
 import { Message, MessageFlags } from "oceanic.js";
+import Config from "~/config";
 
 import { reply } from "~/util/discord";
 import { doFetch } from "~/util/fetch";
@@ -113,7 +114,7 @@ export async function resolveGithubLines(input: string) {
 }
 
 export async function handleGithubLines(msg: Message) {
-    if (!msg.content.includes("github.com/")) return;
+    if (!Config.githubLinesEnabled || !msg.content.includes("github.com/")) return;
 
     const files = await silently(resolveGithubLines(msg.content));
     if (!files?.length) return;
