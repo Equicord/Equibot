@@ -1,6 +1,6 @@
 import { createHmac, timingSafeEqual } from "crypto";
 import fs from "fs";
-import { ButtonStyles, MessageFlags } from "oceanic.js";
+import { ButtonStyles, MessageFlags, SeparatorSpacingSize } from "oceanic.js";
 import { join } from "path";
 import { Vaius } from "~/Vaius";
 import Config from "~/config";
@@ -9,7 +9,7 @@ import { fastify } from "~/server";
 import { toTitle } from "~/util/text";
 import { sleep } from "~/util/time";
 
-import { ActionRow, Button, Container, Section, TextDisplay, Thumbnail } from "~components";
+import { ActionRow, Button, Container, Section, Separator, TextDisplay, Thumbnail } from "~components";
 
 type ReleaseType = "stable" | "beta" | "alpha";
 type TestFlightStatus = "open" | "full" | "closed" | "unknown" | "notfound" | "ratelimited";
@@ -96,19 +96,6 @@ function readVersion(file: string): number {
     }
 }
 
-function writeVersion(file: string, version: number): void {
-    fs.writeFileSync(file, version.toString(), "utf-8");
-}
-
-function discordTimestamp(date: string | Date, format: "f" | "F" | "d" | "D" | "t" | "T" | "R" = "f"): string {
-    const unix = Math.floor(new Date(date).getTime() / 1000);
-    return `<t:${unix}:${format}>`;
-}
-
-function formatSize(bytes: number | null): string {
-    return bytes === null ? "?" : (bytes / (1024 * 1024)).toFixed(1);
-}
-
 function resolveChannelIds(extraChannelId?: string): string[] {
     const ids = [logChannelId];
     if (extraChannelId && extraChannelId !== logChannelId) {
@@ -148,35 +135,10 @@ function trackerUrl(buildID: number, split: string): string {
     return `${TRACKER_BASE}/${buildID}/${split}`;
 }
 
-function vendettaGrid(versionCode: number): string {
-    const core = `[base.apk](${trackerUrl(versionCode, "base")})`;
-    const arch = ["config.arm64_v8a", "config.armeabi_v7a", "config.x86_64", "config.x86"]
-        .map(s => `[${s.replace("config.", "")}](${trackerUrl(versionCode, s)})`).join(" · ");
-    const density = ["config.hdpi", "config.xxhdpi"]
-        .map(s => `[${s.replace("config.", "")}](${trackerUrl(versionCode, s)})`).join(" · ");
-    const lang = ["config.en", "config.de"]
-        .map(s => `[${s === "config.en" ? "English (en)" : "German (de)"}](${trackerUrl(versionCode, s)})`).join(" · ");
-
-    return [
-        "**Core Files**",
-        core,
-        "",
-        "**Architecture (CPU)**",
-        arch,
-        "",
-        "**Screen Density (Display)**",
-        density,
-        "",
-        "**Language**",
-        lang,
-    ].join("\n");
-}
-
 function formatReleaseName(versionCode: number, releaseType: ReleaseType): string {
     const str = versionCode.toString();
     const versionStr = `${str.slice(0, 3)}.${parseInt(str.slice(4))}`;
-    const releaseStr = toTitle(releaseType);
-    return `${versionStr} ${releaseStr} (${versionCode})`;
+    return `**${versionStr} ${toTitle(releaseType)}** · \`${versionCode}\``;
 }
 
 export function checkAndroid(bypass = false, extraChannelId?: string, latest?: Partial<Record<ReleaseType, AndroidRelease | null>>): Promise<void> {
@@ -203,14 +165,32 @@ export function checkAndroid(bypass = false, extraChannelId?: string, latest?: P
 
             const name = formatReleaseName(versionCode, releaseType);
             const accentColor = ANDROID_COLORS[releaseType];
+            const { fileSizeBytes, targetSdkVersion: sdk } = release;
+            const notes = release.releaseNotes?.trim();
+            const links = (splits: [string, string][]) =>
+                splits.map(([label, split]) => `[${label}](${trackerUrl(versionCode, split)})`).join(" · ");
 
             const components = <>
                 <Container accentColor={accentColor}>
                     <Section accessory={<Thumbnail url={`${Config.httpServer.domain}/public/googleplay.png`} />}>
-                        <TextDisplay>New Android Release</TextDisplay>
-                        <TextDisplay>{name} · Detected {discordTimestamp(new Date())}</TextDisplay>
-                        <TextDisplay>{vendettaGrid(versionCode)}</TextDisplay>
+                        <TextDisplay>### New Android Release</TextDisplay>
+                        <TextDisplay>{`${name}\n-# Detected <t:${Math.floor(Date.now() / 1000)}:f>`}</TextDisplay>
+                        <TextDisplay>{[
+                            `**Size:** ${fileSizeBytes === null ? "?" : `${(fileSizeBytes / (1024 * 1024)).toFixed(1)} MB`}`,
+                            // API 33+ maps to Android (sdk - 20); Discord hasn't targeted anything older in years
+                            `**Targets:** ${sdk === null ? "?" : sdk >= 33 ? `Android ${sdk - 20}` : `API ${sdk}`}`,
+                        ].join("\n")}</TextDisplay>
                     </Section>
+                    {notes && <Separator spacing={SeparatorSpacingSize.SMALL} />}
+                    {notes && <TextDisplay>{"**What's New**\n" + (notes.length > 600 ? notes.slice(0, 600).trimEnd() + "…" : notes).split("\n").map(l => `> ${l.trim()}`).join("\n")}</TextDisplay>}
+                    <Separator spacing={SeparatorSpacingSize.SMALL} />
+                    <TextDisplay>{[
+                        "**Downloads**",
+                        `**Core:** ${links([["base.apk", "base"]])}`,
+                        `**Architecture:** ${links([["arm64_v8a", "config.arm64_v8a"], ["armeabi_v7a", "config.armeabi_v7a"], ["x86_64", "config.x86_64"], ["x86", "config.x86"]])}`,
+                        `**Density:** ${links([["hdpi", "config.hdpi"], ["xxhdpi", "config.xxhdpi"]])}`,
+                        `**Language:** ${links([["English", "config.en"], ["German", "config.de"]])}`,
+                    ].join("\n")}</TextDisplay>
                 </Container>
                 <ActionRow>
                     <Button style={ButtonStyles.LINK} url={GOOGLE_PLAY_URL}>Google Play Store</Button>
@@ -219,23 +199,9 @@ export function checkAndroid(bypass = false, extraChannelId?: string, latest?: P
             </>;
 
             await postUpdateMessage(channelIds, components as any, `Android ${releaseType}`);
-            writeVersion(versionFile, versionCode);
+            fs.writeFileSync(versionFile, versionCode.toString(), "utf-8");
         }
     });
-}
-
-function appStoreGrid(release: AppStoreRelease, size: string): string {
-    const sections: [string, string][] = [
-        ["**Size**", `${size} MB`],
-        ["**Requires**", `iOS ${release.minimumOsVersion ?? "?"}+`],
-    ];
-
-    if (release.releaseNotes) {
-        const notes = release.releaseNotes.slice(0, 300) + (release.releaseNotes.length > 300 ? "…" : "");
-        sections.push(["**What's New**", notes]);
-    }
-
-    return sections.flatMap(([header, value], i) => i === 0 ? [header, value] : ["", header, value]).join("\n");
 }
 
 export function checkAppStore(bypass = false, extraChannelId?: string, release?: AppStoreRelease | null): Promise<void> {
@@ -254,17 +220,25 @@ export function checkAppStore(bypass = false, extraChannelId?: string, release?:
 
         const { version } = release;
         const versionCode = Number(version.replace(/\./g, ""));
-        const size = formatSize(release.fileSizeBytes);
 
         if (!bypass && readVersion(versionFile) >= versionCode) return;
+
+        const { fileSizeBytes, releasedAt } = release;
+        const notes = release.releaseNotes?.trim();
 
         const components = <>
             <Container accentColor={0x007AFF}>
                 <Section accessory={<Thumbnail url={`${Config.httpServer.domain}/public/appstore.png`} />}>
-                    <TextDisplay>New App Store Release</TextDisplay>
-                    <TextDisplay>{version} · Detected {discordTimestamp(new Date())}</TextDisplay>
-                    <TextDisplay>{appStoreGrid(release, size)}</TextDisplay>
+                    <TextDisplay>### New App Store Release</TextDisplay>
+                    <TextDisplay>{`**${version}**\n-# Detected <t:${Math.floor(Date.now() / 1000)}:f>`}</TextDisplay>
+                    <TextDisplay>{[
+                        `**Size:** ${fileSizeBytes === null ? "?" : `${(fileSizeBytes / (1024 * 1024)).toFixed(1)} MB`}`,
+                        `**Requires:** iOS ${release.minimumOsVersion ?? "?"}+`,
+                        releasedAt && `**Released:** <t:${Math.floor(Date.parse(releasedAt) / 1000)}:f>`,
+                    ].filter(Boolean).join("\n")}</TextDisplay>
                 </Section>
+                {notes && <Separator spacing={SeparatorSpacingSize.SMALL} />}
+                {notes && <TextDisplay>{"**What's New**\n" + (notes.length > 600 ? notes.slice(0, 600).trimEnd() + "…" : notes).split("\n").map(l => `> ${l.trim()}`).join("\n")}</TextDisplay>}
             </Container>
             <ActionRow>
                 <Button style={ButtonStyles.LINK} url={APP_STORE_URL}>View on App Store</Button>
@@ -272,24 +246,8 @@ export function checkAppStore(bypass = false, extraChannelId?: string, release?:
         </>;
 
         await postUpdateMessage(resolveChannelIds(extraChannelId), components as any, "AppStore");
-        writeVersion(versionFile, versionCode);
+        fs.writeFileSync(versionFile, versionCode.toString(), "utf-8");
     });
-}
-
-function testFlightGrid(release: TestFlightRelease, status: TestFlightStatus, size: string): string {
-    const sections: [string, string][] = [
-        ["**Status**", TESTFLIGHT_STATUS_LABELS[status] ?? TESTFLIGHT_STATUS_LABELS.unknown],
-        ["**Size**", `${size} MB`],
-    ];
-    if (release.releasedAt) sections.push(["**Released**", discordTimestamp(release.releasedAt)]);
-    if (release.expiresAt) sections.push(["**Expires**", discordTimestamp(release.expiresAt)]);
-
-    if (release.whatsNew) {
-        const whatsNew = release.whatsNew.slice(0, 300) + (release.whatsNew.length > 300 ? "…" : "");
-        sections.push(["**What's New**", whatsNew]);
-    }
-
-    return sections.flatMap(([header, value], i) => i === 0 ? [header, value] : ["", header, value]).join("\n");
 }
 
 export function checkTestFlight(bypass = false, extraChannelId?: string, release?: TestFlightRelease | null, program?: TestFlightProgram | null): Promise<void> {
@@ -313,15 +271,29 @@ export function checkTestFlight(bypass = false, extraChannelId?: string, release
         if (!bypass && readVersion(versionFile) >= versionCode) return;
 
         const status = program?.status ?? "unknown";
-        const size = formatSize(release.fileSizeBytes);
+        const { fileSizeBytes, releasedAt, expiresAt } = release;
+
+        // whatsNew is CI output: a disclaimer line followed by "Key: value" lines
+        const lines = release.whatsNew?.split("\n").map(l => l.trim()).filter(Boolean) ?? [];
+        const info = lines.length > 0 && ["**Build Info**", ...lines.map(line => {
+            const match = line.match(/^([\w ]+):\s*(.+)$/);
+            return match ? `**${match[1]}:** \`${match[2]}\`` : `-# ${line}`;
+        })].join("\n");
 
         const components = <>
             <Container accentColor={0xFF6B35}>
                 <Section accessory={<Thumbnail url={`${Config.httpServer.domain}/public/testflight.png`} />}>
-                    <TextDisplay>New TestFlight Release</TextDisplay>
-                    <TextDisplay>{release.version} · Build `{release.build}`</TextDisplay>
-                    <TextDisplay>{testFlightGrid(release, status, size)}</TextDisplay>
+                    <TextDisplay>### New TestFlight Release</TextDisplay>
+                    <TextDisplay>{`**${release.version}** · Build \`${release.build}\`\n-# Detected <t:${Math.floor(Date.now() / 1000)}:f>`}</TextDisplay>
+                    <TextDisplay>{[
+                        `**Status:** ${TESTFLIGHT_STATUS_LABELS[status] ?? TESTFLIGHT_STATUS_LABELS.unknown}`,
+                        `**Size:** ${fileSizeBytes === null ? "?" : `${(fileSizeBytes / (1024 * 1024)).toFixed(1)} MB`}`,
+                        releasedAt && `**Released:** <t:${Math.floor(Date.parse(releasedAt) / 1000)}:f>`,
+                        expiresAt && `**Expires:** <t:${Math.floor(Date.parse(expiresAt) / 1000)}:R>`,
+                    ].filter(Boolean).join("\n")}</TextDisplay>
                 </Section>
+                {info && <Separator spacing={SeparatorSpacingSize.SMALL} />}
+                {info && <TextDisplay>{info}</TextDisplay>}
             </Container>
             <ActionRow>
                 {status === "open" && <Button style={ButtonStyles.LINK} url={program?.joinUrl ?? TESTFLIGHT_URL}>Join TestFlight</Button>}
@@ -330,7 +302,7 @@ export function checkTestFlight(bypass = false, extraChannelId?: string, release
         </>;
 
         await postUpdateMessage(resolveChannelIds(extraChannelId), components as any, "TestFlight");
-        writeVersion(versionFile, versionCode);
+        fs.writeFileSync(versionFile, versionCode.toString(), "utf-8");
     });
 }
 
