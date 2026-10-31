@@ -6,11 +6,10 @@ import { ZWSP } from "~/constants";
 import { ChatInputCommandOptions, CommandInteractionHandler, registerChatInputCommand } from "~/SlashCommands";
 import { run } from "~/util/functions";
 
-import { buffer } from "stream/consumers";
+import sharp from "sharp";
 import Config from "~/config";
 import { OwnerId } from "~/owner";
 import { atomicWriteFileSync } from "~/util/atomicWriteFile";
-import { spawnP } from "~/util/childProcess";
 import { getHomeGuild } from "~/util/discord";
 import { lookupKlipyURL, lookupTenorURL } from "~/util/gifs";
 import { logBadgeAction } from "~/util/logAction";
@@ -25,6 +24,8 @@ const badgesForUser = (userId: string) => `${BasePath}/badges/${userId}`;
 interface BadgeInfo {
     tooltip: string;
     badge: string;
+    /** Indicates that a 2x resolution variant of the badge image exists */
+    "2"?: 1;
 }
 
 const BadgeData: Record<string, Array<BadgeInfo>> = run(() => {
@@ -44,35 +45,66 @@ const DefaultBadgeTooltip = "Equicord Donor";
 const TranslatorBadgeUrl = "https://badge.equicord.org/translator.png";
 const TranslatorBadgeTooltip = "Equicord Translator";
 
-async function optimizeImage(imgData: Buffer, ext: string) {
-    const { child, promise } = ext === "gif"
-        ? spawnP("gifsicle", ["-O3", "--colors", "256", "--resize", "128x128"], {})
-        : spawnP("convert", ["-", "-background", "none", "-resize", "128x128", "-quality", "75", "WEBP:-"], {});
+async function optimizeImage(imgData: Buffer) {
+    const img = sharp(imgData, {
+        animated: true,
+        autoOrient: true
+    });
 
-    // the process may exit before consuming all of stdin
-    child.stdin!.on("error", () => { });
-    child.stdin!.end(imgData);
+    const { width, height } = await img.metadata();
+    const originalSize = Math.min(width, height);
+    const size = Math.min(originalSize, 128);
+    const size2x = Math.min(originalSize, 256);
 
-    const stdout = buffer(child.stdout!);
-    const stderr = buffer(child.stderr!);
+    const resizeOptions = {
+        fit: "cover",
+        position: "centre",
+        kernel: "lanczos3",
+    } as const;
 
-    let res: Buffer;
-    try {
-        [res] = await Promise.all([stdout, promise]);
-    } catch (err) {
-        console.error("Failed to optimize badge image", err, (await stderr).toString());
-        res = Buffer.alloc(0);
-    }
+    const webpOptions = {
+        quality: 30,
+        alphaQuality: 90,
+        effort: 6,
+        mixed: true,
+        loop: 0
+    } as const;
 
-    // a failed run produces empty output, which must not be mistaken for a smaller image
-    const useOptimized = res.byteLength > 0 && res.byteLength < imgData.byteLength;
+    const [res, res2x] = await Promise.all([
+        img.clone()
+            .resize(size, size, resizeOptions)
+            .webp(webpOptions)
+            .toBuffer(),
+        // Never upscale, and don't create a 2x variant for images that are already 128px or smaller
+        originalSize < 128
+            ? undefined
+            : img.clone()
+                .resize(size2x, size2x, resizeOptions)
+                .webp(webpOptions)
+                .toBuffer()
+    ]);
 
-    return [
-        useOptimized ? res : imgData,
-        useOptimized ? (ext === "gif" ? "gif" : "webp") : ext,
-        imgData.byteLength,
-        res.byteLength
-    ] as const;
+    // never let an empty result replace the original image
+    if (!res.byteLength) throw new Error("Optimized badge image is empty");
+
+    return [res, res2x?.byteLength ? res2x : undefined] as const;
+}
+
+const get2xFileName = (fileName: string) => {
+    const extIndex = fileName.lastIndexOf(".");
+    return `${fileName.slice(0, extIndex)}@2x${fileName.slice(extIndex)}`;
+};
+
+function writeBadgeImage(userId: string, fileName: string, imgData: Buffer, imgData2x?: Buffer) {
+    mkdirSync(badgesForUser(userId), { recursive: true });
+    writeFileSync(`${badgesForUser(userId)}/${fileName}`, imgData);
+    if (imgData2x) writeFileSync(`${badgesForUser(userId)}/${get2xFileName(fileName)}`, imgData2x);
+}
+
+/** Removes a badge image and its 2x variant from disk. */
+function removeBadgeImage(userId: string, fileName: string) {
+    rmSync(`${badgesForUser(userId)}/${fileName}`, { force: true });
+    rmSync(`${badgesForUser(userId)}/${get2xFileName(fileName)}`, { force: true });
 }
 
 async function normaliseUrl(rawUrl: string) {
@@ -81,7 +113,7 @@ async function normaliseUrl(rawUrl: string) {
     if (url.host === "klipy.com") return lookupKlipyURL(url);
     if (url.host !== "cdn.discordapp.com" || url.pathname.includes("/attachments/")) return rawUrl;
 
-    url.searchParams.set("size", "128");
+    url.searchParams.set("size", "256");
 
     return url.toString();
 }
@@ -303,7 +335,7 @@ const handler: CommandInteractionHandler = {
 
             const fileName = new URL(existingBadge.badge).pathname.split("/").pop()!;
             const contents = readFileSync(`${badgesForUser(user.id)}/${fileName}`);
-            rmSync(`${badgesForUser(user.id)}/${fileName}`, { force: true });
+            removeBadgeImage(user.id, fileName);
 
             BadgeData[user.id].splice(existingBadgeIndex!, 1);
             if (BadgeData[user.id].length === 0)
@@ -339,7 +371,19 @@ const handler: CommandInteractionHandler = {
                     flags: MessageFlags.EPHEMERAL
                 });
 
-            url ??= existing.badge;
+            // only the tooltip changed, so keep the existing image and its 2x variant
+            if (!url) {
+                const newBadgeData = { ...existing, tooltip: tooltip! };
+                logBadgeAction("Edited", user, existing, newBadgeData);
+                BadgeData[user.id][existingBadgeIndex!] = newBadgeData;
+                saveBadges();
+
+                return i.createMessage({
+                    content: "Done!",
+                    flags: MessageFlags.EPHEMERAL
+                });
+            }
+
             tooltip ??= existing.tooltip;
         }
 
@@ -348,12 +392,19 @@ const handler: CommandInteractionHandler = {
         i.defer(MessageFlags.EPHEMERAL);
 
         let imgData: Buffer;
+        let imgData2x: Buffer | undefined;
         let ext: string;
         let footer = "";
 
         {
             const res = await doFetch(url);
             imgData = Buffer.from(await res.arrayBuffer());
+
+            if (!imgData.byteLength)
+                return i.createFollowup({
+                    content: "That image is empty",
+                    flags: MessageFlags.EPHEMERAL
+                });
 
             const { pathname } = new URL(url);
             const lastSegment = pathname.split("/").pop() ?? "";
@@ -376,12 +427,15 @@ const handler: CommandInteractionHandler = {
         }
 
         if (optimize) {
-            let sizes: [number, number];
-            ([imgData, ext, ...sizes] = await optimizeImage(imgData, ext));
-
-            footer = sizes[1] === 0
-                ? "Optimization failed, kept original image\n"
-                : `${(sizes[0] / 1024).toFixed(2)}k -> ${(sizes[1] / 1024).toFixed(2)}k\n`;
+            try {
+                const before = imgData.byteLength;
+                [imgData, imgData2x] = await optimizeImage(imgData);
+                ext = "webp";
+                footer = `${(before / 1024).toFixed(2)}k -> ${(imgData.byteLength / 1024).toFixed(2)}k\n`;
+            } catch (err) {
+                console.error("Failed to optimize badge image", err);
+                footer = "Optimization failed, kept original image\n";
+            }
         }
 
         const hash = createHash("sha1").update(imgData).digest("hex");
@@ -394,6 +448,7 @@ const handler: CommandInteractionHandler = {
             tooltip: tooltip,
             badge: `https://badge.equicord.org/badges/${user.id}/${fileName}`,
         };
+        if (imgData2x) newBadgeData["2"] = 1;
 
         const before = data.options.getInteger("before");
         if (before != null) {
@@ -408,7 +463,7 @@ const handler: CommandInteractionHandler = {
                     contents,
                 };
                 logBadgeAction("Edited", user, existingBadge, newBadgeData, undefined, file);
-                rmSync(`${badgesForUser(user.id)}/${fileName}`, { force: true });
+                removeBadgeImage(user.id, fileName);
             }
 
             BadgeData[user.id][index] = newBadgeData;
@@ -416,8 +471,7 @@ const handler: CommandInteractionHandler = {
 
         if (subCommand === "add") logBadgeAction("Added", user, newBadgeData);
 
-        mkdirSync(badgesForUser(user.id), { recursive: true });
-        writeFileSync(`${badgesForUser(user.id)}/${fileName}`, imgData);
+        writeBadgeImage(user.id, fileName, imgData, imgData2x);
 
         saveBadges();
 
