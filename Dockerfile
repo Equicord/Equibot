@@ -31,7 +31,7 @@ RUN apt-get update && \
     apt-get install -y --no-install-recommends ca-certificates curl gnupg nano && \
     mkdir -p /etc/apt/keyrings && \
     curl -fsSL https://repo.jellyfin.org/jellyfin_team.gpg.key | gpg --dearmor -o /etc/apt/keyrings/jellyfin.gpg && \
-    printf "Types: deb\nURIs: https://repo.jellyfin.org/debian\nSuites: bookworm\nComponents: main\nArchitectures: amd64\nSigned-By: /etc/apt/keyrings/jellyfin.gpg\n" > /etc/apt/sources.list.d/jellyfin.sources && \
+    printf "Types: deb\nURIs: https://repo.jellyfin.org/debian\nSuites: $(. /etc/os-release && echo $VERSION_CODENAME)\nComponents: main\nArchitectures: amd64\nSigned-By: /etc/apt/keyrings/jellyfin.gpg\n" > /etc/apt/sources.list.d/jellyfin.sources && \
     apt-get update && \
     apt-get install -y --no-install-recommends jellyfin-ffmpeg8 && \
     ln -sf /usr/lib/jellyfin-ffmpeg/ffmpeg /usr/local/bin/ffmpeg && \
