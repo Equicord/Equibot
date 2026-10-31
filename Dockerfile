@@ -1,12 +1,14 @@
 FROM node:lts-slim AS build
 WORKDIR /app
 
+# .git is not in the build context, so scripts/build.mjs takes git data from these
 ARG GIT_COMMIT
-ENV GIT_COMMIT=$GIT_COMMIT
+ENV GIT_COMMIT_HASH=${GIT_COMMIT:-unknown}
+ENV GIT_REMOTE="https://github.com/Equicord/Equibot"
 
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
-RUN corepack enable
+RUN npm install -g corepack && corepack enable
 
 COPY package*.json pnpm-*.yaml ./
 COPY patches ./patches
@@ -18,12 +20,12 @@ RUN pnpm build
 FROM node:lts-slim
 WORKDIR /app
 
-ARG GIT_COMMIT
-ENV GIT_COMMIT=$GIT_COMMIT
+# config.toml is mounted at /app/config.toml at runtime
+ENV HTTP_HOST=0.0.0.0
 
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
-RUN corepack enable
+RUN npm install -g corepack && corepack enable
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends ca-certificates curl gnupg nano && \

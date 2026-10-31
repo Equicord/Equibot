@@ -6,4 +6,5 @@ data
 
 .env
 discord_version
+config.toml
 .DS_Store

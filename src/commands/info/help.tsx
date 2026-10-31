@@ -1,10 +1,10 @@
+import { gitRemote } from "__gitData__";
 import { SeparatorSpacingSize } from "oceanic.js";
 
 import { CommandContext, Commands, defineCommand, FullCommand } from "~/Commands";
 import Config from "~/config";
 import { ZWSP } from "~/constants";
 import { groupBy } from "~/util/arrays";
-import { getGitRemote } from "~/util/git";
 import { PaginatorCv2 } from "~/util/PaginatorCv2";
 import { makeEmbedSpaces, snakeToTitle, stripIndent, toCodeblock, toInlineCode, toTitle } from "~/util/text";
 import { ActionRow, ComponentMessage, Container, Separator, StringOption, StringSelect, TextDisplay } from "~components";
@@ -51,8 +51,7 @@ function JumpToCategory({ pages, paginator }: { pages: string[], paginator: Pagi
     );
 }
 
-async function renderTableOfContents(pages: string[], { prefix, commandName }: CommandContext, paginator: PaginatorCv2<FullCommand>) {
-    const gitRemote = await getGitRemote();
+function renderTableOfContents(pages: string[], { prefix, commandName }: CommandContext, paginator: PaginatorCv2<FullCommand>) {
     const description = stripIndent`
         My ${Config.prefixes.length === 1 ? "prefix is" : "prefixes are"} ${Config.prefixes.map(toInlineCode).join(", ")}.
         Use \`${prefix}${commandName} <command>\` for more information on a specific command!

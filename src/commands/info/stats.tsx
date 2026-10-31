@@ -1,5 +1,5 @@
+import { gitCommitHash, gitRemote } from "__gitData__";
 import { Commands, defineCommand } from "~/Commands";
-import { getGitCommitHash, getGitRemote } from "~/util/git";
 import { makeEmbedSpaces, toInlineCode } from "~/util/text";
 import { ActionRow, Button, ButtonStyles } from "~components";
 
@@ -9,8 +9,6 @@ defineCommand({
     description: "Display information about the bot",
     usage: null,
     async execute({ reply, msg: { client, guildID } }) {
-        const gitRemote = await getGitRemote();
-        const gitHash = await getGitCommitHash();
         const shardID = client.guildShardMap.get(guildID!);
         const shard = client.shards.get(shardID!);
         const ping = shard?.latency ?? "?";
@@ -24,7 +22,7 @@ defineCommand({
         const rows = [
             [
                 "Equibot Version",
-                `[${toInlineCode(gitHash.slice(0, 7))}](${gitRemote}/commit/${gitHash})`
+                `[${toInlineCode(gitCommitHash.slice(0, 7))}](${gitRemote}/commit/${gitCommitHash})`
             ],
             [
                 "Node.js",

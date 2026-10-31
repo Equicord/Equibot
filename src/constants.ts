@@ -17,6 +17,10 @@ export const SUPPORT_ALLOWED_CHANNELS = [
     ...Config.channels.supportAllowedChannels
 ];
 
+export const REGULAR_ROLES = [
+    Config.roles.regular
+];
+
 export const MANAGEABLE_ROLES = [
     Config.roles.donor,
     Config.roles.regular,
@@ -85,5 +89,6 @@ export const ZWSP = "\u200B";
 export const Colors = makeConstants({
     Pink: 0xffb3ba,
     Green: 0xbaffc9,
+    Red: 0xff6961,
     Banana: 0xffffba,
 });

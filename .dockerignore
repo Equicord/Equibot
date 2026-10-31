@@ -7,3 +7,4 @@ Dockerfile
 .gitignore
 *.md
 discord_version*
+config.toml

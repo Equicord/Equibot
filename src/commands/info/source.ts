@@ -1,8 +1,8 @@
+import { gitRemote } from "__gitData__";
 import { defineCommand } from "~/Commands";
 import { registerChatInputCommand } from "~/SlashCommands";
-import { getGitRemote } from "~/util/git";
 
-const getSourceMessage = async () => "I am free software! You can find my Source code at " + await getGitRemote();
+const SOURCE_MESSAGE = "I am free software! You can find my Source code at " + gitRemote;
 
 defineCommand({
     name: "source-code",
@@ -10,7 +10,7 @@ defineCommand({
     description: "Get the source code for this bot",
     usage: null,
     async execute({ reply }) {
-        return reply(await getSourceMessage());
+        return reply(SOURCE_MESSAGE);
     }
 });
 
@@ -21,7 +21,7 @@ registerChatInputCommand(
     },
     {
         async handle(interaction) {
-            return interaction.reply({ content: await getSourceMessage() });
+            return interaction.reply({ content: SOURCE_MESSAGE });
         }
     }
 );

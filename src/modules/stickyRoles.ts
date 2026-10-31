@@ -74,7 +74,7 @@ defineCommand({
     async execute({ msg }) {
         if (msg.guildID !== Config.homeGuildId) return;
 
-        const members = await msg.guild.fetchMembers();
+        const members = await msg.guild.requestMembers();
 
         const rows = members
             .map(m => {
